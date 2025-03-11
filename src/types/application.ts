@@ -4,7 +4,7 @@ export interface Application {
   name: string;
   description: string;
   category: string;
-  status: 'active' | 'development' | 'maintenance' | 'archived';
+  status: ApplicationStatus;
   favorite: boolean;
   endpoints_count: number;
   tools_count: number;
