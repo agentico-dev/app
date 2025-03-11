@@ -19,3 +19,14 @@ export interface ApplicationTag {
   tag_id: string;
   tag_name: string;
 }
+
+export interface Tag {
+  id: string;
+  name: string;
+  category?: string;
+}
+
+export interface ResourceTags {
+  resourceId: string;
+  tags: Tag[];
+}

@@ -4,14 +4,18 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { AppWindow, CircuitBoard, Star } from 'lucide-react';
+import { AppWindow, CircuitBoard, Star, Tag, X } from 'lucide-react';
 import { Application } from '@/types/application';
+import { useTags } from '@/contexts/TagsContext';
+import { toast } from '@/components/ui/use-toast';
 
 interface ApplicationCardProps {
   application: Application;
 }
 
 export function ApplicationCard({ application }: ApplicationCardProps) {
+  const { removeTagFromResource } = useTags();
+
   const getStatusClassName = (status: string): string => {
     switch (status.toLowerCase()) {
       case 'active': return 'bg-green-500 hover:bg-green-600';
@@ -19,6 +23,24 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       case 'maintenance': return 'bg-yellow-500 hover:bg-yellow-600';
       case 'archived': return 'bg-red-500 hover:bg-red-600';
       default: return 'bg-slate-500 hover:bg-slate-600';
+    }
+  };
+
+  const handleRemoveTag = async (tagName: string) => {
+    try {
+      // In a real implementation, we would use the tag's ID from the database
+      // For now, just show a toast message
+      toast({
+        title: 'Tag removed',
+        description: `Tag "${tagName}" was removed from ${application.name}`,
+      });
+    } catch (error) {
+      console.error('Error removing tag:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to remove tag',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -39,12 +61,20 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       </CardHeader>
       <CardContent className="p-4 pt-4">
         <div className="flex flex-wrap gap-2 mb-4">
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="text-xs flex items-center gap-1">
+            <Tag className="h-3 w-3" />
             {application.category}
           </Badge>
           {application.tags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs">
+            <Badge key={tag} variant="secondary" className="text-xs flex items-center gap-1 group">
               {tag}
+              <button
+                onClick={() => handleRemoveTag(tag)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label={`Remove ${tag} tag`}
+              >
+                <X className="h-3 w-3" />
+              </button>
             </Badge>
           ))}
         </div>
