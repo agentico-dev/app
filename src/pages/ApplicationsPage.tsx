@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 import { AppWindow, CircuitBoard, Filter, Plus, Search, Star } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { supabase } from "@/integrations/supabase/client";
+import { Application, ApplicationStatus } from '@/types/application';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,101 +20,65 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-interface Application {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  endpointsCount: number;
-  toolsCount: number;
-  status: 'Active' | 'Development' | 'Maintenance' | 'Archived';
-  favorite: boolean;
-  tags: string[];
-}
-
-const mockApplications: Application[] = [
-  {
-    id: '1',
-    name: 'Customer Support Portal',
-    description: 'AI-powered chat interface for customer support',
-    category: 'Customer Service',
-    endpointsCount: 8,
-    toolsCount: 5,
-    status: 'Active',
-    favorite: true,
-    tags: ['customer-service', 'chatbot', 'production'],
-  },
-  {
-    id: '2',
-    name: 'Content Generator',
-    description: 'Automated content creation for marketing materials',
-    category: 'Marketing',
-    endpointsCount: 12,
-    toolsCount: 7,
-    status: 'Active',
-    favorite: false,
-    tags: ['content', 'marketing', 'ai-writing'],
-  },
-  {
-    id: '3',
-    name: 'Data Analysis Dashboard',
-    description: 'Visual analytics of business metrics with predictive insights',
-    category: 'Business Intelligence',
-    endpointsCount: 15,
-    toolsCount: 8,
-    status: 'Development',
-    favorite: true,
-    tags: ['analytics', 'dashboard', 'data-visualization'],
-  },
-  {
-    id: '4',
-    name: 'Document Processor',
-    description: 'Extract information from documents and forms',
-    category: 'Document Management',
-    endpointsCount: 6,
-    toolsCount: 4,
-    status: 'Active',
-    favorite: false,
-    tags: ['document', 'extraction', 'ocr'],
-  },
-  {
-    id: '5',
-    name: 'Recommendation API',
-    description: 'Product and content recommendation engine',
-    category: 'E-commerce',
-    endpointsCount: 5,
-    toolsCount: 3,
-    status: 'Development',
-    favorite: false,
-    tags: ['recommendations', 'personalization', 'ml'],
-  },
-  {
-    id: '6',
-    name: 'Image Recognition Service',
-    description: 'Identify objects and features in images',
-    category: 'Computer Vision',
-    endpointsCount: 9,
-    toolsCount: 5,
-    status: 'Active',
-    favorite: true,
-    tags: ['vision', 'image-processing', 'detection'],
-  },
-];
-
 export function ApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  
-  const filteredApplications = mockApplications.filter(app => {
+
+  // Query to fetch applications from Supabase
+  const { data: applications = [], isLoading, error } = useQuery({
+    queryKey: ['applications'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('api.applications')
+          .select('*');
+
+        if (error) {
+          console.error('Error fetching applications:', error);
+          toast({
+            title: 'Error fetching applications',
+            description: error.message,
+            variant: 'destructive',
+          });
+          return [];
+        }
+
+        // Format data to match the Application interface
+        return data.map((app) => ({
+          id: app.id,
+          name: app.name,
+          description: app.description || '',
+          category: app.category || 'Other',
+          status: (app.status || 'active').toLowerCase() as ApplicationStatus,
+          favorite: app.favorite || false,
+          endpoints_count: app.endpoints_count || 0,
+          tools_count: app.tools_count || 0,
+          tags: app.tags || [],
+          created_at: app.created_at,
+          updated_at: app.updated_at
+        }));
+      } catch (err) {
+        console.error('Unexpected error fetching applications:', err);
+        toast({
+          title: 'Unexpected error',
+          description: 'Failed to load applications. Please try again later.',
+          variant: 'destructive',
+        });
+        return [];
+      }
+    }
+  });
+
+  // Filter applications based on search query and active filter
+  const filteredApplications = applications.filter(app => {
     const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           app.description.toLowerCase().includes(searchQuery.toLowerCase());
     
     if (!activeFilter) return matchesSearch;
     
     if (activeFilter === 'favorite') return matchesSearch && app.favorite;
-    if (activeFilter === 'active') return matchesSearch && app.status === 'Active';
-    if (activeFilter === 'customer-service') return matchesSearch && app.category === 'Customer Service';
-    if (activeFilter === 'marketing') return matchesSearch && app.category === 'Marketing';
+    if (activeFilter === 'active') return matchesSearch && app.status === 'active';
+    if (activeFilter === 'category') return matchesSearch && app.category === activeFilter;
     
     return matchesSearch;
   });
@@ -164,12 +132,12 @@ export function ApplicationsPage() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Categories</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => setActiveFilter('customer-service')}>
-              Customer Service
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setActiveFilter('marketing')}>
-              Marketing
-            </DropdownMenuItem>
+            {/* Dynamically generate category filters from unique categories */}
+            {[...new Set(applications.map(app => app.category))].map(category => (
+              <DropdownMenuItem key={category} onClick={() => setActiveFilter(category)}>
+                {category}
+              </DropdownMenuItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -181,25 +149,70 @@ export function ApplicationsPage() {
           <TabsTrigger value="recent">Recent</TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="mt-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredApplications.map((app) => (
-              <ApplicationCard key={app.id} application={app} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center p-8">
+              <p>Loading applications...</p>
+            </div>
+          ) : error ? (
+            <div className="flex justify-center p-8">
+              <p className="text-red-500">Failed to load applications</p>
+            </div>
+          ) : filteredApplications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <p className="mb-4 text-muted-foreground">No applications found</p>
+              <Button asChild>
+                <Link to="/applications/new">Create your first application</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredApplications.map((app) => (
+                <ApplicationCard key={app.id} application={app} />
+              ))}
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="favorites" className="mt-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredApplications.filter(a => a.favorite).map((app) => (
-              <ApplicationCard key={app.id} application={app} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center p-8">
+              <p>Loading applications...</p>
+            </div>
+          ) : filteredApplications.filter(a => a.favorite).length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <p className="mb-4 text-muted-foreground">No favorite applications found</p>
+              <p className="text-sm text-muted-foreground">Mark applications as favorites to see them here</p>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredApplications.filter(a => a.favorite).map((app) => (
+                <ApplicationCard key={app.id} application={app} />
+              ))}
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="recent" className="mt-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredApplications.slice(0, 3).map((app) => (
-              <ApplicationCard key={app.id} application={app} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center p-8">
+              <p>Loading applications...</p>
+            </div>
+          ) : filteredApplications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <p className="mb-4 text-muted-foreground">No recent applications found</p>
+              <Button asChild>
+                <Link to="/applications/new">Create your first application</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {/* Show most recently updated applications first */}
+              {[...filteredApplications]
+                .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+                .slice(0, 6)
+                .map((app) => (
+                  <ApplicationCard key={app.id} application={app} />
+                ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
@@ -207,8 +220,18 @@ export function ApplicationsPage() {
 }
 
 function ApplicationCard({ application }: { application: Application }) {
+  const getStatusClassName = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case 'active': return 'bg-green-500 hover:bg-green-600';
+      case 'development': return 'bg-purple-500 hover:bg-purple-600';
+      case 'maintenance': return 'bg-yellow-500 hover:bg-yellow-600';
+      case 'archived': return 'bg-red-500 hover:bg-red-600';
+      default: return 'bg-slate-500 hover:bg-slate-600';
+    }
+  };
+
   return (
-    <Card className="overflow-hidden card-hover">
+    <Card className="overflow-hidden transition-all hover:shadow-md">
       <CardHeader className="p-4 pb-0 flex justify-between">
         <div>
           <div className="flex items-center justify-between">
@@ -236,22 +259,17 @@ function ApplicationCard({ application }: { application: Application }) {
         <div className="flex justify-between text-sm">
           <div className="flex items-center">
             <AppWindow className="h-4 w-4 mr-1 text-muted-foreground" />
-            <span>{application.endpointsCount} endpoints</span>
+            <span>{application.endpoints_count} endpoints</span>
           </div>
           <div className="flex items-center">
             <CircuitBoard className="h-4 w-4 mr-1 text-muted-foreground" />
-            <span>{application.toolsCount} AI tools</span>
+            <span>{application.tools_count} AI tools</span>
           </div>
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex justify-between">
-        <Badge className={`
-          ${application.status === 'Active' ? 'tag-green' : ''}
-          ${application.status === 'Development' ? 'tag-purple' : ''}
-          ${application.status === 'Maintenance' ? 'tag-yellow' : ''}
-          ${application.status === 'Archived' ? 'tag-red' : ''}
-        `}>
-          {application.status}
+        <Badge className={`${getStatusClassName(application.status)} text-white`}>
+          {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
         </Badge>
         <Button asChild>
           <Link to={`/applications/${application.id}`}>View API</Link>
