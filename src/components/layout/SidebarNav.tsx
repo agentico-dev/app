@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -19,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 
 type SidebarNavProps = {
   onClose?: () => void;
@@ -34,7 +34,8 @@ type NavItem = {
 
 export function SidebarNav({ onClose }: SidebarNavProps) {
   const location = useLocation();
-  
+  const { session } = useAuth();
+
   const mainNav: NavItem[] = [
     {
       title: 'Dashboard',
@@ -100,14 +101,14 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-14 items-center border-b border-sidebar-border px-4">
         <Link to="/" className="flex items-center space-x-2">
-          <CircuitBoard className="h-6 w-6 text-sidebar-primary" />
-          <span className="font-semibold">AI Tools Hub</span>
+          <img src="/favicon-32x32.png" alt="Agentico" className="h-6 w-6" />
+          <span>Agentico <small style={{ fontSize: '8px' }}>{import.meta.env.VITE_REACT_APP_VERSION}</small></span>
         </Link>
         {onClose && (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={onClose} 
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
             className="ml-auto"
           >
             <X className="h-4 w-4" />
@@ -119,20 +120,20 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
         <div className="space-y-4">
           <div className="space-y-1">
             {mainNav.map((item) => (
-              <NavLink 
-                key={item.href} 
-                item={item} 
-                active={location.pathname === item.href} 
+              <NavLink
+                key={item.href}
+                item={item}
+                active={location.pathname === item.href}
               />
             ))}
           </div>
           <div className="h-px bg-sidebar-border" />
           <div className="space-y-1">
             {utilityNav.map((item) => (
-              <NavLink 
-                key={item.href} 
-                item={item} 
-                active={location.pathname === item.href} 
+              <NavLink
+                key={item.href}
+                item={item}
+                active={location.pathname === item.href}
               />
             ))}
           </div>
@@ -144,8 +145,20 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
             <User className="h-4 w-4 text-sidebar-primary" />
           </div>
           <div className="text-sm">
-            <div className="font-medium">User Name</div>
-            <div className="text-sidebar-foreground/60">user@example.com</div>
+            {session.user && (
+              <>
+                <div className="font-medium">User Name</div>
+                <div className="text-sidebar-foreground/60">user@example.com</div>
+              </>
+            )
+              || (
+                <>
+                  <div className="font-medium">Guest</div>
+                  <div className="text-sidebar-foreground/60">
+                    <Link to="/login">Sign in</Link> for more features
+                  </div>
+                </>
+              )}
           </div>
         </div>
       </div>

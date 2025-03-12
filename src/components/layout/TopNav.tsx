@@ -40,7 +40,7 @@ export function TopNav() {
       <Link to="/" className="flex items-center gap-2 font-semibold md:hidden">
         <img src="/favicon-32x32.png" alt="Agentico" className="h-6 w-6" />
         <CircuitBoard className="h-6 w-6" />
-        <span>Agentico {import.meta.env.VITE_REACT_APP_VERSION}</span>
+        <span>Agentico <small style={{ fontSize: '8px' }}>{import.meta.env.VITE_REACT_APP_VERSION}</small></span>
       </Link>
 
       <div className="w-full flex items-center justify-between gap-2">

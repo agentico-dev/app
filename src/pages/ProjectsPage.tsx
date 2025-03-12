@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AppWindow, CircuitBoard, Filter, Plus, Search, Server, Star, Tag } from 'lucide-react';
+import { AppWindow, CircuitBoard, Filter, Plus, Search, Server, Shield, Star, Tag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface Project {
   id: string;
@@ -32,6 +33,7 @@ export function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const { session } = useAuth();
+  const isAuthenticated = !!session.user;
   
   const projects: Project[] = [
     {
@@ -132,7 +134,7 @@ export function ProjectsPage() {
           </p>
         </div>
         <Button asChild>
-          <Link to="/projects/new">
+          <Link to={isAuthenticated ? "/projects/new" : "/login"}>
             <Plus className="mr-2 h-4 w-4" />
             New Project
           </Link>
@@ -176,6 +178,15 @@ export function ProjectsPage() {
         </DropdownMenu>
       </div>
 
+      {!isAuthenticated && (
+        <Alert variant="default" className="bg-amber-50 border-amber-200">
+          <Shield className="h-4 w-4 text-amber-500" />
+          <AlertTitle>Limited Access Mode</AlertTitle>
+          <AlertDescription>
+            You're browsing in read-only mode. Sign in to create or manage projects.
+          </AlertDescription>
+        </Alert>
+      )}
       <Tabs defaultValue="all">
         <TabsList>
           <TabsTrigger value="all">All Projects</TabsTrigger>
