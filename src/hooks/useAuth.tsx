@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,12 +59,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
-      // Using mock profile data instead of fetching from Supabase
-      setSession(prev => ({
-        ...prev,
-        profile: mockProfile,
-        isLoading: false,
-      }));
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching profile:', error);
+      }
+
+      if (data) {
+        setSession(prev => ({
+          ...prev,
+          profile: data,
+          isLoading: false,
+        }));
+      } else {
+        setSession(prev => ({ ...prev, isLoading: false }));
+      }
     } catch (error) {
       console.error('Unexpected error fetching profile:', error);
       setSession(prev => ({ ...prev, isLoading: false }));
@@ -103,28 +115,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           data: {
             full_name: fullName,
+            plan_id: planId,
           },
         },
       });
       
       if (error) throw error;
       
-      // Using console.log instead of database update for plan_id
-      if (data.user) {
-        console.log(`User ${data.user.id} signed up with plan: ${planId}`);
-        // In a real implementation, this would update the database
-      }
-
       toast({
         title: "Success!",
-        description: "Please check your email to verify your account.",
+        description: "Your account has been created. You can now sign in.",
       });
+      
+      return data;
     } catch (error: any) {
       toast({
         title: "Error signing up",
         description: error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 

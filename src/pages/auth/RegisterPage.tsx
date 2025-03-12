@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Plan } from '@/types/plans';
 import PlanSelector from '@/components/PlanSelector';
+import { toast } from 'sonner';
 
 // Mock plans data
 const mockPlans: Plan[] = [
@@ -21,6 +22,7 @@ const mockPlans: Plan[] = [
     price: 0,
     features: ['5 projects', '2 team members', 'Basic AI tools'],
     active: true,
+    interval: 'month',
   },
   {
     id: 'pro',
@@ -29,6 +31,7 @@ const mockPlans: Plan[] = [
     price: 29,
     features: ['Unlimited projects', '10 team members', 'Advanced AI tools', 'Priority support'],
     active: true,
+    interval: 'month',
   },
   {
     id: 'enterprise',
@@ -37,10 +40,12 @@ const mockPlans: Plan[] = [
     price: 99,
     features: ['Unlimited everything', 'Dedicated support', 'Custom integrations', 'Advanced security'],
     active: true,
+    interval: 'month',
   },
 ];
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -51,18 +56,87 @@ export default function RegisterPage() {
   const { data: plans } = useQuery({
     queryKey: ['plans'],
     queryFn: async () => {
-      // Using mock data instead of fetching from Supabase
+      // Using mock data since there's no plans table yet
       return mockPlans;
     }
   });
 
+  const createUserOrganization = async (userId: string, fullName: string) => {
+    const orgName = `${fullName}'s Organization`;
+    const orgSlug = orgName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    
+    try {
+      // Create organization
+      const { data: org, error: orgError } = await supabase
+        .from('organizations')
+        .insert({
+          name: orgName,
+          slug: orgSlug,
+          description: `Personal organization for ${fullName}`,
+        })
+        .select()
+        .single();
+      
+      if (orgError) throw orgError;
+      
+      // Add user as owner
+      const { error: memberError } = await supabase
+        .from('organization_members')
+        .insert({
+          organization_id: org.id,
+          user_id: userId,
+          role: 'owner',
+        });
+      
+      if (memberError) throw memberError;
+      
+      return org;
+    } catch (error) {
+      console.error('Error creating organization:', error);
+      // Don't throw here - we still want the user registration to succeed
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPlan) return;
+    if (!selectedPlan) {
+      toast.error("Please select a plan to continue");
+      return;
+    }
     
     setLoading(true);
-    await signUp(email, password, fullName, selectedPlan);
-    setLoading(false);
+    try {
+      // Sign up user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            plan_id: selectedPlan,
+          },
+        },
+      });
+      
+      if (error) throw error;
+      
+      if (data?.user) {
+        // Create user's organization
+        await createUserOrganization(data.user.id, fullName);
+        
+        toast.success('Account created successfully!');
+        
+        // Auto sign in
+        await signIn('email', email, password);
+        navigate('/');
+      } else {
+        toast.info('Please check your email to confirm your account.');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'An error occurred during registration.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
