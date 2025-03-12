@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -10,49 +11,7 @@ import { FilterControls } from '@/components/applications/FilterControls';
 import { ApplicationsTabContent } from '@/components/applications/ApplicationsTabContent';
 import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-// Mock data to use while fixing Supabase issues
-const mockApplications: Application[] = [
-  {
-    id: '1',
-    name: 'Customer Portal API',
-    description: 'API for customer portal integration',
-    category: 'Web API',
-    status: 'active',
-    favorite: true,
-    endpoints_count: 24,
-    tools_count: 3,
-    tags: ['important', 'customer-facing'],
-    created_at: '2023-06-15T10:30:00Z',
-    updated_at: '2023-08-20T14:45:00Z'
-  },
-  {
-    id: '2',
-    name: 'Payment Processing Service',
-    description: 'Service for handling payment processing',
-    category: 'Microservice',
-    status: 'development',
-    favorite: false,
-    endpoints_count: 8,
-    tools_count: 2,
-    tags: ['finance', 'security'],
-    created_at: '2023-07-10T09:15:00Z',
-    updated_at: '2023-08-18T11:20:00Z'
-  },
-  {
-    id: '3',
-    name: 'Inventory Management System',
-    description: 'Inventory tracking and management API',
-    category: 'Internal API',
-    status: 'maintenance',
-    favorite: true,
-    endpoints_count: 16,
-    tools_count: 5,
-    tags: ['inventory', 'warehouse'],
-    created_at: '2023-05-22T08:45:00Z',
-    updated_at: '2023-08-15T16:30:00Z'
-  }
-];
+import { supabase } from '@/integrations/supabase/client';
 
 export function ApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,20 +19,15 @@ export function ApplicationsPage() {
   const { session } = useAuth();
   const isAuthenticated = !!session.user;
 
-  // Query to fetch applications - using mock data until Supabase issues are fixed
-  const { data: applications = mockApplications, isLoading, error } = useQuery({
+  // Query to fetch applications from Supabase
+  const { data: applications = [], isLoading, error } = useQuery({
     queryKey: ['applications'],
     queryFn: async () => {
       try {
-        // We'll use mock data for now instead of hitting Supabase
-        // until the Database types are properly set up
-        return mockApplications;
-        
-        // This code would be used once Supabase issues are fixed:
-        /*
         const { data, error } = await supabase
           .from('applications')
-          .select('*');
+          .select('*')
+          .order('created_at', { ascending: false });
 
         if (error) {
           throw new Error(error.message);
@@ -89,10 +43,9 @@ export function ApplicationsPage() {
           endpoints_count: app.endpoints_count || 0,
           tools_count: app.tools_count || 0,
           tags: app.tags || [],
-          created_at: app.created_at,
-          updated_at: app.updated_at
+          created_at: app.created_at || new Date().toISOString(),
+          updated_at: app.updated_at || new Date().toISOString()
         }));
-        */
       } catch (err) {
         console.error('Unexpected error fetching applications:', err);
         toast({
@@ -100,7 +53,7 @@ export function ApplicationsPage() {
           description: 'Failed to load applications. Please try again later.',
           variant: 'destructive',
         });
-        return mockApplications; // Fallback to mock data on error
+        return [];
       }
     }
   });
@@ -170,7 +123,7 @@ export function ApplicationsPage() {
           <ApplicationsTabContent 
             isLoading={isLoading}
             error={error}
-            applications={filteredApplications}
+            applications={filteredApplications.filter(a => a.favorite)}
             tabValue="favorites"
           />
         </TabsContent>
@@ -178,7 +131,9 @@ export function ApplicationsPage() {
           <ApplicationsTabContent 
             isLoading={isLoading}
             error={error}
-            applications={filteredApplications}
+            applications={[...filteredApplications].sort((a, b) => 
+              new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+            ).slice(0, 6)}
             tabValue="recent"
           />
         </TabsContent>

@@ -63,22 +63,6 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
       href: '/ai-tools',
       icon: CircuitBoard,
     },
-    // @todo Add these later
-    // {
-    //   title: 'Models',
-    //   href: '/models',
-    //   icon: Brain,
-    // },
-    // {
-    //   title: 'Data',
-    //   href: '/data',
-    //   icon: Database,
-    // },
-    // {
-    //   title: 'Agents',
-    //   href: '/agents',
-    //   icon: Users,
-    // },
   ];
 
   const utilityNav: NavItem[] = [

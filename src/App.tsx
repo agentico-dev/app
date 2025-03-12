@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +13,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
 const AIToolsPage = lazy(() => import("./pages/AIToolsPage"));
 const ApplicationsPage = lazy(() => import("./pages/ApplicationsPage"));
+const ServersPage = lazy(() => import("./pages/ServersPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"));
@@ -102,7 +102,7 @@ const AppRoutes = () => {
         <Route path="/applications/new" element={<AuthenticatedRoute><NewApplicationPage /></AuthenticatedRoute>} />
 
         {/* Servers routes */}
-        <Route path="/servers" element={<ProjectsPage />} />
+        <Route path="/servers" element={<ServersPage />} />
         <Route path="/servers/new" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
 
         {/* AI Tools routes */}
