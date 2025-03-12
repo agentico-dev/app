@@ -4,11 +4,12 @@ import { Link } from 'react-router-dom';
 import { 
   Bell, 
   CircuitBoard, 
-  Menu, 
   Moon, 
   Search, 
   Sun, 
-  User
+  User,
+  AtSign,
+  PlugZap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,8 +36,9 @@ export function TopNav() {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
       <Link to="/" className="flex items-center gap-2 font-semibold md:hidden">
+        <img src="/favicon-32x32.png" alt="Agentico" className="h-6 w-6" />
         <CircuitBoard className="h-6 w-6" />
-        <span>AI Tools Hub</span>
+        <span>Agentico {import.meta.env.VITE_REACT_APP_VERSION}</span>
       </Link>
 
       <div className="w-full flex items-center justify-between gap-2">
@@ -52,6 +54,18 @@ export function TopNav() {
         </form>
 
         <div className="flex flex-1 items-center justify-end gap-4">
+          <Button variant="outline" size="icon">
+            <a href="https://www.linkedin.com/comm/mynetwork/discovery-see-all?usecase=PEOPLE_FOLLOWS&followMember=adrianescutia" target="_blank">
+              <PlugZap className="h-4 w-4" />
+              <span className="sr-only">Follow me on LinkedIn</span>
+            </a>
+          </Button>
+          <Button variant="outline" size="icon">
+            <a href="https://go.rebelion.la/contact-us" target="_blank">
+              <AtSign className="h-4 w-4" />
+              <span className="sr-only">Contact Us</span>
+            </a>
+          </Button>
           <Button variant="outline" size="icon" className="relative" asChild>
             <Link to="/notifications">
               <Bell className="h-4 w-4" />
