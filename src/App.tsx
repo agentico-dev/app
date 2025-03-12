@@ -40,70 +40,75 @@ const queryClient = new QueryClient({
 // Route guard component to protect routes that require authentication
 const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session } = useAuth();
-  
+
   if (session.isLoading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
-  
+
   return <>{children}</>;
 };
 
 // Public routes that redirect to dashboard if logged in
 const RedirectIfAuthenticated = ({ children }: { children: React.ReactNode }) => {
   const { session } = useAuth();
-  
+
   if (session.isLoading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
-  
+
   if (session.user) {
     return <Navigate to="/" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
 const AppRoutes = () => {
   const { session } = useAuth();
-  
+
   // If user is not logged in and is visiting the root path, show landing page
   if (!session.user && window.location.pathname === '/') {
     return (
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        {/* <Route path="/" element={<LandingPage />} /> */}
+        <Route element={<DashboardLayout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
         <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
         <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
-  
+
   return (
     <Routes>
       {/* Auth routes */}
       <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
       <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
-      
+
       {/* Dashboard layout routes - now accessible to all users */}
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<Dashboard />} />
-        
+        <Route path="/dashboard" element={<Dashboard />} />
+
         {/* Projects routes */}
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/new" element={<AuthenticatedRoute><NewProjectPage /></AuthenticatedRoute>} />
-        
+
         {/* Applications routes */}
         <Route path="/applications" element={<ApplicationsPage />} />
         <Route path="/applications/new" element={<AuthenticatedRoute><NewApplicationPage /></AuthenticatedRoute>} />
-        
+
         {/* Servers routes */}
         <Route path="/servers" element={<ProjectsPage />} />
         <Route path="/servers/new" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
-        
+
         {/* AI Tools routes */}
         <Route path="/ai-tools" element={<AIToolsPage />} />
         <Route path="/ai-tools/new" element={<AuthenticatedRoute><NewToolPage /></AuthenticatedRoute>} />
-        
+
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
         <Route path="/agents" element={<ProjectsPage />} />
@@ -112,7 +117,7 @@ const AppRoutes = () => {
         <Route path="/profile" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
         <Route path="/settings" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
       </Route>
-      
+
       {/* Catch-all route */}
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
-import { CircuitBoard, Filter, Plus, Search, Server, Star, Users } from 'lucide-react';
+import { CircuitBoard, Filter, Plus, Search, Server, Shield, Star, Users } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AITool {
   id: string;
@@ -107,7 +108,9 @@ const mockAITools: AITool[] = [
 export function AIToolsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  
+  const { session } = useAuth();
+  const isAuthenticated = !!session.user;
+
   const filteredTools = mockAITools.filter(tool => {
     const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          tool.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -132,7 +135,7 @@ export function AIToolsPage() {
           </p>
         </div>
         <Button asChild>
-          <Link to="/ai-tools/new">
+          <Link to={isAuthenticated ? "/ai-tools/new" : "/login"}>
             <Plus className="mr-2 h-4 w-4" />
             New AI Tool
           </Link>
@@ -181,6 +184,14 @@ export function AIToolsPage() {
         </DropdownMenu>
       </div>
 
+      {!isAuthenticated && (
+          <Alert variant="default" className="bg-amber-50 border-amber-200">
+            <Shield className="h-4 w-4 text-amber-500" />
+            <AlertDescription>
+              You are currently in limited access mode. Some features may be restricted.
+            </AlertDescription>
+          </Alert>
+        )}
       <Tabs defaultValue="all">
         <TabsList>
           <TabsTrigger value="all">All Tools</TabsTrigger>

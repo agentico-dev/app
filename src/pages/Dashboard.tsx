@@ -3,9 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowUpRight, BarChart3, Briefcase, CircuitBoard, Server, Users } from 'lucide-react';
+import { ArrowUpRight, BarChart3, Briefcase, CircuitBoard, Server, Shield, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const recentProjects = [
   {
@@ -70,6 +71,7 @@ const mockStats = {
 
 export function Dashboard() {
   const { session } = useAuth();
+  const isAuthenticated = !!session.user;
 
   const { data: projectsData, isLoading: projectsLoading } = useQuery({
     queryKey: ['dashboard', 'projects'],
@@ -105,7 +107,7 @@ export function Dashboard() {
         default: return CircuitBoard;
       }
     };
-    
+
     return {
       icon: getIcon(),
       description: notification.message,
@@ -128,9 +130,17 @@ export function Dashboard() {
           </Button>
         </div>
       </div>
+        {!isAuthenticated && (
+          <Alert variant="default" className="bg-amber-50 border-amber-200">
+            <Shield className="h-4 w-4 text-amber-500" />
+            <AlertDescription>
+              You are currently in limited access mode. Some features may be restricted.
+            </AlertDescription>
+          </Alert>
+        )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard 
+        <MetricCard
           title="Projects"
           value={stats.projects.count.toString()}
           description="Total projects"
@@ -138,24 +148,24 @@ export function Dashboard() {
           trend={stats.projects.trend}
           trendUp={stats.projects.trendUp}
         />
-        <MetricCard 
-          title="Applications" 
+        <MetricCard
+          title="Applications"
           value={stats.applications.count.toString()}
           description="Deployed applications"
           icon={CircuitBoard}
           trend={stats.applications.trend}
           trendUp={stats.applications.trendUp}
         />
-        <MetricCard 
-          title="Servers" 
+        <MetricCard
+          title="Servers"
           value={stats.servers.count.toString()}
           description="Active servers"
           icon={Server}
           trend={stats.servers.trend}
           trendUp={stats.servers.trendUp}
         />
-        <MetricCard 
-          title="AI Tools" 
+        <MetricCard
+          title="AI Tools"
           value={stats.aiTools.count.toString()}
           description="Total AI tools"
           icon={BarChart3}
@@ -203,7 +213,7 @@ export function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
@@ -250,10 +260,9 @@ function MetricCard({ title, value, description, icon: Icon, trend, trendUp }: M
         <div className="text-2xl font-bold">{value}</div>
         <p className="text-xs text-muted-foreground">{description}</p>
         {trend && (
-          <div className={`mt-2 flex items-center text-xs ${
-            trendUp === true ? 'text-green-500' : 
-            trendUp === false ? 'text-red-500' : 'text-muted-foreground'
-          }`}>
+          <div className={`mt-2 flex items-center text-xs ${trendUp === true ? 'text-green-500' :
+              trendUp === false ? 'text-red-500' : 'text-muted-foreground'
+            }`}>
             {trend}
           </div>
         )}

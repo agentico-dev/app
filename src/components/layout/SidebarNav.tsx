@@ -35,6 +35,7 @@ type NavItem = {
 export function SidebarNav({ onClose }: SidebarNavProps) {
   const location = useLocation();
   const { session } = useAuth();
+  const isAuthenticated = !!session.user;
 
   const mainNav: NavItem[] = [
     {
@@ -62,21 +63,22 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
       href: '/ai-tools',
       icon: CircuitBoard,
     },
-    {
-      title: 'Models',
-      href: '/models',
-      icon: Brain,
-    },
-    {
-      title: 'Data',
-      href: '/data',
-      icon: Database,
-    },
-    {
-      title: 'Agents',
-      href: '/agents',
-      icon: Users,
-    },
+    // @todo Add these later
+    // {
+    //   title: 'Models',
+    //   href: '/models',
+    //   icon: Brain,
+    // },
+    // {
+    //   title: 'Data',
+    //   href: '/data',
+    //   icon: Database,
+    // },
+    // {
+    //   title: 'Agents',
+    //   href: '/agents',
+    //   icon: Users,
+    // },
   ];
 
   const utilityNav: NavItem[] = [
@@ -128,15 +130,17 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
             ))}
           </div>
           <div className="h-px bg-sidebar-border" />
-          <div className="space-y-1">
-            {utilityNav.map((item) => (
-              <NavLink
-                key={item.href}
-                item={item}
-                active={location.pathname === item.href}
-              />
-            ))}
-          </div>
+          {isAuthenticated && (
+            <div className="space-y-1">
+              {utilityNav.map((item) => (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  active={location.pathname === item.href}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </ScrollArea>
       <div className="border-t border-sidebar-border p-4">

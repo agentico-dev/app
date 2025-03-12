@@ -1,14 +1,15 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Shield } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { Application, ApplicationStatus } from '@/types/application';
 import { FilterControls } from '@/components/applications/FilterControls';
 import { ApplicationsTabContent } from '@/components/applications/ApplicationsTabContent';
+import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Mock data to use while fixing Supabase issues
 const mockApplications: Application[] = [
@@ -56,6 +57,8 @@ const mockApplications: Application[] = [
 export function ApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const { session } = useAuth();
+  const isAuthenticated = !!session.user;
 
   // Query to fetch applications - using mock data until Supabase issues are fixed
   const { data: applications = mockApplications, isLoading, error } = useQuery({
@@ -126,12 +129,20 @@ export function ApplicationsPage() {
           </p>
         </div>
         <Button asChild>
-          <Link to="/applications/new">
+          <Link to={isAuthenticated ? "/applications/new" : "/login"}>
             <Plus className="mr-2 h-4 w-4" />
             New Application
           </Link>
         </Button>
       </div>
+        {!isAuthenticated && (
+          <Alert variant="default" className="bg-amber-50 border-amber-200">
+            <Shield className="h-4 w-4 text-amber-500" />
+            <AlertDescription>
+              You are currently in limited access mode. Some features may be restricted.
+            </AlertDescription>
+          </Alert>
+        )}
 
       <FilterControls 
         searchQuery={searchQuery}
