@@ -1,12 +1,12 @@
-
 export interface Organization {
   id: string;
   name: string;
   slug: string;
-  description: string | null;
+  description?: string;
   logo_url: string | null;
   created_at: string;
   updated_at: string;
+  role?: string; // Adding the optional role property
 }
 
 export interface OrganizationMember {
