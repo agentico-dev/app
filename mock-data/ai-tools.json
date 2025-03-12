@@ -1,0 +1,74 @@
+[
+  {
+    "id": "1",
+    "name": "Text Summarizer",
+    "description": "Automatically summarize long documents and articles",
+    "category": "NLP",
+    "serversCount": 2,
+    "applicationsCount": 3,
+    "agentsCount": 1,
+    "status": "Active",
+    "favorite": true,
+    "tags": ["nlp", "text-processing", "summarization"]
+  },
+  {
+    "id": "2",
+    "name": "Sentiment Analyzer",
+    "description": "Analyze text for emotional tone and sentiment",
+    "category": "NLP",
+    "serversCount": 1,
+    "applicationsCount": 4,
+    "agentsCount": 2,
+    "status": "Active",
+    "favorite": false,
+    "tags": ["nlp", "sentiment", "analysis"]
+  },
+  {
+    "id": "3",
+    "name": "Image Classifier",
+    "description": "Identify objects and scenes in images",
+    "category": "Computer Vision",
+    "serversCount": 3,
+    "applicationsCount": 2,
+    "agentsCount": 0,
+    "status": "Development",
+    "favorite": true,
+    "tags": ["vision", "classification", "detection"]
+  },
+  {
+    "id": "4",
+    "name": "Entity Extractor",
+    "description": "Extract named entities from unstructured text",
+    "category": "NLP",
+    "serversCount": 1,
+    "applicationsCount": 2,
+    "agentsCount": 1,
+    "status": "Active",
+    "favorite": false,
+    "tags": ["nlp", "entity-extraction", "information-retrieval"]
+  },
+  {
+    "id": "5",
+    "name": "Speech-to-Text",
+    "description": "Convert audio recordings to written text",
+    "category": "Speech",
+    "serversCount": 2,
+    "applicationsCount": 1,
+    "agentsCount": 0,
+    "status": "Development",
+    "favorite": false,
+    "tags": ["speech", "audio-processing", "transcription"]
+  },
+  {
+    "id": "6",
+    "name": "Recommendation Engine",
+    "description": "Generate personalized recommendations based on user behavior",
+    "category": "Machine Learning",
+    "serversCount": 4,
+    "applicationsCount": 2,
+    "agentsCount": 3,
+    "status": "Active",
+    "favorite": true,
+    "tags": ["recommendations", "ml", "personalization"]
+  }
+]

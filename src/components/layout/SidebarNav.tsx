@@ -133,10 +133,10 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
             <User className="h-4 w-4 text-sidebar-primary" />
           </div>
           <div className="text-sm">
-            {session.user && (
+            {isAuthenticated && (
               <>
-                <div className="font-medium">User Name</div>
-                <div className="text-sidebar-foreground/60">user@example.com</div>
+                <div className="font-medium">{session.user.user_metadata.full_name}</div>
+                <div className="text-sidebar-foreground/60">{session.user.email}</div>
               </>
             )
               || (

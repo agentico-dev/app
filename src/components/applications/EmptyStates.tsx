@@ -2,12 +2,15 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 interface EmptyStateProps {
   type: 'loading' | 'error' | 'no-applications' | 'no-favorites';
 }
 
 export function EmptyState({ type }: EmptyStateProps) {
+  const { session } = useAuth();
+  const isAuthenticated = !!session.user;
   switch (type) {
     case 'loading':
       return (
@@ -26,7 +29,7 @@ export function EmptyState({ type }: EmptyStateProps) {
         <div className="flex flex-col items-center justify-center p-8 text-center">
           <p className="mb-4 text-muted-foreground">No applications found</p>
           <Button asChild>
-            <Link to="/applications/new">Create your first application</Link>
+            <Link to={isAuthenticated ? "/applications/new" : "/login"}>Create your first application</Link>
           </Button>
         </div>
       );

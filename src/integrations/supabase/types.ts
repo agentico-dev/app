@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  public: {
+  api: {
     Tables: {
       ai_tools: {
         Row: {
@@ -258,7 +258,7 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type PublicSchema = Database[Extract<keyof Database, "api">]
 
 export type Tables<
   PublicTableNameOrOptions extends

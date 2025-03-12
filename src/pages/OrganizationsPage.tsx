@@ -98,7 +98,7 @@ export default function OrganizationsPage() {
                     placeholder="acme-inc"
                   />
                   <p className="text-sm text-muted-foreground">
-                    Used in URLs: agentico.com/org/{newOrg.slug || 'your-slug'}
+                    Used in URLs: app.agentico.dev/org/{newOrg.slug || 'your-slug'}
                   </p>
                 </div>
                 <div className="grid gap-2">

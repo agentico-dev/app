@@ -188,7 +188,7 @@ export function AIToolsPage() {
               </p>
               {isAuthenticated && (
                 <Button asChild>
-                  <Link to="/ai-tools/new">Create AI Tool</Link>
+                  <Link to={isAuthenticated ? "/ai-tools/new" : "/login"}>Create AI Tool</Link>
                 </Button>
               )}
             </Card>

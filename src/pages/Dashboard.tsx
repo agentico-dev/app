@@ -126,7 +126,7 @@ export function Dashboard() {
         </div>
         <div className="flex items-center gap-2">
           <Button asChild>
-            <Link to="/projects/new">Create new project</Link>
+            <Link to={isAuthenticated ? "/projects/new" : "/login"}>Create new project</Link>
           </Button>
         </div>
       </div>
