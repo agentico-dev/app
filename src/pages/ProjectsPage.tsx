@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Project {
   id: string;
@@ -31,8 +31,8 @@ interface Project {
 export function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const { session } = useAuth();
   
-  // Mock project data
   const projects: Project[] = [
     {
       id: '1',
@@ -265,3 +265,4 @@ function ProjectCard({ project }: { project: Project }) {
 }
 
 export default ProjectsPage;
+

@@ -22,6 +22,12 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 const OrganizationsPage = lazy(() => import("./pages/OrganizationsPage"));
 const OrganizationDetailPage = lazy(() => import("./pages/OrganizationDetailPage"));
 
+// New pages for creating resources
+const NewProjectPage = lazy(() => import("./pages/projects/NewProjectPage"));
+const NewApplicationPage = lazy(() => import("./pages/applications/NewApplicationPage"));
+const NewServerPage = lazy(() => import("./pages/servers/NewServerPage"));
+const NewToolPage = lazy(() => import("./pages/ai-tools/NewToolPage"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -32,7 +38,6 @@ const queryClient = new QueryClient({
 });
 
 // Route guard component to protect routes that require authentication
-// (we no longer restrict routes but we check authentication state inside components)
 const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session } = useAuth();
   
@@ -82,10 +87,23 @@ const AppRoutes = () => {
       {/* Dashboard layout routes - now accessible to all users */}
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<Dashboard />} />
+        
+        {/* Projects routes */}
         <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projects/new" element={<AuthenticatedRoute><NewProjectPage /></AuthenticatedRoute>} />
+        
+        {/* Applications routes */}
         <Route path="/applications" element={<ApplicationsPage />} />
-        <Route path="/ai-tools" element={<AIToolsPage />} />
+        <Route path="/applications/new" element={<AuthenticatedRoute><NewApplicationPage /></AuthenticatedRoute>} />
+        
+        {/* Servers routes */}
         <Route path="/servers" element={<ProjectsPage />} />
+        <Route path="/servers/new" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
+        
+        {/* AI Tools routes */}
+        <Route path="/ai-tools" element={<AIToolsPage />} />
+        <Route path="/ai-tools/new" element={<AuthenticatedRoute><NewToolPage /></AuthenticatedRoute>} />
+        
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
         <Route path="/agents" element={<ProjectsPage />} />
