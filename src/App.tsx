@@ -19,6 +19,8 @@ const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const OrganizationsPage = lazy(() => import("./pages/OrganizationsPage"));
+const OrganizationDetailPage = lazy(() => import("./pages/OrganizationDetailPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,23 +31,20 @@ const queryClient = new QueryClient({
   },
 });
 
-// Route guard component to protect routes
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+// Route guard component to protect routes that require authentication
+// (we no longer restrict routes but we check authentication state inside components)
+const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session } = useAuth();
   
   if (session.isLoading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
   
-  if (!session.user) {
-    return <Navigate to="/login" replace />;
-  }
-  
   return <>{children}</>;
 };
 
 // Public routes that redirect to dashboard if logged in
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+const RedirectIfAuthenticated = ({ children }: { children: React.ReactNode }) => {
   const { session } = useAuth();
   
   if (session.isLoading) {
@@ -67,8 +66,8 @@ const AppRoutes = () => {
     return (
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-        <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+        <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
+        <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
@@ -76,12 +75,12 @@ const AppRoutes = () => {
   
   return (
     <Routes>
-      {/* Public routes */}
-      <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-      <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+      {/* Auth routes */}
+      <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
+      <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
       
-      {/* Protected routes (dashboard layout) */}
-      <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+      {/* Dashboard layout routes - now accessible to all users */}
+      <Route element={<DashboardLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/applications" element={<ApplicationsPage />} />
@@ -90,8 +89,10 @@ const AppRoutes = () => {
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
         <Route path="/agents" element={<ProjectsPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/settings" element={<ProfilePage />} />
+        <Route path="/organizations" element={<OrganizationsPage />} />
+        <Route path="/organizations/:slug" element={<OrganizationDetailPage />} />
+        <Route path="/profile" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
+        <Route path="/settings" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
       </Route>
       
       {/* Catch-all route */}

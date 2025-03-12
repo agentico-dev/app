@@ -6,253 +6,254 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-
-export interface Database {
+export type Database = {
   public: {
     Tables: {
-      profiles: {
+      ai_tools: {
         Row: {
-          id: string
-          full_name: string | null
-          plan_id: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id: string
-          full_name?: string | null
-          plan_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          full_name?: string | null
-          plan_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      projects: {
-        Row: {
-          id: string
-          name: string
+          agents_count: number | null
+          applications_count: number | null
+          category: string | null
+          created_at: string | null
           description: string | null
-          status: string
-          favorite: boolean
-          tools_count: number
-          applications_count: number
-          servers_count: number
-          tags: string[]
-          user_id: string
-          created_at: string
-          updated_at: string
+          favorite: boolean | null
+          id: string
+          name: string
+          organization_id: string | null
+          servers_count: number | null
+          status: string | null
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
+          agents_count?: number | null
+          applications_count?: number | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          favorite?: boolean | null
           id?: string
           name: string
-          description?: string | null
-          status?: string
-          favorite?: boolean
-          tools_count?: number
-          applications_count?: number
-          servers_count?: number
-          tags?: string[]
-          user_id: string
-          created_at?: string
-          updated_at?: string
+          organization_id?: string | null
+          servers_count?: number | null
+          status?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
+          agents_count?: number | null
+          applications_count?: number | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          favorite?: boolean | null
           id?: string
           name?: string
-          description?: string | null
-          status?: string
-          favorite?: boolean
-          tools_count?: number
-          applications_count?: number
-          servers_count?: number
-          tags?: string[]
-          user_id?: string
-          created_at?: string
-          updated_at?: string
+          organization_id?: string | null
+          servers_count?: number | null
+          status?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tools_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       applications: {
         Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          endpoints_count: number | null
+          favorite: boolean | null
           id: string
           name: string
-          description: string | null
-          category: string | null
-          status: string
-          favorite: boolean
-          endpoints_count: number
-          tools_count: number
-          tags: string[]
-          user_id: string
-          created_at: string
-          updated_at: string
+          organization_id: string | null
+          status: string | null
+          tags: string[] | null
+          tools_count: number | null
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          endpoints_count?: number | null
+          favorite?: boolean | null
           id?: string
           name: string
-          description?: string | null
-          category?: string | null
-          status?: string
-          favorite?: boolean
-          endpoints_count?: number
-          tools_count?: number
-          tags?: string[]
-          user_id: string
-          created_at?: string
-          updated_at?: string
+          organization_id?: string | null
+          status?: string | null
+          tags?: string[] | null
+          tools_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          endpoints_count?: number | null
+          favorite?: boolean | null
           id?: string
           name?: string
-          description?: string | null
-          category?: string | null
-          status?: string
-          favorite?: boolean
-          endpoints_count?: number
-          tools_count?: number
-          tags?: string[]
-          user_id?: string
-          created_at?: string
-          updated_at?: string
+          organization_id?: string | null
+          status?: string | null
+          tags?: string[] | null
+          tools_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "applications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      ai_tools: {
+      organization_members: {
         Row: {
+          created_at: string | null
           id: string
-          name: string
-          description: string | null
-          category: string | null
-          status: string
-          favorite: boolean
-          servers_count: number
-          applications_count: number
-          agents_count: number
-          tags: string[]
-          user_id: string
-          created_at: string
-          updated_at: string
+          organization_id: string | null
+          role: string
+          user_id: string | null
         }
         Insert: {
+          created_at?: string | null
           id?: string
-          name: string
-          description?: string | null
-          category?: string | null
-          status?: string
-          favorite?: boolean
-          servers_count?: number
-          applications_count?: number
-          agents_count?: number
-          tags?: string[]
-          user_id: string
-          created_at?: string
-          updated_at?: string
+          organization_id?: string | null
+          role: string
+          user_id?: string | null
         }
         Update: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string | null
+          role?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          applications_count: number | null
+          created_at: string | null
+          description: string | null
+          favorite: boolean | null
+          id: string
+          name: string
+          organization_id: string | null
+          servers_count: number | null
+          status: string | null
+          tags: string[] | null
+          tools_count: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          applications_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          favorite?: boolean | null
+          id?: string
+          name: string
+          organization_id?: string | null
+          servers_count?: number | null
+          status?: string | null
+          tags?: string[] | null
+          tools_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          applications_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          favorite?: boolean | null
           id?: string
           name?: string
-          description?: string | null
-          category?: string | null
-          status?: string
-          favorite?: boolean
-          servers_count?: number
-          applications_count?: number
-          agents_count?: number
-          tags?: string[]
-          user_id?: string
-          created_at?: string
-          updated_at?: string
+          organization_id?: string | null
+          servers_count?: number | null
+          status?: string | null
+          tags?: string[] | null
+          tools_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
         }
-      }
-      notifications: {
-        Row: {
-          id: string
-          user_id: string
-          title: string
-          message: string
-          type: string
-          read: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          title: string
-          message: string
-          type?: string
-          read?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          title?: string
-          message?: string
-          type?: string
-          read?: boolean
-          created_at?: string
-        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
-      projects_with_tools: {
-        Row: {
-          project_id: string
-          project_name: string
-          tool_id: string
-          tool_name: string
-          tool_category: string | null
-          tool_status: string
-          tool_favorite: boolean
-          tool_created_at: string
-          tool_updated_at: string
-        }
-      }
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
     }
     Enums: {
-      plan: {
-        free: "free"
-        basic: "basic"
-        premium: "premium"
-      }
-      project_status: {
-        active: "active"
-        archived: "archived"
-        deleted: "deleted"
-      }
-      application_status: {
-        active: "active"
-        archived: "archived"
-        deleted: "deleted"
-      }
-      ai_tool_status: {
-        active: "active"
-        archived: "archived"
-        deleted: "deleted"
-      }
-      notification_type: {
-        success: "success"
-        info: "info"
-        warning: "warning"
-        error: "error"
-      }
+      [_ in never]: never
     }
     CompositeTypes: {
-      project_with_tools: {
-        project_id: string
-        project_name: string
-        tool_id: string
-        tool_name: string
-        tool_category: string | null
-        tool_status: string
-        tool_favorite: boolean
-        tool_created_at: string
-        tool_updated_at: string
-      }
+      [_ in never]: never
     }
   }
 }
@@ -261,95 +262,95 @@ type PublicSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
   PublicTableNameOrOptions extends
-  | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
-  | { schema: keyof Database },
+    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+    | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-  ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-    Database[PublicTableNameOrOptions["schema"]]["Views"])
-  : never = never,
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
+    : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-    Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-  ? R
-  : never
+    ? R
+    : never
   : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-    PublicSchema["Views"])
-  ? (PublicSchema["Tables"] &
-    PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-      Row: infer R
-    }
-  ? R
-  : never
-  : never
+        PublicSchema["Views"])
+    ? (PublicSchema["Tables"] &
+        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
   PublicTableNameOrOptions extends
-  | keyof PublicSchema["Tables"]
-  | { schema: keyof Database },
+    | keyof PublicSchema["Tables"]
+    | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-  ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
+      Insert: infer I
+    }
+    ? I
+    : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-  ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
-  : never
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
   PublicTableNameOrOptions extends
-  | keyof PublicSchema["Tables"]
-  | { schema: keyof Database },
+    | keyof PublicSchema["Tables"]
+    | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-  ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Update: infer U
-  }
-  ? U
-  : never
+      Update: infer U
+    }
+    ? U
+    : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-  ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-    Update: infer U
-  }
-  ? U
-  : never
-  : never
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
 export type Enums<
   PublicEnumNameOrOptions extends
-  | keyof PublicSchema["Enums"]
-  | { schema: keyof Database },
+    | keyof PublicSchema["Enums"]
+    | { schema: keyof Database },
   EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
-  : never = never,
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
 > = PublicEnumNameOrOptions extends { schema: keyof Database }
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-  ? PublicSchema["Enums"][PublicEnumNameOrOptions]
-  : never
+    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof PublicSchema["CompositeTypes"]
-  | { schema: keyof Database },
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
   }
-  ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-  : never = never,
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-  ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -7,7 +8,8 @@ import {
   Search, 
   User,
   AtSign,
-  PlugZap
+  PlugZap,
+  Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +26,8 @@ import { useAuth } from '@/hooks/useAuth';
 
 export function TopNav() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const { signOut } = useAuth();
+  const { signOut, session } = useAuth();
+  const isAuthenticated = !!session.user;
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -53,6 +56,13 @@ export function TopNav() {
         </form>
 
         <div className="flex flex-1 items-center justify-end gap-4">
+          <Link to="/organizations">
+            <Button variant="ghost" className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              <span className="hidden md:inline">Organizations</span>
+            </Button>
+          </Link>
+          
           <Button variant="outline" size="icon">
             <a href="https://www.linkedin.com/comm/mynetwork/discovery-see-all?usecase=PEOPLE_FOLLOWS&followMember=adrianescutia" target="_blank">
               <PlugZap className="h-4 w-4" />
@@ -91,19 +101,32 @@ export function TopNav() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/profile">Profile</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/settings">Settings</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/teams">Teams</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut()}>
-                Log out
-              </DropdownMenuItem>
+              {isAuthenticated ? (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings">Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/organizations">Organizations</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut()}>
+                    Log out
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link to="/login">Sign In</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/register">Register</Link>
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
