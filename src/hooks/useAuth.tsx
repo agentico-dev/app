@@ -1,13 +1,13 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { AuthState, AuthUser, Profile } from '@/types/auth';
 import { useToast } from '@/components/ui/use-toast';
+import { Provider } from '@supabase/supabase-js';
 
 const AuthContext = createContext<{
   session: AuthState;
-  signIn: (provider: 'github' | 'google' | 'email', email?: string, password?: string) => Promise<void>;
+  signIn: (provider: Provider | 'email', email?: string, password?: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string, planId: string) => Promise<void>;
   signOut: () => Promise<void>;
 }>({
@@ -49,33 +49,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    if (error) {
-      console.error('Error fetching profile:', error);
+      if (error) {
+        console.error('Error fetching profile:', error);
+        setSession(prev => ({ ...prev, isLoading: false }));
+        return;
+      }
+
+      setSession(prev => ({
+        ...prev,
+        profile: data as Profile,
+        isLoading: false,
+      }));
+    } catch (error) {
+      console.error('Unexpected error fetching profile:', error);
       setSession(prev => ({ ...prev, isLoading: false }));
-      return;
     }
-
-    setSession(prev => ({
-      ...prev,
-      profile: data as Profile,
-      isLoading: false,
-    }));
   };
 
-  const signIn = async (provider: 'github' | 'google' | 'email', email?: string, password?: string) => {
+  const signIn = async (provider: Provider | 'email', email?: string, password?: string) => {
     try {
       if (provider === 'email' && email && password) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-      } else {
+      } else if (provider !== 'email') {
         const { error } = await supabase.auth.signInWithOAuth({
-          provider,
+          provider: provider as Provider,
           options: {
             redirectTo: `${window.location.origin}/auth/callback`,
           },
@@ -93,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string, planId: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -102,15 +107,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
         },
       });
+      
       if (error) throw error;
+      
+      if (data.user) {
+        // Update profile with selected plan
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ plan_id: planId })
+          .eq('id', data.user.id);
 
-      // Update profile with selected plan
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ plan_id: planId })
-        .eq('id', session.user?.id);
-
-      if (profileError) throw profileError;
+        if (profileError) throw profileError;
+      }
 
       toast({
         title: "Success!",

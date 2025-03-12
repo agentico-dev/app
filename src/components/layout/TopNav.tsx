@@ -1,12 +1,10 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Bell, 
-  CircuitBoard, 
   Moon, 
-  Search, 
+  CircuitBoard, 
   Sun, 
+  Search, 
   User,
   AtSign,
   PlugZap
@@ -21,11 +19,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { NotificationsPopover } from '@/components/notifications/NotificationsPopover';
+import { useAuth } from '@/hooks/useAuth';
 
 export function TopNav() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const { signOut } = useAuth();
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -66,18 +65,8 @@ export function TopNav() {
               <span className="sr-only">Contact Us</span>
             </a>
           </Button>
-          <Button variant="outline" size="icon" className="relative" asChild>
-            <Link to="/notifications">
-              <Bell className="h-4 w-4" />
-              <Badge
-                className="absolute -right-1 -top-1 h-4 w-4 rounded-full p-0"
-                variant="destructive"
-              >
-                3
-              </Badge>
-              <span className="sr-only">Notifications</span>
-            </Link>
-          </Button>
+          
+          <NotificationsPopover />
 
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
             {theme === 'light' ? (
@@ -112,7 +101,7 @@ export function TopNav() {
                 <Link to="/teams">Teams</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => signOut()}>
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,11 +14,19 @@ import Dashboard from "./pages/Dashboard";
 import ProjectsPage from "./pages/ProjectsPage";
 import AIToolsPage from "./pages/AIToolsPage";
 import ApplicationsPage from "./pages/ApplicationsPage";
+import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => {
   return (
@@ -45,8 +52,8 @@ const App = () => {
                   <Route path="/models" element={<ProjectsPage />} />
                   <Route path="/data" element={<ProjectsPage />} />
                   <Route path="/agents" element={<ProjectsPage />} />
-                  <Route path="/profile" element={<ProjectsPage />} />
-                  <Route path="/settings" element={<ProjectsPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/settings" element={<ProfilePage />} />
                 </Route>
                 
                 {/* Catch-all route */}
