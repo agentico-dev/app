@@ -12,6 +12,34 @@ import { useAuth } from '@/hooks/useAuth';
 import type { Plan } from '@/types/plans';
 import PlanSelector from '@/components/PlanSelector';
 
+// Mock plans data
+const mockPlans: Plan[] = [
+  {
+    id: 'free',
+    name: 'Free Plan',
+    description: 'For personal projects and small teams',
+    price: 0,
+    features: ['5 projects', '2 team members', 'Basic AI tools'],
+    active: true,
+  },
+  {
+    id: 'pro',
+    name: 'Pro Plan',
+    description: 'For growing teams and businesses',
+    price: 29,
+    features: ['Unlimited projects', '10 team members', 'Advanced AI tools', 'Priority support'],
+    active: true,
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    description: 'For large organizations',
+    price: 99,
+    features: ['Unlimited everything', 'Dedicated support', 'Custom integrations', 'Advanced security'],
+    active: true,
+  },
+];
+
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,14 +51,8 @@ export default function RegisterPage() {
   const { data: plans } = useQuery({
     queryKey: ['plans'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('plans')
-        .select('*')
-        .eq('active', true)
-        .order('price');
-      
-      if (error) throw error;
-      return data as Plan[];
+      // Using mock data instead of fetching from Supabase
+      return mockPlans;
     }
   });
 

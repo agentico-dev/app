@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell } from 'lucide-react';
@@ -9,7 +10,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, formatDistanceToNow } from 'date-fns';
 
@@ -22,6 +22,42 @@ interface Notification {
   created_at: string;
 }
 
+// Mock data for notifications
+const mockNotifications: Notification[] = [
+  {
+    id: '1',
+    title: 'New Project Created',
+    message: 'Your project "Customer Support Bot" was created successfully',
+    type: 'success',
+    read: false,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+  },
+  {
+    id: '2',
+    title: 'Server Restart',
+    message: 'Server "NLP-Processor-01" was restarted',
+    type: 'info',
+    read: false,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
+  },
+  {
+    id: '3',
+    title: 'Update Available',
+    message: 'A new version of the application is available',
+    type: 'warning',
+    read: true,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), // 8 hours ago
+  },
+  {
+    id: '4',
+    title: 'Deployment Failed',
+    message: 'Deployment of "Content Generation System" failed',
+    type: 'error',
+    read: true,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+  },
+];
+
 export function NotificationsPopover() {
   const [open, setOpen] = useState(false);
   const { session } = useAuth();
@@ -30,35 +66,18 @@ export function NotificationsPopover() {
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
-      if (!session.user) return [];
-      
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) {
-        console.error('Error fetching notifications:', error);
-        return [];
-      }
-
-      return data as Notification[];
+      // Using mock data instead of fetching from Supabase
+      return mockNotifications;
     },
-    enabled: !!session.user,
   });
 
   const unreadCount = notifications.filter(notification => !notification.read).length;
 
   const markAsRead = useMutation({
     mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
+      // Mock implementation instead of Supabase update
+      console.log(`Marking notification ${notificationId} as read`);
+      // In a real implementation, this would update the database
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -67,15 +86,9 @@ export function NotificationsPopover() {
 
   const markAllAsRead = useMutation({
     mutationFn: async () => {
-      if (!session.user) return;
-      
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('user_id', session.user.id)
-        .eq('read', false);
-
-      if (error) throw error;
+      // Mock implementation instead of Supabase update
+      console.log('Marking all notifications as read');
+      // In a real implementation, this would update the database
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });

@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -43,6 +42,19 @@ const profileFormSchema = z.object({
   company: z.string().optional(),
 });
 
+// Mock profile data
+const mockProfileData = {
+  id: '1',
+  full_name: 'John Doe',
+  email: 'john.doe@example.com',
+  bio: 'Frontend developer with a passion for UI/UX.',
+  job_title: 'Senior Developer',
+  company: 'Acme Inc.',
+  plan_id: 'pro',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+
 export default function ProfilePage() {
   const { session } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
@@ -52,61 +64,34 @@ export default function ProfilePage() {
   const { data: profileData, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
-      if (!session.user) return null;
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
-      }
-
-      return {
-        ...data,
-        email: session.user.email,
-      };
+      // Using mock data instead of fetching from Supabase
+      return mockProfileData;
     },
-    enabled: !!session.user,
   });
 
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      full_name: profileData?.full_name || '',
-      email: profileData?.email || '',
-      bio: profileData?.bio || '',
-      job_title: profileData?.job_title || '',
-      company: profileData?.company || '',
+      full_name: '',
+      email: '',
+      bio: '',
+      job_title: '',
+      company: '',
     },
-    values: {
-      full_name: profileData?.full_name || '',
-      email: profileData?.email || '',
-      bio: profileData?.bio || '',
-      job_title: profileData?.job_title || '',
-      company: profileData?.company || '',
-    },
+    values: profileData ? {
+      full_name: profileData.full_name || '',
+      email: profileData.email || '',
+      bio: profileData.bio || '',
+      job_title: profileData.job_title || '',
+      company: profileData.company || '',
+    } : undefined,
   });
 
   const updateProfile = useMutation({
     mutationFn: async (values: z.infer<typeof profileFormSchema>) => {
-      if (!session.user) throw new Error('User not authenticated');
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: values.full_name,
-          bio: values.bio,
-          job_title: values.job_title,
-          company: values.company,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', session.user.id);
-
-      if (error) throw error;
+      // Mock implementation instead of Supabase update
+      console.log('Updating profile with values:', values);
+      // In a real implementation, this would update the database
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
@@ -118,7 +103,7 @@ export default function ProfilePage() {
     onError: (error) => {
       toast({
         title: 'Error updating profile',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
         variant: 'destructive',
       });
     },

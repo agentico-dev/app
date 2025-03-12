@@ -1,9 +1,19 @@
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { AuthState, AuthUser, Profile } from '@/types/auth';
 import { useToast } from '@/components/ui/use-toast';
 import { Provider } from '@supabase/supabase-js';
+
+// Mock profile data
+const mockProfile: Profile = {
+  id: '1',
+  full_name: 'Demo User',
+  plan_id: 'pro',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+};
 
 const AuthContext = createContext<{
   session: AuthState;
@@ -50,21 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        setSession(prev => ({ ...prev, isLoading: false }));
-        return;
-      }
-
+      // Using mock profile data instead of fetching from Supabase
       setSession(prev => ({
         ...prev,
-        profile: data as Profile,
+        profile: mockProfile,
         isLoading: false,
       }));
     } catch (error) {
@@ -110,14 +109,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) throw error;
       
+      // Using console.log instead of database update for plan_id
       if (data.user) {
-        // Update profile with selected plan
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ plan_id: planId })
-          .eq('id', data.user.id);
-
-        if (profileError) throw profileError;
+        console.log(`User ${data.user.id} signed up with plan: ${planId}`);
+        // In a real implementation, this would update the database
       }
 
       toast({

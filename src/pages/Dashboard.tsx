@@ -5,8 +5,68 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowUpRight, BarChart3, Briefcase, CircuitBoard, Server, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+
+const recentProjects = [
+  {
+    id: '1',
+    name: 'Customer Support Bot',
+    tools_count: 8,
+    servers_count: 2,
+    status: 'Active',
+  },
+  {
+    id: '2',
+    name: 'Data Analysis Pipeline',
+    tools_count: 12,
+    servers_count: 4,
+    status: 'Active',
+  },
+  {
+    id: '3',
+    name: 'Content Generation System',
+    tools_count: 6,
+    servers_count: 2,
+    status: 'Development',
+  },
+  {
+    id: '4',
+    name: 'Recommendation Engine',
+    tools_count: 9,
+    servers_count: 3,
+    status: 'Maintenance',
+  },
+];
+
+const recentActivity = [
+  {
+    icon: CircuitBoard,
+    description: 'New AI Tool "Text Summarizer" was created',
+    time: '2 hours ago',
+  },
+  {
+    icon: Server,
+    description: 'Server "NLP-Processor-01" was restarted',
+    time: '4 hours ago',
+  },
+  {
+    icon: Users,
+    description: 'User "Alex Kim" was added to "Data Analysis Pipeline" project',
+    time: '6 hours ago',
+  },
+  {
+    icon: CircuitBoard,
+    description: 'Application "Customer Portal" deployed to production',
+    time: '1 day ago',
+  },
+];
+
+const mockStats = {
+  projects: { count: 12, trend: '+2 this month', trendUp: true },
+  applications: { count: 8, trend: '+1 this week', trendUp: true },
+  servers: { count: 23, trend: 'No change', trendUp: null },
+  aiTools: { count: 35, trend: '+5 this month', trendUp: true },
+};
 
 export function Dashboard() {
   const { session } = useAuth();
@@ -14,140 +74,25 @@ export function Dashboard() {
   const { data: projectsData, isLoading: projectsLoading } = useQuery({
     queryKey: ['dashboard', 'projects'],
     queryFn: async () => {
-      if (!session.user) return [];
-
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('updated_at', { ascending: false })
-        .limit(4);
-
-      if (error) {
-        console.error('Error fetching projects:', error);
-        return [];
-      }
-
-      return data;
+      return recentProjects;
     },
-    enabled: !!session.user,
   });
 
   const { data: activityData, isLoading: activityLoading } = useQuery({
     queryKey: ['dashboard', 'activity'],
     queryFn: async () => {
-      if (!session.user) return [];
-
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false })
-        .limit(4);
-
-      if (error) {
-        console.error('Error fetching activity:', error);
-        return [];
-      }
-
-      return data;
+      return recentActivity;
     },
-    enabled: !!session.user,
   });
 
   const { data: statsSummary, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboard', 'stats'],
     queryFn: async () => {
-      if (!session.user) return null;
-      
-      // For a real app, you would compute these on the server or use a stored procedure
-      // For now, we'll fetch the counts directly
-      
-      const projectsPromise = supabase
-        .from('projects')
-        .select('id', { count: 'exact' })
-        .eq('user_id', session.user.id);
-      
-      const applicationsPromise = supabase
-        .from('applications')
-        .select('id', { count: 'exact' })
-        .eq('user_id', session.user.id);
-      
-      const serversPromise = supabase
-        .from('servers')
-        .select('id', { count: 'exact' })
-        .eq('user_id', session.user.id);
-      
-      const aiToolsPromise = supabase
-        .from('ai_tools')
-        .select('id', { count: 'exact' })
-        .eq('user_id', session.user.id);
-      
-      const [
-        projectsResult, 
-        applicationsResult,
-        serversResult,
-        aiToolsResult
-      ] = await Promise.all([
-        projectsPromise,
-        applicationsPromise,
-        serversPromise,
-        aiToolsPromise
-      ]);
-      
-      // Handle potential errors
-      if (projectsResult.error || applicationsResult.error || 
-          serversResult.error || aiToolsResult.error) {
-        console.error('Error fetching stats:', {
-          projectsError: projectsResult.error,
-          applicationsError: applicationsResult.error,
-          serversError: serversResult.error,
-          aiToolsError: aiToolsResult.error
-        });
-        
-        // Return mock data as fallback
-        return {
-          projects: { count: 12, trend: '+2 this month', trendUp: true },
-          applications: { count: 8, trend: '+1 this week', trendUp: true },
-          servers: { count: 23, trend: 'No change', trendUp: null },
-          aiTools: { count: 35, trend: '+5 this month', trendUp: true },
-        };
-      }
-      
-      return {
-        projects: { 
-          count: projectsResult.count || 0, 
-          trend: '+2 this month', 
-          trendUp: true 
-        },
-        applications: { 
-          count: applicationsResult.count || 0, 
-          trend: '+1 this week', 
-          trendUp: true 
-        },
-        servers: { 
-          count: serversResult.count || 0, 
-          trend: 'No change', 
-          trendUp: null 
-        },
-        aiTools: { 
-          count: aiToolsResult.count || 0, 
-          trend: '+5 this month', 
-          trendUp: true 
-        },
-      };
+      return mockStats;
     },
-    enabled: !!session.user,
   });
 
-  // Fallback data in case of loading or error
-  const stats = statsLoading || !statsSummary ? {
-    projects: { count: 12, trend: '+2 this month', trendUp: true },
-    applications: { count: 8, trend: '+1 this week', trendUp: true },
-    servers: { count: 23, trend: 'No change', trendUp: null },
-    aiTools: { count: 35, trend: '+5 this month', trendUp: true },
-  } : statsSummary;
-
+  const stats = statsLoading || !statsSummary ? mockStats : statsSummary;
   const projects = projectsLoading || !projectsData ? recentProjects : projectsData;
   const activity = activityLoading || !activityData ? recentActivity : activityData.map(notification => {
     const getIcon = () => {
@@ -316,60 +261,5 @@ function MetricCard({ title, value, description, icon: Icon, trend, trendUp }: M
     </Card>
   );
 }
-
-// Fallback data
-const recentProjects = [
-  {
-    id: '1',
-    name: 'Customer Support Bot',
-    tools_count: 8,
-    servers_count: 2,
-    status: 'Active',
-  },
-  {
-    id: '2',
-    name: 'Data Analysis Pipeline',
-    tools_count: 12,
-    servers_count: 4,
-    status: 'Active',
-  },
-  {
-    id: '3',
-    name: 'Content Generation System',
-    tools_count: 6,
-    servers_count: 2,
-    status: 'Development',
-  },
-  {
-    id: '4',
-    name: 'Recommendation Engine',
-    tools_count: 9,
-    servers_count: 3,
-    status: 'Maintenance',
-  },
-];
-
-const recentActivity = [
-  {
-    icon: CircuitBoard,
-    description: 'New AI Tool "Text Summarizer" was created',
-    time: '2 hours ago',
-  },
-  {
-    icon: Server,
-    description: 'Server "NLP-Processor-01" was restarted',
-    time: '4 hours ago',
-  },
-  {
-    icon: Users,
-    description: 'User "Alex Kim" was added to "Data Analysis Pipeline" project',
-    time: '6 hours ago',
-  },
-  {
-    icon: CircuitBoard,
-    description: 'Application "Customer Portal" deployed to production',
-    time: '1 day ago',
-  },
-];
 
 export default Dashboard;
