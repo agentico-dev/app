@@ -71,7 +71,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           full_name: data.full_name,
           plan_id: data.plan_id,
           created_at: data.created_at,
-          updated_at: data.updated_at
+          updated_at: data.updated_at,
+          bio: data.bio || null,
+          job_title: data.job_title || null,
+          company: data.company || null
         };
 
         setSession(prev => ({

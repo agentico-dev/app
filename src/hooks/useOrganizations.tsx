@@ -17,7 +17,7 @@ export function useOrganizations() {
     queryKey: ['organizations'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('organizations')
+        .rpc('list_organizations')
         .select('*')
         .order('name');
       
@@ -33,18 +33,11 @@ export function useOrganizations() {
       if (!session.user) return [];
       
       const { data, error } = await supabase
-        .from('organization_members')
-        .select(`
-          *,
-          organizations:organization_id(*)
-        `)
-        .eq('user_id', session.user.id);
+        .rpc('list_user_organizations', { user_id: session.user.id })
+        .select('*');
       
       if (error) throw error;
-      return data.map(item => ({
-        ...item.organizations,
-        role: item.role,
-      }));
+      return data as (Organization & { role: string })[];
     },
     enabled: isAuthenticated,
   });
@@ -56,12 +49,11 @@ export function useOrganizations() {
       
       // Create the organization
       const { data: org, error: orgError } = await supabase
-        .from('organizations')
-        .insert({
-          name: orgData.name,
-          slug: orgData.slug || orgData.name?.toLowerCase().replace(/\s+/g, '-'),
-          description: orgData.description || null,
-          logo_url: orgData.logo_url || null,
+        .rpc('create_organization', {
+          org_name: orgData.name || '',
+          org_slug: orgData.slug || orgData.name?.toLowerCase().replace(/\s+/g, '-') || '',
+          org_description: orgData.description || null,
+          org_logo_url: orgData.logo_url || null
         })
         .select()
         .single();
@@ -70,11 +62,10 @@ export function useOrganizations() {
       
       // Add current user as owner
       const { error: memberError } = await supabase
-        .from('organization_members')
-        .insert({
-          organization_id: org.id,
-          user_id: session.user.id,
-          role: 'owner',
+        .rpc('add_organization_member', {
+          org_id: org.id,
+          member_id: session.user.id,
+          member_role: 'owner'
         });
       
       if (memberError) throw memberError;
@@ -121,9 +112,8 @@ export function useOrganizationMembers(organizationId?: string) {
       if (!organizationId) return [];
       
       const { data, error } = await supabase
-        .from('organization_members')
-        .select('*')
-        .eq('organization_id', organizationId);
+        .rpc('list_organization_members', { org_id: organizationId })
+        .select('*');
       
       if (error) throw error;
       return data as OrganizationMember[];
@@ -136,23 +126,21 @@ export function useOrganizationMembers(organizationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       if (!organizationId) throw new Error('Organization ID is required');
       
-      // This is simplified - in a real app you'd need to first find the user by email
-      // Then add them to the organization
+      // For a real implementation, we'd need to:
+      // 1. Find user by email
+      // 2. Add them to the organization
       
-      // For demo purposes, we'll add a mock member
-      const mockUserId = 'mock-user-id';
-      
+      // Call the RPC function to add a member
       const { data, error } = await supabase
-        .from('organization_members')
-        .insert({
-          organization_id: organizationId,
-          user_id: mockUserId,
-          role,
+        .rpc('add_member_by_email', {
+          org_id: organizationId,
+          member_email: email,
+          member_role: role
         })
         .select();
       
       if (error) throw error;
-      return data[0];
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organization-members'] });

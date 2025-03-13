@@ -1,390 +1,408 @@
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Shield, User, Key, CreditCard, Mail, LogOut } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import PlanSelector from '@/components/PlanSelector';
+import { PLAN_DATA } from '@/types/plans';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
+import { AlertCircle, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-const profileFormSchema = z.object({
-  full_name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email.",
-  }),
-  bio: z.string().optional(),
-  job_title: z.string().optional(),
-  company: z.string().optional(),
-});
-
-export default function ProfilePage() {
+function ProfilePage() {
   const { session, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState('profile');
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const { data: profileData, isLoading } = useQuery({
-    queryKey: ['profile'],
-    queryFn: async () => {
-      // Only proceed if user is authenticated
-      if (!session.user) {
-        return null;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('Error fetching profile data:', error);
-        return null;
-      }
-    },
-    enabled: !!session.user,
+  const navigate = useNavigate();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [profileData, setProfileData] = useState({
+    full_name: '',
+    bio: '',
+    job_title: '',
+    company: '',
   });
-
-  const form = useForm<z.infer<typeof profileFormSchema>>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      full_name: '',
-      email: '',
-      bio: '',
-      job_title: '',
-      company: '',
-    },
-    values: profileData && session.user ? {
-      full_name: profileData.full_name || '',
-      email: session.user.email || '',
-      bio: profileData.bio || '',
-      job_title: profileData.job_title || '',
-      company: profileData.company || '',
-    } : undefined,
+  const [passwordData, setPasswordData] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: '',
   });
+  const [passwordError, setPasswordError] = useState('');
 
-  const updateProfile = useMutation({
-    mutationFn: async (values: z.infer<typeof profileFormSchema>) => {
-      if (!session.user) throw new Error('Not authenticated');
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: values.full_name,
-          bio: values.bio,
-          job_title: values.job_title,
-          company: values.company,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', session.user.id);
+  // Get current plan
+  const currentPlan = session.profile?.plan_id 
+    ? PLAN_DATA.find((plan) => plan.id === session.profile.plan_id) 
+    : PLAN_DATA[0];
 
-      if (error) throw error;
-      return true;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile has been updated successfully.',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error updating profile',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const onSubmit = (values: z.infer<typeof profileFormSchema>) => {
-    updateProfile.mutate(values);
-  };
-
-  const handleLogout = async () => {
-    await signOut();
-  };
-
-  if (isLoading || !profileData) {
+  // Handle loading and authentication state
+  if (session.isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <h1 className="text-3xl font-bold">Profile</h1>
-        <div className="animate-pulse space-y-4">
-          <div className="h-32 bg-muted rounded"></div>
-          <div className="h-12 bg-muted rounded"></div>
-          <div className="h-40 bg-muted rounded"></div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-6 h-6 border-t-2 border-blue-500 rounded-full animate-spin"></div>
+        <span className="ml-2">Loading...</span>
       </div>
     );
   }
 
-  const userInitials = profileData.full_name
-    ? profileData.full_name.split(' ').map(n => n[0]).join('').toUpperCase()
-    : session.user?.email?.charAt(0).toUpperCase() || 'U';
+  if (!session.user) {
+    navigate('/login');
+    return null;
+  }
+
+  // Load profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user?.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching profile:", error);
+          return;
+        }
+
+        if (data) {
+          setProfileData({
+            full_name: data.full_name || '',
+            bio: data.bio || '',
+            job_title: data.job_title || '',
+            company: data.company || '',
+          });
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+
+    if (session.user) {
+      fetchProfile();
+    }
+  }, [session.user]);
+
+  const handleProfileUpdate = async () => {
+    if (!session.user) return;
+
+    setIsUpdating(true);
+    try {
+      // Update the profile in the database
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: profileData.full_name,
+          bio: profileData.bio,
+          job_title: profileData.job_title,
+          company: profileData.company,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', session.user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    setPasswordError('');
+    
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      setPasswordError("New passwords don't match");
+      return;
+    }
+
+    if (passwordData.new_password.length < 6) {
+      setPasswordError("New password must be at least 6 characters");
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      // First verify the current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: session.user?.email || '',
+        password: passwordData.current_password,
+      });
+
+      if (signInError) {
+        setPasswordError("Current password is incorrect");
+        return;
+      }
+
+      // Update the password
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.new_password,
+      });
+
+      if (error) throw error;
+
+      // Clear the form
+      setPasswordData({
+        current_password: '',
+        new_password: '',
+        confirm_password: '',
+      });
+
+      toast({
+        title: "Password updated",
+        description: "Your password has been updated successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // In a real app, you'd need a secure server-side endpoint to handle this
+      // This is a simplified version that only works with RLS properly set up
+      const { error } = await supabase.rpc('delete_user_account');
+      
+      if (error) throw error;
+
+      await signOut();
+      navigate('/');
+      
+      toast({
+        title: "Account deleted",
+        description: "Your account has been deleted successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Deletion failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
-          <p className="text-muted-foreground">
-            Manage your account settings and preferences
-          </p>
-        </div>
-        <Button variant="outline" onClick={handleLogout} className="gap-2">
-          <LogOut className="h-4 w-4" />
-          Log out
+    <div className="container py-10 max-w-5xl">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
+        <Button variant="outline" onClick={signOut} className="ml-auto">
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign out
         </Button>
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="profile">
-            <User className="h-4 w-4 mr-2" />
-            Profile
-          </TabsTrigger>
-          <TabsTrigger value="account">
-            <Shield className="h-4 w-4 mr-2" />
-            Account
-          </TabsTrigger>
-          <TabsTrigger value="security">
-            <Key className="h-4 w-4 mr-2" />
-            Security
-          </TabsTrigger>
-          <TabsTrigger value="billing">
-            <CreditCard className="h-4 w-4 mr-2" />
-            Billing
-          </TabsTrigger>
+      
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="plan">Plan</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="profile" className="space-y-6">
+        
+        <TabsContent value="profile">
           <Card>
             <CardHeader>
               <CardTitle>Profile Information</CardTitle>
               <CardDescription>
-                Update your profile information and personal details
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-4 mb-6">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src="" alt={profileData.full_name || ''} />
-                  <AvatarFallback className="text-lg">{userInitials}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <Button variant="outline" size="sm">
-                    Change Avatar
-                  </Button>
-                </div>
-              </div>
-
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="full_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Your name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <div className="flex">
-                            <Input disabled {...field} />
-                            <Button type="button" variant="ghost" className="ml-2">
-                              <Mail className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          Your email address is managed through your account settings.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="bio"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bio</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Tell us about yourself" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="job_title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Job Title</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Your job title" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="company"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Company</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Your company" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="flex justify-end">
-                    <Button type="submit" disabled={updateProfile.isPending}>
-                      {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="account" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Settings</CardTitle>
-              <CardDescription>
-                Manage your account preferences and settings
+                Update your account profile information.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <h3 className="text-lg font-medium">Account Type</h3>
-                <p className="text-muted-foreground">
-                  Your account is on the {profileData.plan_id || 'Free'} plan
-                </p>
+                <Label htmlFor="name">Full Name</Label>
+                <Input 
+                  id="name" 
+                  value={profileData.full_name} 
+                  onChange={(e) => setProfileData({...profileData, full_name: e.target.value})}
+                />
               </div>
-              <Separator />
+              
               <div className="space-y-2">
-                <h3 className="text-lg font-medium">Connected Accounts</h3>
-                <p className="text-muted-foreground">
-                  No connected accounts
-                </p>
-                <div className="flex flex-col gap-2 mt-2">
-                  <Button variant="outline">Connect Google</Button>
-                  <Button variant="outline">Connect GitHub</Button>
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea 
+                  id="bio" 
+                  value={profileData.bio} 
+                  onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+                  placeholder="Tell us a bit about yourself"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="job">Job Title</Label>
+                  <Input 
+                    id="job" 
+                    value={profileData.job_title} 
+                    onChange={(e) => setProfileData({...profileData, job_title: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company</Label>
+                  <Input 
+                    id="company" 
+                    value={profileData.company} 
+                    onChange={(e) => setProfileData({...profileData, company: e.target.value})}
+                  />
                 </div>
               </div>
             </CardContent>
+            <CardFooter>
+              <Button onClick={handleProfileUpdate} disabled={isUpdating}>
+                {isUpdating ? 'Updating...' : 'Update profile'}
+              </Button>
+            </CardFooter>
           </Card>
         </TabsContent>
-
-        <TabsContent value="security" className="space-y-6">
+        
+        <TabsContent value="security">
           <Card>
             <CardHeader>
               <CardTitle>Security Settings</CardTitle>
               <CardDescription>
-                Manage your security preferences and settings
+                Manage your account credentials and security settings.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <h3 className="text-lg font-medium">Change Password</h3>
-                <div className="grid gap-2">
-                  <div className="grid gap-1">
-                    <label htmlFor="current-password">Current Password</label>
-                    <Input id="current-password" type="password" />
+                <Label htmlFor="email">Email Address</Label>
+                <Input id="email" value={session.user?.email} disabled />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Your email address is used for login and communications.
+                </p>
+              </div>
+              
+              <Separator className="my-4" />
+              
+              <div>
+                <h3 className="font-medium mb-2">Change Password</h3>
+                {passwordError && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{passwordError}</AlertDescription>
+                  </Alert>
+                )}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="current-password">Current Password</Label>
+                    <Input 
+                      id="current-password" 
+                      type="password"
+                      value={passwordData.current_password}
+                      onChange={(e) => setPasswordData({...passwordData, current_password: e.target.value})}
+                    />
                   </div>
-                  <div className="grid gap-1">
-                    <label htmlFor="new-password">New Password</label>
-                    <Input id="new-password" type="password" />
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input 
+                      id="new-password" 
+                      type="password"
+                      value={passwordData.new_password}
+                      onChange={(e) => setPasswordData({...passwordData, new_password: e.target.value})}
+                    />
                   </div>
-                  <div className="grid gap-1">
-                    <label htmlFor="confirm-password">Confirm Password</label>
-                    <Input id="confirm-password" type="password" />
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm New Password</Label>
+                    <Input 
+                      id="confirm-password" 
+                      type="password"
+                      value={passwordData.confirm_password}
+                      onChange={(e) => setPasswordData({...passwordData, confirm_password: e.target.value})}
+                    />
                   </div>
-                  <Button className="w-full">Change Password</Button>
                 </div>
               </div>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button 
+                variant="outline" 
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Account'}
+              </Button>
+              <Button onClick={handlePasswordChange} disabled={isUpdating}>
+                {isUpdating ? 'Updating...' : 'Change Password'}
+              </Button>
+            </CardFooter>
           </Card>
         </TabsContent>
-
-        <TabsContent value="billing" className="space-y-6">
+        
+        <TabsContent value="plan">
           <Card>
             <CardHeader>
-              <CardTitle>Billing Information</CardTitle>
+              <CardTitle>Plan Settings</CardTitle>
               <CardDescription>
-                Manage your billing information and subscription
+                Manage your subscription plan and billing.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">Current Plan</h3>
-                <p className="text-muted-foreground">
-                  You are on the {profileData.plan_id || 'Free'} plan
-                </p>
-                <Button variant="outline">Upgrade Plan</Button>
-              </div>
-              <Separator />
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">Payment Method</h3>
-                <p className="text-muted-foreground">
-                  No payment method added
-                </p>
-                <Button variant="outline">Add Payment Method</Button>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium mb-2">Current Plan</h3>
+                  <div className="p-4 border rounded-md bg-muted/50">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-semibold text-lg">{currentPlan?.name}</h4>
+                        <p className="text-sm text-muted-foreground">{currentPlan?.description}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">${currentPlan?.price}/month</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <Separator className="my-4" />
+                
+                <div>
+                  <h3 className="font-medium mb-4">Change Plan</h3>
+                  <PlanSelector
+                    onSelectPlan={(planId) => toast({
+                      title: "Plan selected",
+                      description: `You selected the ${PLAN_DATA.find(p => p.id === planId)?.name} plan`,
+                    })}
+                    selectedPlanId={session.profile?.plan_id}
+                  />
+                </div>
               </div>
             </CardContent>
+            <CardFooter>
+              <Button variant="outline">Cancel Subscription</Button>
+              <Button className="ml-auto">Update Plan</Button>
+            </CardFooter>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
+export default ProfilePage;

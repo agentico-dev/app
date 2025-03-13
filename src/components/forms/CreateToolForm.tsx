@@ -54,17 +54,14 @@ export function CreateToolForm() {
       setIsLoadingOrgs(true);
       try {
         const { data, error } = await supabase
-          .from('organization_members')
-          .select(`
-            organizations:organization_id(id, name)
-          `)
-          .eq('user_id', session.user.id);
+          .rpc('list_user_organizations', { user_id: session.user.id })
+          .select('*');
         
         if (error) throw error;
         
         const orgs = data.map(item => ({
-          id: item.organizations.id,
-          name: item.organizations.name
+          id: item.id,
+          name: item.name
         }));
         
         setOrganizations(orgs);
