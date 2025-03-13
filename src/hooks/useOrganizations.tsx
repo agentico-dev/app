@@ -16,8 +16,9 @@ export function useOrganizations() {
   const { data: organizations, isLoading, error } = useQuery({
     queryKey: ['organizations'],
     queryFn: async () => {
+      // Use from('api.organizations') instead of rpc
       const { data, error } = await supabase
-        .rpc('list_organizations')
+        .from('api.organizations')
         .select('*')
         .order('name');
       
@@ -32,12 +33,22 @@ export function useOrganizations() {
     queryFn: async () => {
       if (!session.user) return [];
       
+      // Join organizations and organization_members
       const { data, error } = await supabase
-        .rpc('list_user_organizations', { user_id: session.user.id })
-        .select('*');
+        .from('api.organization_members')
+        .select(`
+          role,
+          organization:organization_id (*)
+        `)
+        .eq('user_id', session.user.id);
       
       if (error) throw error;
-      return data as (Organization & { role: string })[];
+      
+      // Transform the data to match the expected format
+      return data.map(item => ({
+        ...item.organization,
+        role: item.role
+      })) as (Organization & { role: string })[];
     },
     enabled: isAuthenticated,
   });
@@ -49,11 +60,12 @@ export function useOrganizations() {
       
       // Create the organization
       const { data: org, error: orgError } = await supabase
-        .rpc('create_organization', {
-          org_name: orgData.name || '',
-          org_slug: orgData.slug || orgData.name?.toLowerCase().replace(/\s+/g, '-') || '',
-          org_description: orgData.description || null,
-          org_logo_url: orgData.logo_url || null
+        .from('api.organizations')
+        .insert({
+          name: orgData.name || '',
+          slug: orgData.slug || orgData.name?.toLowerCase().replace(/\s+/g, '-') || '',
+          description: orgData.description || null,
+          logo_url: orgData.logo_url || null
         })
         .select()
         .single();
@@ -62,10 +74,11 @@ export function useOrganizations() {
       
       // Add current user as owner
       const { error: memberError } = await supabase
-        .rpc('add_organization_member', {
-          org_id: org.id,
-          member_id: session.user.id,
-          member_role: 'owner'
+        .from('api.organization_members')
+        .insert({
+          organization_id: org.id,
+          user_id: session.user.id,
+          role: 'owner'
         });
       
       if (memberError) throw memberError;
@@ -112,8 +125,9 @@ export function useOrganizationMembers(organizationId?: string) {
       if (!organizationId) return [];
       
       const { data, error } = await supabase
-        .rpc('list_organization_members', { org_id: organizationId })
-        .select('*');
+        .from('api.organization_members')
+        .select('*')
+        .eq('organization_id', organizationId);
       
       if (error) throw error;
       return data as OrganizationMember[];
@@ -126,12 +140,22 @@ export function useOrganizationMembers(organizationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       if (!organizationId) throw new Error('Organization ID is required');
       
-      // Call the RPC function to add a member by email
+      // First, get the user ID from the email
+      const { data: userData, error: userError } = await supabase
+        .from('auth.users')
+        .select('id')
+        .eq('email', email)
+        .single();
+      
+      if (userError) throw new Error('User not found');
+      
+      // Then add the member
       const { data, error } = await supabase
-        .rpc('add_member_by_email', {
-          org_id: organizationId,
-          member_email: email,
-          member_role: role
+        .from('api.organization_members')
+        .insert({
+          organization_id: organizationId,
+          user_id: userData.id,
+          role: role
         })
         .select();
       

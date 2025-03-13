@@ -17,7 +17,7 @@ export function useServers() {
     queryKey: ['servers'],
     queryFn: async () => {
       let query = supabase
-        .from('servers')
+        .from('api.servers')
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -34,12 +34,12 @@ export function useServers() {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
-        .from('servers')
+        .from('api.servers')
         .insert({
           name: serverData.name,
           description: serverData.description,
           type: serverData.type || 'Standard',
-          status: serverData.status || 'Development',
+          status: serverData.status || 'development',
           organization_id: serverData.organization_id,
           user_id: session.user.id,
           tags: serverData.tags || [],
@@ -72,7 +72,7 @@ export function useServers() {
       if (!session.user) throw new Error('Authentication required');
       
       const { data: updatedServer, error } = await supabase
-        .from('servers')
+        .from('api.servers')
         .update({
           name: data.name,
           description: data.description,
@@ -110,7 +110,7 @@ export function useServers() {
       if (!session.user) throw new Error('Authentication required');
       
       const { error } = await supabase
-        .from('servers')
+        .from('api.servers')
         .delete()
         .eq('id', id);
       
@@ -139,7 +139,7 @@ export function useServers() {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
-        .from('servers')
+        .from('api.servers')
         .update({ favorite })
         .eq('id', id)
         .select()
@@ -182,7 +182,7 @@ export function useServer(id?: string) {
       if (!id) return null;
       
       const { data, error } = await supabase
-        .from('servers')
+        .from('api.servers')
         .select('*')
         .eq('id', id)
         .single();
