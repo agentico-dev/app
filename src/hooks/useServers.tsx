@@ -16,7 +16,7 @@ export function useServers() {
   const { data: servers, isLoading, error } = useQuery({
     queryKey: ['servers'],
     queryFn: async () => {
-      const query = supabase
+      let query = supabase
         .from('servers')
         .select('*')
         .order('created_at', { ascending: false });
@@ -82,7 +82,6 @@ export function useServers() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
-        .eq('user_id', session.user.id)
         .select()
         .single();
       
@@ -113,8 +112,7 @@ export function useServers() {
       const { error } = await supabase
         .from('servers')
         .delete()
-        .eq('id', id)
-        .eq('user_id', session.user.id);
+        .eq('id', id);
       
       if (error) throw error;
       return id;
@@ -144,7 +142,6 @@ export function useServers() {
         .from('servers')
         .update({ favorite })
         .eq('id', id)
-        .eq('user_id', session.user.id)
         .select()
         .single();
       

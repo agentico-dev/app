@@ -12,7 +12,7 @@ export function useOrganizations() {
   
   const isAuthenticated = !!session.user;
 
-  // Fetch all organizations (available to anonymous users)
+  // Fetch all organizations (only public and global ones for anonymous users)
   const { data: organizations, isLoading, error } = useQuery({
     queryKey: ['organizations'],
     queryFn: async () => {
@@ -126,11 +126,7 @@ export function useOrganizationMembers(organizationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       if (!organizationId) throw new Error('Organization ID is required');
       
-      // For a real implementation, we'd need to:
-      // 1. Find user by email
-      // 2. Add them to the organization
-      
-      // Call the RPC function to add a member
+      // Call the RPC function to add a member by email
       const { data, error } = await supabase
         .rpc('add_member_by_email', {
           org_id: organizationId,

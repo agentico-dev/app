@@ -26,15 +26,13 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     queryKey: ['tags'],
     queryFn: async () => {
       try {
-        // This is a placeholder - in a real implementation, we would query the tags table
-        // For now, let's return some mock data
-        return [
-          { id: '1', name: 'API', category: 'type' },
-          { id: '2', name: 'Integration', category: 'type' },
-          { id: '3', name: 'Important', category: 'priority' },
-          { id: '4', name: 'Frontend', category: 'area' },
-          { id: '5', name: 'Backend', category: 'area' },
-        ];
+        const { data, error } = await supabase
+          .from('tags')
+          .select('*')
+          .order('name');
+        
+        if (error) throw error;
+        return data as Tag[];
       } catch (err) {
         console.error('Error fetching tags:', err);
         setError(err instanceof Error ? err : new Error('Failed to fetch tags'));
@@ -51,14 +49,14 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addTag = async (tag: Omit<Tag, 'id'>): Promise<Tag | null> => {
     try {
-      // This would be implemented to insert a new tag into the database
-      // For now, just return a mock response
-      const newTag: Tag = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: tag.name,
-        category: tag.category
-      };
-      return newTag;
+      const { data, error } = await supabase
+        .from('tags')
+        .insert(tag)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Tag;
     } catch (err) {
       console.error('Error adding tag:', err);
       toast({
@@ -72,7 +70,12 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const deleteTag = async (tagId: string): Promise<boolean> => {
     try {
-      // This would be implemented to delete a tag from the database
+      const { error } = await supabase
+        .from('tags')
+        .delete()
+        .eq('id', tagId);
+      
+      if (error) throw error;
       return true;
     } catch (err) {
       console.error('Error deleting tag:', err);
@@ -91,7 +94,16 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     tagId: string
   ): Promise<boolean> => {
     try {
-      // This would be implemented to assign a tag to a resource
+      const { data, error } = await supabase
+        .from('resource_tags')
+        .insert({
+          resource_type: resourceType,
+          resource_id: resourceId,
+          tag_id: tagId
+        })
+        .select();
+      
+      if (error) throw error;
       return true;
     } catch (err) {
       console.error('Error assigning tag:', err);
@@ -110,7 +122,16 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     tagId: string
   ): Promise<boolean> => {
     try {
-      // This would be implemented to remove a tag from a resource
+      const { error } = await supabase
+        .from('resource_tags')
+        .delete()
+        .match({
+          resource_type: resourceType,
+          resource_id: resourceId,
+          tag_id: tagId
+        });
+      
+      if (error) throw error;
       return true;
     } catch (err) {
       console.error('Error removing tag:', err);
@@ -125,9 +146,16 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const getResourceTags = async (resourceType: string, resourceId: string): Promise<Tag[]> => {
     try {
-      // This would be implemented to get tags for a specific resource
-      // For now, just return a subset of the mock tags
-      return tags.slice(0, 2);
+      const { data, error } = await supabase
+        .from('resource_tags')
+        .select(`
+          tags:tag_id (*)
+        `)
+        .eq('resource_type', resourceType)
+        .eq('resource_id', resourceId);
+      
+      if (error) throw error;
+      return data?.map(item => item.tags) || [];
     } catch (err) {
       console.error('Error fetching resource tags:', err);
       toast({
