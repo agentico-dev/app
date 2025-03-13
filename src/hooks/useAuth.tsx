@@ -1,18 +1,10 @@
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { AuthState, AuthUser, Profile } from '@/types/auth';
 import { useToast } from '@/components/ui/use-toast';
 import { Provider } from '@supabase/supabase-js';
-
-// Mock profile data
-const mockProfile: Profile = {
-  id: '1',
-  full_name: 'Demo User',
-  plan_id: 'pro',
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString()
-};
 
 const AuthContext = createContext<{
   session: AuthState;
@@ -59,20 +51,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
+      // Fetch from the profiles table in the api schema
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
       
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching profile:', error);
+        setSession(prev => ({ ...prev, isLoading: false }));
+        return;
       }
 
       if (data) {
+        // Cast the data to Profile type to ensure proper typing
+        const profile: Profile = {
+          id: data.id,
+          full_name: data.full_name,
+          plan_id: data.plan_id,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+
         setSession(prev => ({
           ...prev,
-          profile: data,
+          profile,
           isLoading: false,
         }));
       } else {
@@ -127,7 +131,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "Your account has been created. You can now sign in.",
       });
       
-      return data;
+      // Return void to match the function signature
+      return;
     } catch (error: any) {
       toast({
         title: "Error signing up",
@@ -142,7 +147,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      // Clear local session state
+      setSession({ user: null, profile: null, isLoading: false });
+      
+      // Navigate to login page
       navigate('/login');
+      
+      toast({
+        title: "Successfully signed out",
+        description: "You have been logged out of your account.",
+      });
     } catch (error: any) {
       toast({
         title: "Error signing out",

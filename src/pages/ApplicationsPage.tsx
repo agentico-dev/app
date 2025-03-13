@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
-import { Plus, Shield } from 'lucide-react';
+import { Plus, Shield, LogOut } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { Application, ApplicationStatus } from '@/types/application';
 import { FilterControls } from '@/components/applications/FilterControls';
@@ -16,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 export function ApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const { session } = useAuth();
+  const { session, signOut } = useAuth();
   const isAuthenticated = !!session.user;
 
   // Query to fetch applications from Supabase
@@ -55,7 +54,8 @@ export function ApplicationsPage() {
         });
         return [];
       }
-    }
+    },
+    enabled: isAuthenticated
   });
 
   // Filter applications based on search query and active filter
@@ -72,6 +72,10 @@ export function ApplicationsPage() {
     return matchesSearch;
   });
 
+  const handleLogout = async () => {
+    await signOut();
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -81,21 +85,30 @@ export function ApplicationsPage() {
             Manage your external API interfaces and applications
           </p>
         </div>
-        <Button asChild>
-          <Link to={isAuthenticated ? "/applications/new" : "/login"}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Application
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild>
+            <Link to={isAuthenticated ? "/applications/new" : "/login"}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Application
+            </Link>
+          </Button>
+          {isAuthenticated && (
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Log out
+            </Button>
+          )}
+        </div>
       </div>
-        {!isAuthenticated && (
-          <Alert variant="default" className="bg-amber-50 border-amber-200">
-            <Shield className="h-4 w-4 text-amber-500" />
-            <AlertDescription>
-              You are currently in limited access mode. Some features may be restricted.
-            </AlertDescription>
-          </Alert>
-        )}
+      
+      {!isAuthenticated && (
+        <Alert variant="default" className="bg-amber-50 border-amber-200">
+          <Shield className="h-4 w-4 text-amber-500" />
+          <AlertDescription>
+            You are currently in limited access mode. Some features may be restricted.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <FilterControls 
         searchQuery={searchQuery}

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -28,7 +29,8 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Shield, User, Key, CreditCard, Mail } from 'lucide-react';
+import { Shield, User, Key, CreditCard, Mail, LogOut } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const profileFormSchema = z.object({
   full_name: z.string().min(2, {
@@ -42,21 +44,8 @@ const profileFormSchema = z.object({
   company: z.string().optional(),
 });
 
-// Mock profile data
-const mockProfileData = {
-  id: '1',
-  full_name: 'John Doe',
-  email: 'john.doe@example.com',
-  bio: 'Frontend developer with a passion for UI/UX.',
-  job_title: 'Senior Developer',
-  company: 'Acme Inc.',
-  plan_id: 'pro',
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
-
 export default function ProfilePage() {
-  const { session } = useAuth();
+  const { session, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -64,9 +53,26 @@ export default function ProfilePage() {
   const { data: profileData, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
-      // Using mock data instead of fetching from Supabase
-      return mockProfileData;
+      // Only proceed if user is authenticated
+      if (!session.user) {
+        return null;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+        return null;
+      }
     },
+    enabled: !!session.user,
   });
 
   const form = useForm<z.infer<typeof profileFormSchema>>({
@@ -78,9 +84,9 @@ export default function ProfilePage() {
       job_title: '',
       company: '',
     },
-    values: profileData ? {
+    values: profileData && session.user ? {
       full_name: profileData.full_name || '',
-      email: profileData.email || '',
+      email: session.user.email || '',
       bio: profileData.bio || '',
       job_title: profileData.job_title || '',
       company: profileData.company || '',
@@ -89,9 +95,21 @@ export default function ProfilePage() {
 
   const updateProfile = useMutation({
     mutationFn: async (values: z.infer<typeof profileFormSchema>) => {
-      // Mock implementation instead of Supabase update
-      console.log('Updating profile with values:', values);
-      // In a real implementation, this would update the database
+      if (!session.user) throw new Error('Not authenticated');
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: values.full_name,
+          bio: values.bio,
+          job_title: values.job_title,
+          company: values.company,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', session.user.id);
+
+      if (error) throw error;
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
@@ -111,6 +129,10 @@ export default function ProfilePage() {
 
   const onSubmit = (values: z.infer<typeof profileFormSchema>) => {
     updateProfile.mutate(values);
+  };
+
+  const handleLogout = async () => {
+    await signOut();
   };
 
   if (isLoading || !profileData) {
@@ -139,6 +161,10 @@ export default function ProfilePage() {
             Manage your account settings and preferences
           </p>
         </div>
+        <Button variant="outline" onClick={handleLogout} className="gap-2">
+          <LogOut className="h-4 w-4" />
+          Log out
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

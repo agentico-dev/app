@@ -1,243 +1,235 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CircuitBoard, Github } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { PlanSelector } from '@/components/PlanSelector';
 import { useAuth } from '@/hooks/useAuth';
-import type { Plan } from '@/types/plans';
-import PlanSelector from '@/components/PlanSelector';
-import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
-// Mock plans data
-const mockPlans: Plan[] = [
+// Available plans
+const plans = [
   {
     id: 'free',
-    name: 'Free Plan',
-    description: 'For personal projects and small teams',
-    price: 0,
-    features: ['5 projects', '2 team members', 'Basic AI tools'],
-    active: true,
-    interval: 'month',
+    name: 'Free',
+    description: 'Basic features for personal use',
+    price: {
+      amount: 0,
+      currency: 'USD',
+      frequency: 'monthly'
+    },
+    features: ['5 applications', 'Basic analytics', 'Community support'],
   },
   {
     id: 'pro',
-    name: 'Pro Plan',
-    description: 'For growing teams and businesses',
-    price: 29,
-    features: ['Unlimited projects', '10 team members', 'Advanced AI tools', 'Priority support'],
-    active: true,
-    interval: 'month',
+    name: 'Pro',
+    description: 'Advanced features for professionals',
+    price: {
+      amount: 15,
+      currency: 'USD',
+      frequency: 'monthly'
+    },
+    features: ['Unlimited applications', 'Advanced analytics', 'Priority support', 'Custom domains'],
+    popular: true,
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
-    description: 'For large organizations',
-    price: 99,
-    features: ['Unlimited everything', 'Dedicated support', 'Custom integrations', 'Advanced security'],
-    active: true,
-    interval: 'month',
+    description: 'Complete solution for teams',
+    price: {
+      amount: 49,
+      currency: 'USD',
+      frequency: 'monthly'
+    },
+    features: ['Unlimited everything', 'Team collaboration', 'Dedicated support', 'Custom integrations', 'SLA'],
   },
 ];
 
-export default function RegisterPage() {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [selectedPlan, setSelectedPlan] = useState<string>('');
-  const [loading, setLoading] = useState(false);
-  const { signUp, signIn } = useAuth();
+const formSchema = z.object({
+  fullName: z.string().min(2, {
+    message: 'Full name must be at least 2 characters.',
+  }),
+  email: z.string().email({
+    message: 'Please enter a valid email address.',
+  }),
+  password: z.string().min(8, {
+    message: 'Password must be at least 8 characters.',
+  }),
+});
 
-  const { data: plans } = useQuery({
-    queryKey: ['plans'],
-    queryFn: async () => {
-      // Using mock data since there's no plans table yet
-      return mockPlans;
-    }
+export default function RegisterPage() {
+  const [selectedPlan, setSelectedPlan] = useState('free');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { signUp } = useAuth();
+
+  // Initialize form
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      fullName: '',
+      email: '',
+      password: '',
+    },
   });
 
-  const createUserOrganization = async (userId: string, fullName: string) => {
-    const orgName = `${fullName}'s Organization`;
-    const orgSlug = orgName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
     try {
-      // Create organization
-      const { data: org, error: orgError } = await supabase
-        .from('organizations')
-        .insert({
-          name: orgName,
-          slug: orgSlug,
-          description: `Personal organization for ${fullName}`,
-        })
-        .select()
-        .single();
+      // Register the user with Supabase Auth
+      await signUp(values.email, values.password, values.fullName, selectedPlan);
       
-      if (orgError) throw orgError;
+      // Get the newly created user
+      const { data: { user } } = await supabase.auth.getUser();
       
-      // Add user as owner
-      const { error: memberError } = await supabase
-        .from('organization_members')
-        .insert({
-          organization_id: org.id,
-          user_id: userId,
-          role: 'owner',
-        });
-      
-      if (memberError) throw memberError;
-      
-      return org;
-    } catch (error) {
-      console.error('Error creating organization:', error);
-      // Don't throw here - we still want the user registration to succeed
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedPlan) {
-      toast.error("Please select a plan to continue");
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      // Sign up user
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            plan_id: selectedPlan,
-          },
-        },
-      });
-      
-      if (error) throw error;
-      
-      if (data?.user) {
-        // Create user's organization
-        await createUserOrganization(data.user.id, fullName);
+      if (user) {
+        // Create an organization for the new user
+        const orgName = `${values.fullName}'s Organization`;
+        const orgSlug = orgName.toLowerCase().replace(/[^a-z0-9]/g, '-');
         
-        toast.success('Account created successfully!');
+        const { data: org, error: orgError } = await supabase
+          .from('organizations')
+          .insert({
+            name: orgName,
+            slug: orgSlug,
+            description: `Personal organization for ${values.fullName}`,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select('id')
+          .single();
         
-        // Auto sign in
-        await signIn('email', email, password);
-        navigate('/');
-      } else {
-        toast.info('Please check your email to confirm your account.');
+        if (orgError) throw orgError;
+        
+        // Add the user as an owner of the organization
+        if (org) {
+          const { error: memberError } = await supabase
+            .from('organization_members')
+            .insert({
+              organization_id: org.id,
+              user_id: user.id,
+              role: 'Owner',
+              created_at: new Date().toISOString()
+            });
+          
+          if (memberError) throw memberError;
+        }
       }
-    } catch (error: any) {
-      toast.error(error.message || 'An error occurred during registration.');
+      
+      // Navigate to login page
+      navigate('/login', { 
+        state: { message: 'Registration successful! Please sign in.' } 
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-xl">
-        <CardHeader className="space-y-2">
-          <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <CircuitBoard className="h-6 w-6 text-primary" />
-            </div>
-          </div>
-          <CardTitle className="text-2xl text-center">Create your account</CardTitle>
-          <CardDescription className="text-center">
-            Choose your plan and enter your information
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-6">
-            <PlanSelector plans={plans || []} selectedPlan={selectedPlan} onSelectPlan={setSelectedPlan} />
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  placeholder="John Doe"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
+    <div className="container relative flex h-[100vh] flex-col items-center justify-center md:grid lg:max-w-none lg:px-0">
+      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex">
+        <div className="absolute inset-0 bg-zinc-900/80" />
+        <div className="relative z-20 flex items-center text-lg font-medium">
+          <Link to="/" className="flex items-center gap-2 font-semibold">
+            <img src="/favicon-32x32.png" alt="Agentico" className="h-6 w-6" />
+            <span>Agentico</span>
+          </Link>
+        </div>
+        <div className="relative z-20 mt-auto">
+          <blockquote className="space-y-2">
+            <p className="text-lg">
+              &ldquo;The best way to predict the future is to invent it.&rdquo;
+            </p>
+            <footer className="text-sm">
+              - Alan Kay
+            </footer>
+          </blockquote>
+        </div>
+      </div>
+      <div className="relative flex w-full flex-col items-center justify-center px-6 py-10 sm:max-w-lg lg:row-span-2 lg:w-[480px] bg-background">
+        <div className="flex flex-col items-center justify-center text-center space-y-2 sm:w-[350px]">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-semibold tracking-tight">
+              Create an account
+            </CardTitle>
+            <CardDescription>
+              Start building amazing things today.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Your full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="name@example.com" type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Password" type="password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-            </div>
+                <PlanSelector plans={plans} selectedPlan={selectedPlan} setSelectedPlan={setSelectedPlan} />
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'Creating account...' : 'Create account'}
+                </Button>
+              </form>
+            </Form>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading || !selectedPlan}>
-              {loading ? 'Creating account...' : 'Create account'}
-            </Button>
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" onClick={() => signIn('github')} type="button">
-                <Github className="mr-2 h-4 w-4" />
-                GitHub
-              </Button>
-              <Button variant="outline" onClick={() => signIn('google')} type="button">
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                  <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    fill="#EA4335"
-                  />
-                </svg>
-                Google
-              </Button>
-            </div>
-            <div className="text-center text-sm">
-              Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:underline">
-                Sign in
-              </Link>
-            </div>
+          <CardFooter className="flex justify-center text-sm">
+            Already have an account? <Link to="/login" className="underline underline-offset-4 ml-1 hover:text-primary">Sign in</Link>
           </CardFooter>
-        </form>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
