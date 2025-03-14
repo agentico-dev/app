@@ -166,18 +166,6 @@ export default function OrganizationsPage() {
         </Dialog>
       </div>
 
-      <div className="w-full max-w-md">
-        <Label htmlFor="org-selector" className="block mb-2">
-          Quick Switch Organization
-        </Label>
-        <OrganizationSelector 
-          onOrganizationChange={setSelectedOrgId}
-          selectedOrgId={selectedOrgId}
-          includeGlobal={true}
-          className="w-full"
-        />
-      </div>
-
       {!isAuthenticated && (
         <Alert variant="default" className="bg-amber-50 border-amber-200">
           <Shield className="h-4 w-4 text-amber-500" />

@@ -77,13 +77,6 @@ export function TopNav() {
             </div>
           )}
           
-          <Link to="/orgs">
-            <Button variant="ghost" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              <span className="hidden md:inline">Organizations</span>
-            </Button>
-          </Link>
-          
           <Button variant="outline" size="icon">
             <a href="https://www.linkedin.com/comm/mynetwork/discovery-see-all?usecase=PEOPLE_FOLLOWS&followMember=adrianescutia" target="_blank">
               <PlugZap className="h-4 w-4" />

@@ -88,3 +88,24 @@ export async function generateUniqueSlug(
   
   return newSlug;
 }
+
+/**
+ * Gets the global organization record from the database
+ * 
+ * @returns Promise resolving to the global organization or null if not found
+ */
+export async function getGlobalOrganization() {
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('*')
+    .eq('is_global', true)
+    .limit(1)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching global organization:', error);
+    return null;
+  }
+  
+  return data;
+}

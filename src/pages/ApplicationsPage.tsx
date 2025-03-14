@@ -45,7 +45,8 @@ export function ApplicationsPage() {
           tools_count: app.tools_count || 0,
           tags: app.tags || [],
           created_at: app.created_at || new Date().toISOString(),
-          updated_at: app.updated_at || new Date().toISOString()
+          updated_at: app.updated_at || new Date().toISOString(),
+          slug: app.slug || app.name.toLowerCase().replace(/\s+/g, '-') // Add the missing slug property
         }));
       } catch (err) {
         console.error('Unexpected error fetching applications:', err);
