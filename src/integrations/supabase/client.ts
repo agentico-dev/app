@@ -9,10 +9,10 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { db: { schema: 'api' } })
+// Create the Supabase client with the api schema set as default
+export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 // Helper function to access tables in the api schema
 export const apiSchema = {
-  // from: (table: string) => supabase.from(`api.${table}`),
-  from: (table: string) => supabase.from(table),
+  from: (table: string) => supabase.from(`api.${table}`),
 }

@@ -14,10 +14,10 @@ import {
   FormMessage 
 } from '@/components/ui/form';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CreateApplicationPayload } from '@/types/organization';
 import { useAuth } from '@/hooks/useAuth';
+import { apiTable } from '@/utils/supabaseHelpers';
 
 export function CreateApplicationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,14 +43,22 @@ export function CreateApplicationForm() {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase.from('applications').insert({
+      // Get organization from localStorage
+      const organizationId = localStorage.getItem('selectedOrganizationId');
+      
+      if (!organizationId) {
+        toast.error("Please select an organization from the top navigation bar");
+        return;
+      }
+      
+      const { error } = await apiTable('applications').insert({
         name: data.name,
         description: data.description,
         category: data.category,
         status: data.status,
         tags: data.tags,
         user_id: session.user.id,
-        organization_id: data.organization_id,
+        organization_id: organizationId,
       });
 
       if (error) throw error;

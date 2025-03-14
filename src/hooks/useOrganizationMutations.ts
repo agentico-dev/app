@@ -30,6 +30,7 @@ export function useCreateOrganizationMutation() {
       console.log('Organization creation completed:', org);
       
       if (orgError) throw orgError;
+      if (!org) throw new Error('Failed to create organization');
       
       console.log('Adding current user as owner...');
       // Add current user as owner
@@ -93,6 +94,7 @@ export function useAddMemberMutation(organizationId?: string) {
         .single();
       
       if (userError) throw new Error('User not found');
+      if (!userData) throw new Error('User not found');
       
       // Then add the member
       const { data, error } = await apiTable('organization_members')

@@ -53,11 +53,15 @@ export const getGlobalOrganization = async (): Promise<Organization | null> => {
       return null;
     }
     
+    if (!data) {
+      return null;
+    }
+    
     // Ensure the response matches the Organization type
     const organization: Organization = {
       id: data.id,
       name: data.name,
-      slug: data.slug,
+      slug: data.slug || '',
       description: data.description || '',
       logo_url: data.logo_url,
       created_at: data.created_at,
