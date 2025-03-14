@@ -35,9 +35,10 @@ export function useUserOrganizationsQuery(userId?: string) {
   return useQuery({
     queryKey: ['userOrganizations', userId],
     queryFn: async () => {
+      // Always considered: global organization
+      const globalOrg = await getGlobalOrganization();
       if (!userId) {
         // Return just the global organization for non-authenticated users
-        const globalOrg = await getGlobalOrganization();
         return globalOrg ? [{ ...globalOrg, role: 'member' }] : [];
       }
       
@@ -53,7 +54,6 @@ export function useUserOrganizationsQuery(userId?: string) {
       
       if (!memberData || memberData.length === 0) {
         // If user has no explicit memberships, still include global org
-        const globalOrg = await getGlobalOrganization();
         return globalOrg ? [{ ...globalOrg, role: 'member' }] : [];
       }
       
@@ -63,10 +63,7 @@ export function useUserOrganizationsQuery(userId?: string) {
         .select('*')
         .in('id', orgIds);
         
-      if (orgsError) throw orgsError;
-      
-      // Also get the global organization if it's not already included
-      const globalOrg = await getGlobalOrganization();
+      if (orgsError) throw orgsError;      
       
       let userOrgs: (Organization & { role: string })[] = orgsData.map((org: any) => {
         const memberInfo = memberData.find((item: any) => item.organization_id === org.id);

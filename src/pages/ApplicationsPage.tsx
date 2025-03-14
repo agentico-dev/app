@@ -15,6 +15,8 @@ import { supabase } from '@/integrations/supabase/client';
 export function ApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { session, signOut } = useAuth();
   const isAuthenticated = !!session.user;
 
@@ -57,6 +59,32 @@ export function ApplicationsPage() {
     },
     enabled: isAuthenticated
   });
+
+  // Extract unique tags from all applications
+  const allTags = Array.from(
+    new Set(
+      applications.flatMap(app => app.tags || [])
+        .filter(Boolean)
+    )
+  );
+
+  // Status options for filtering
+  const statusOptions = [
+    { value: 'all', label: 'All Statuses' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'draft', label: 'Draft' }
+  ];
+
+  // Handler for status change
+  const handleStatusChange = (status: string) => {
+    setSelectedStatus(status);
+  };
+
+  // Handler for tag selection
+  const handleTagChange = (tags: string[]) => {
+    setSelectedTags(tags);
+  };
 
   // Filter applications based on search query and active filter
   const filteredApplications = applications.filter(app => {
@@ -116,6 +144,12 @@ export function ApplicationsPage() {
         activeFilter={activeFilter}
         setActiveFilter={setActiveFilter}
         applications={applications}
+        statusOptions={statusOptions}
+        selectedStatus={selectedStatus}
+        onStatusChange={handleStatusChange}
+        tags={allTags}
+        selectedTags={selectedTags}
+        onTagsChange={handleTagChange}
       />
 
       <Tabs defaultValue="all">
