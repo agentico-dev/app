@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CreateServerPayload } from '@/types/organization';
 import { useAuth } from '@/hooks/useAuth';
+import { generateSlug } from '@/utils/supabaseHelpers';
 
 export function CreateServerForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,13 +43,56 @@ export function CreateServerForm() {
     setIsSubmitting(true);
     
     try {
-      // This is a placeholder as there's no servers table yet
-      // In a real implementation, you would insert into the servers table
-      toast.success('Server creation functionality will be implemented soon');
-      navigate('/servers');
-    } catch (error) {
+      // Get organization from localStorage
+      const organizationId = localStorage.getItem('selectedOrganizationId');
+      
+      if (!organizationId) {
+        toast.error("Please select an organization from the top navigation bar");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Generate slug from name
+      const slug = generateSlug(data.name);
+      
+      const { data: newServer, error } = await supabase
+        .from('servers')
+        .insert({
+          name: data.name,
+          slug: slug,
+          description: data.description,
+          type: data.type,
+          status: data.status,
+          user_id: session.user.id,
+          organization_id: organizationId,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      toast.success('Server created successfully');
+      
+      // Navigate to the new server using the slug-based URL
+      if (newServer) {
+        // Fetch the organization slug
+        const { data: org } = await supabase
+          .from('organizations')
+          .select('slug')
+          .eq('id', organizationId)
+          .single();
+          
+        if (org) {
+          navigate(`/servers/${org.slug}@${newServer.slug}`);
+        } else {
+          navigate(`/servers/${newServer.id}`);
+        }
+      } else {
+        navigate('/servers');
+      }
+    } catch (error: any) {
       console.error('Error creating server:', error);
-      toast.error('Failed to create server');
+      toast.error(`Failed to create server: ${error.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }

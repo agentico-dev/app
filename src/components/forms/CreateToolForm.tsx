@@ -17,9 +17,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { CreateToolPayload } from '@/types/organization';
 import { useAuth } from '@/hooks/useAuth';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { apiTable } from '@/utils/supabaseHelpers';
+import { generateSlug } from '@/utils/supabaseHelpers';
+import { supabase } from '@/integrations/supabase/client';
 
 export function CreateToolForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,15 +60,21 @@ export function CreateToolForm() {
     setIsSubmitting(true);
     
     try {
-      const { error } = await apiTable('ai_tools').insert({
-        name: data.name,
-        description: data.description,
-        category: data.category,
-        status: data.status,
-        tags: data.tags,
-        user_id: session.user.id,
-        organization_id: organizationId,
-      });
+      // Generate slug from name
+      const slug = generateSlug(data.name);
+      
+      const { error } = await supabase
+        .from('ai_tools')
+        .insert({
+          name: data.name,
+          slug: slug,
+          description: data.description,
+          category: data.category,
+          status: data.status,
+          tags: data.tags,
+          user_id: session.user.id,
+          organization_id: organizationId,
+        });
 
       if (error) throw error;
       

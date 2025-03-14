@@ -1,77 +1,34 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Organization } from '@/types/organization';
 
-/**
- * Access a table in the public schema
- * @param table The table name
- * @returns A PostgrestQueryBuilder for the specified table
- */
-export const apiTable = (table: string) => {
-  return supabase.from(table);
+// Function to ensure table operations use the correct schema
+export const apiTable = (tableName: string) => {
+  return supabase.from('public.' + tableName);
 };
 
-/**
- * Create a relationship query string for tables in the public schema
- * @param table The related table name
- * @param fields The fields to select from the related table
- * @returns A properly formatted select string for use in join queries
- */
-export const apiJoin = (table: string, fields: string) => {
-  return `${table}(${fields})`;
-};
-
-/**
- * Handles Supabase errors consistently
- * @param error The error object from Supabase
- * @returns A standardized error message
- */
-export const handleSupabaseError = (error: any): string => {
-  console.error('Supabase error:', error);
-  if (error?.message) {
-    return error.message;
+// Generate a valid slug from a name
+export function generateSlug(name: string): string {
+  // Convert to lowercase
+  let slug = name.toLowerCase();
+  
+  // Replace spaces and non-alphanumeric characters with dashes
+  slug = slug.replace(/[^a-z0-9]+/g, '-');
+  
+  // Remove leading and trailing dashes
+  slug = slug.replace(/^-+|-+$/g, '');
+  
+  // Ensure it starts with an alphabetic character
+  if (!/^[a-z]/.test(slug)) {
+    slug = 'a-' + slug;
   }
-  if (error?.error_description) {
-    return error.error_description;
+  
+  // Ensure it ends with an alphanumeric character
+  if (!/[a-z0-9]$/.test(slug)) {
+    slug = slug + '0';
   }
-  return 'An unexpected error occurred. Please try again.';
-};
-
-/**
- * Get the global organization that all users belong to
- * @returns Promise with the global organization
- */
-export const getGlobalOrganization = async (): Promise<Organization | null> => {
-  try {
-    const { data, error } = await apiTable('organizations')
-      .select('*')
-      .eq('slug', 'global')
-      .single();
-    
-    if (error) {
-      console.error('Error fetching global organization:', error);
-      return null;
-    }
-    
-    if (!data) {
-      return null;
-    }
-    
-    // Ensure the response matches the Organization type
-    const organization: Organization = {
-      id: data.id,
-      name: data.name,
-      slug: data.slug || '',
-      description: data.description || '',
-      logo_url: data.logo_url,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      is_global: true
-    };
-    
-    return organization;
-  } catch (error) {
-    console.error('Error fetching global organization:', error);
-    return null;
-  }
-};
+  
+  // Limit to 63 characters
+  slug = slug.slice(0, 63);
+  
+  return slug;
+}
