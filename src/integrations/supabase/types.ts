@@ -22,6 +22,7 @@ export type Database = {
           organization_id: string | null
           servers_count: number | null
           service_id: string | null
+          slug: string
           status: string | null
           tags: string[] | null
           updated_at: string | null
@@ -39,6 +40,7 @@ export type Database = {
           organization_id?: string | null
           servers_count?: number | null
           service_id?: string | null
+          slug: string
           status?: string | null
           tags?: string[] | null
           updated_at?: string | null
@@ -56,6 +58,7 @@ export type Database = {
           organization_id?: string | null
           servers_count?: number | null
           service_id?: string | null
+          slug?: string
           status?: string | null
           tags?: string[] | null
           updated_at?: string | null
@@ -272,6 +275,7 @@ export type Database = {
           name: string
           organization_id: string | null
           project_id: string | null
+          slug: string
           status: string | null
           tags: string[] | null
           tools_count: number | null
@@ -289,6 +293,7 @@ export type Database = {
           name: string
           organization_id?: string | null
           project_id?: string | null
+          slug: string
           status?: string | null
           tags?: string[] | null
           tools_count?: number | null
@@ -306,6 +311,7 @@ export type Database = {
           name?: string
           organization_id?: string | null
           project_id?: string | null
+          slug?: string
           status?: string | null
           tags?: string[] | null
           tools_count?: number | null
@@ -477,6 +483,7 @@ export type Database = {
           name: string
           organization_id: string | null
           servers_count: number | null
+          slug: string
           status: string | null
           tags: string[] | null
           tools_count: number | null
@@ -493,6 +500,7 @@ export type Database = {
           name: string
           organization_id?: string | null
           servers_count?: number | null
+          slug: string
           status?: string | null
           tags?: string[] | null
           tools_count?: number | null
@@ -509,6 +517,7 @@ export type Database = {
           name?: string
           organization_id?: string | null
           servers_count?: number | null
+          slug?: string
           status?: string | null
           tags?: string[] | null
           tools_count?: number | null
@@ -637,6 +646,7 @@ export type Database = {
           id: string
           name: string
           organization_id: string | null
+          slug: string
           status: string | null
           tags: string[] | null
           type: string | null
@@ -650,6 +660,7 @@ export type Database = {
           id?: string
           name: string
           organization_id?: string | null
+          slug: string
           status?: string | null
           tags?: string[] | null
           type?: string | null
@@ -663,6 +674,7 @@ export type Database = {
           id?: string
           name?: string
           organization_id?: string | null
+          slug?: string
           status?: string | null
           tags?: string[] | null
           type?: string | null

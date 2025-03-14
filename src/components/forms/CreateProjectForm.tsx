@@ -62,7 +62,7 @@ export function CreateProjectForm() {
       // Generate slug from name
       const slug = generateSlug(data.name);
       
-      const { error } = await supabase
+      const { data: newProject, error } = await supabase
         .from('projects')
         .insert({
           name: data.name,
@@ -72,12 +72,20 @@ export function CreateProjectForm() {
           tags: data.tags,
           user_id: session.user.id,
           organization_id: organizationId,
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
       
       toast.success('Project created successfully');
-      navigate('/projects');
+      
+      // Navigate to the new project page with the slug if available
+      if (newProject) {
+        navigate(`/projects/${newProject.slug}`);
+      } else {
+        navigate('/projects');
+      }
     } catch (error: any) {
       console.error('Error creating project:', error);
       toast.error('Failed to create project');
