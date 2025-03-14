@@ -26,7 +26,8 @@ export function CodeEditor({ value, onChange, language = 'json', className }: Co
         const formatted = JSON.stringify(JSON.parse(value || '{}'), null, 2);
         onChange(formatted);
       }
-      // For YAML we would typically use a library, but for now we'll skip auto-formatting
+      // For YAML we would need to use a library like js-yaml which requires installation
+      // For now we'll skip YAML formatting but this could be added with a library
     } catch (error) {
       console.error("Failed to format code:", error);
     }
@@ -50,6 +51,7 @@ export function CodeEditor({ value, onChange, language = 'json', className }: Co
             className="h-7 px-2"
             onClick={formatCode}
             title="Format code"
+            type="button" // Important to avoid submitting the form
           >
             Format
           </Button>
@@ -59,6 +61,7 @@ export function CodeEditor({ value, onChange, language = 'json', className }: Co
             className="h-7 px-2"
             onClick={handleCopy}
             title={copied ? "Copied!" : "Copy to clipboard"}
+            type="button" // Important to avoid submitting the form
           >
             {copied ? (
               <Check className="h-3 w-3" />
