@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
  * @returns A PostgrestQueryBuilder for the specified table
  */
 export const apiTable = (table: string) => {
-  return supabase.from(`api.${table}`);
+  return supabase.from(`api.${table}` as any);
 };
 
 /**

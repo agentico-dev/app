@@ -22,7 +22,7 @@ export function useOrganizations() {
         .order('name');
       
       if (error) throw error;
-      return data as Organization[];
+      return data as unknown as Organization[];
     },
   });
 
@@ -38,7 +38,7 @@ export function useOrganizations() {
           role,
           organization_id
         `)
-        .eq('user_id', session.user.id);
+        .eq('user_id', session.user.id) as { data: OrganizationMember[], error: any };
       
       if (error) throw error;
       
@@ -48,7 +48,7 @@ export function useOrganizations() {
       const orgIds = data.map(item => item.organization_id);
       const { data: orgsData, error: orgsError } = await apiSchema.from('organizations')
         .select('*')
-        .in('id', orgIds);
+        .in('id', orgIds) as { data: Organization[], error: any };
         
       if (orgsError) throw orgsError;
       
@@ -79,7 +79,7 @@ export function useOrganizations() {
           logo_url: orgData.logo_url || null
         })
         .select()
-        .single();
+        .single() as { data: Organization, error: any };
       console.log('Organization creation completed:', org);
       
       if (orgError) throw orgError;

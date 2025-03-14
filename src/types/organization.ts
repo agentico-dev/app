@@ -3,7 +3,7 @@ export interface Organization {
   name: string;
   slug: string;
   description?: string;
-  logo_url: string | null;
+  logo_url?: string | null;
   created_at: string;
   updated_at: string;
   role?: string; // Adding the optional role property
