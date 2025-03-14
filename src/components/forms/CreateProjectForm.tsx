@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -12,25 +13,18 @@ import {
   FormLabel, 
   FormMessage 
 } from '@/components/ui/form';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
-import { supabase, apiSchema } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CreateProjectPayload } from '@/types/organization';
 import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { apiTable } from '@/utils/supabaseHelpers';
+import OrganizationSelector from '@/components/organizations/OrganizationSelector';
 
 export function CreateProjectForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [organizations, setOrganizations] = useState<{id: string, name: string}[]>([]);
-  const [isLoadingOrgs, setIsLoadingOrgs] = useState(true);
+  const [isLoadingOrgs, setIsLoadingOrgs] = useState(false);
   const navigate = useNavigate();
   const { session } = useAuth();
   
@@ -44,47 +38,9 @@ export function CreateProjectForm() {
     },
   });
 
-  // Fetch user's organizations and public ones
-  useEffect(() => {
-    const fetchOrganizations = async () => {
-      if (!session.user) return;
-      
-      setIsLoadingOrgs(true);
-      try {
-        // Get organizations where user is a member
-        const { data: memberData, error: memberError } = await apiSchema.from('organization_members')
-          .select('organization_id')
-          .eq('user_id', session.user.id);
-
-        if (memberError) throw memberError;
-        
-        if (memberData && memberData.length > 0) {
-          const orgIds = memberData.map(item => item.organization_id);
-          
-          // Get organization details
-          const { data: orgsData, error: orgsError } = await apiSchema.from('organizations')
-            .select('id, name')
-            .in('id', orgIds);
-            
-          if (orgsError) throw orgsError;
-          
-          setOrganizations(orgsData as {id: string, name: string}[]);
-          
-          // Select first by default if available
-          if (orgsData && orgsData.length > 0) {
-            form.setValue('organization_id', orgsData[0].id);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching organizations:', error);
-        toast.error('Failed to load organizations');
-      } finally {
-        setIsLoadingOrgs(false);
-      }
-    };
-    
-    fetchOrganizations();
-  }, [session.user, form]);
+  const handleOrganizationChange = (orgId: string) => {
+    form.setValue('organization_id', orgId);
+  };
 
   const onSubmit = async (data: CreateProjectPayload) => {
     if (!session.user) {
@@ -100,7 +56,7 @@ export function CreateProjectForm() {
     setIsSubmitting(true);
     
     try {
-      const { error } = await apiSchema.from('projects').insert({
+      const { error } = await apiTable('projects').insert({
         name: data.name,
         description: data.description,
         status: data.status,
@@ -124,48 +80,19 @@ export function CreateProjectForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {organizations.length === 0 && !isLoadingOrgs && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>No organizations found</AlertTitle>
-            <AlertDescription>
-              You need to be a member of at least one organization to create a project.
-              <Button 
-                variant="link" 
-                className="p-0 h-auto font-normal"
-                onClick={() => navigate('/orgs')}
-              >
-                Go to Organizations
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-        
         <FormField
           control={form.control}
           name="organization_id"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Organization</FormLabel>
-              <Select
-                disabled={isLoadingOrgs || organizations.length === 0}
-                onValueChange={field.onChange}
-                value={field.value}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={isLoadingOrgs ? "Loading organizations..." : "Select an organization"} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {organizations.map((org) => (
-                    <SelectItem key={org.id} value={org.id}>
-                      {org.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <OrganizationSelector
+                  selectedOrgId={field.value}
+                  onOrganizationChange={handleOrganizationChange}
+                  includeGlobal={false}
+                />
+              </FormControl>
               <FormDescription>
                 The organization this project belongs to.
               </FormDescription>
@@ -222,7 +149,7 @@ export function CreateProjectForm() {
           </Button>
           <Button 
             type="submit" 
-            disabled={isSubmitting || organizations.length === 0 || isLoadingOrgs}
+            disabled={isSubmitting}
           >
             {isSubmitting ? 'Creating...' : 'Create Project'}
           </Button>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea';
 import OrganizationsList from '@/components/organizations/OrganizationsList';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import OrganizationSelector from '@/components/organizations/OrganizationSelector';
 
 export default function OrganizationsPage() {
   const { organizations, userOrganizations, isLoading, error, isAuthenticated, createOrganization } = useOrganizations();
@@ -24,6 +26,14 @@ export default function OrganizationsPage() {
     description: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedOrgId, setSelectedOrgId] = useState<string>('');
+
+  // Set the selected organization when user organizations load
+  useEffect(() => {
+    if (userOrganizations && userOrganizations.length > 0 && !selectedOrgId) {
+      setSelectedOrgId(userOrganizations[0].id);
+    }
+  }, [userOrganizations, selectedOrgId]);
 
   const handleCreateOrganization = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,6 +164,18 @@ export default function OrganizationsPage() {
             </form>
           </DialogContent>
         </Dialog>
+      </div>
+
+      <div className="w-full max-w-md">
+        <Label htmlFor="org-selector" className="block mb-2">
+          Quick Switch Organization
+        </Label>
+        <OrganizationSelector 
+          onOrganizationChange={setSelectedOrgId}
+          selectedOrgId={selectedOrgId}
+          includeGlobal={true}
+          className="w-full"
+        />
       </div>
 
       {!isAuthenticated && (

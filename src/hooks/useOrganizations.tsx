@@ -1,9 +1,10 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, apiSchema } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import type { Organization, OrganizationMember } from '@/types/organization';
 import { useAuth } from './useAuth';
 import { useToast } from '@/components/ui/use-toast';
+import { apiTable, getGlobalOrganization } from '@/utils/supabaseHelpers';
 
 export function useOrganizations() {
   const queryClient = useQueryClient();
@@ -16,8 +17,7 @@ export function useOrganizations() {
   const { data: organizations, isLoading, error } = useQuery({
     queryKey: ['organizations'],
     queryFn: async () => {
-      // Use apiSchema helper for consistent schema reference
-      const { data, error } = await apiSchema.from('organizations')
+      const { data, error } = await apiTable('organizations')
         .select('*')
         .order('name');
       
@@ -26,42 +26,62 @@ export function useOrganizations() {
     },
   });
 
-  // Fetch user's organizations (only if authenticated)
+  // Fetch user's organizations (only if authenticated) - including global org
   const { data: userOrganizations } = useQuery({
     queryKey: ['userOrganizations', session.user?.id],
     queryFn: async () => {
-      if (!session.user) return [];
+      if (!session.user) {
+        // Return just the global organization for non-authenticated users
+        const globalOrg = await getGlobalOrganization();
+        return globalOrg ? [{ ...globalOrg, role: 'member', is_global: true }] : [];
+      }
       
-      // Join organizations and organization_members
-      const { data, error } = await apiSchema.from('organization_members')
+      // Get user's organization memberships
+      const { data: memberData, error: memberError } = await apiTable('organization_members')
         .select(`
           role,
           organization_id
         `)
-        .eq('user_id', session.user.id) as { data: OrganizationMember[], error: any };
+        .eq('user_id', session.user.id);
       
-      if (error) throw error;
+      if (memberError) throw memberError;
       
-      if (!data || data.length === 0) return [];
+      if (!memberData || memberData.length === 0) {
+        // If user has no explicit memberships, still include global org
+        const globalOrg = await getGlobalOrganization();
+        return globalOrg ? [{ ...globalOrg, role: 'member', is_global: true }] : [];
+      }
       
-      // Get the full organization details
-      const orgIds = data.map(item => item.organization_id);
-      const { data: orgsData, error: orgsError } = await apiSchema.from('organizations')
+      // Get all organizations the user is a member of
+      const orgIds = memberData.map(item => item.organization_id);
+      const { data: orgsData, error: orgsError } = await apiTable('organizations')
         .select('*')
-        .in('id', orgIds) as { data: Organization[], error: any };
+        .in('id', orgIds);
         
       if (orgsError) throw orgsError;
       
-      // Map the role to each organization
-      return orgsData.map(org => {
-        const memberData = data.find(item => item.organization_id === org.id);
+      // Also get the global organization if it's not already included
+      const globalOrg = await getGlobalOrganization();
+      let userOrgs = orgsData.map(org => {
+        const memberInfo = memberData.find(item => item.organization_id === org.id);
         return {
           ...org,
-          role: memberData?.role || 'member',
+          role: memberInfo?.role || 'member',
         } as Organization & { role: string };
       });
+      
+      // Add global org if not already in the list
+      if (globalOrg && !userOrgs.some(org => org.id === globalOrg.id)) {
+        userOrgs.push({
+          ...globalOrg,
+          role: 'member',
+          is_global: true
+        });
+      }
+      
+      return userOrgs;
     },
-    enabled: isAuthenticated,
+    enabled: true, // Always fetch, even for anonymous users
   });
 
   // Create a new organization
@@ -71,7 +91,7 @@ export function useOrganizations() {
       if (!session.user) throw new Error('Authentication required');
       
       // Create the organization with a simplified payload
-      const { data: org, error: orgError } = await apiSchema.from('organizations')
+      const { data: org, error: orgError } = await apiTable('organizations')
         .insert({
           name: orgData.name || '',
           slug: orgData.slug || orgData.name?.toLowerCase().replace(/\s+/g, '-') || '',
@@ -79,19 +99,21 @@ export function useOrganizations() {
           logo_url: orgData.logo_url || null
         })
         .select()
-        .single() as { data: Organization, error: any };
+        .single();
+      
       console.log('Organization creation completed:', org);
       
       if (orgError) throw orgError;
       
       console.log('Adding current user as owner...');
       // Add current user as owner
-      const { error: memberError } = await apiSchema.from('organization_members')
+      const { error: memberError } = await apiTable('organization_members')
         .insert({
           organization_id: org.id,
           user_id: session.user.id,
           role: 'owner'
         });
+      
       console.log('Member added:', memberError);
       
       if (memberError) throw memberError;
@@ -138,7 +160,7 @@ export function useOrganizationMembers(organizationId?: string) {
     queryFn: async () => {
       if (!organizationId) return [];
       
-      const { data, error } = await apiSchema.from('organization_members')
+      const { data, error } = await apiTable('organization_members')
         .select('*')
         .eq('organization_id', organizationId);
       
@@ -153,9 +175,8 @@ export function useOrganizationMembers(organizationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       if (!organizationId) throw new Error('Organization ID is required');
       
-      // First, get the user ID from the email using RPC or a more direct approach
-      const { data: userData, error: userError } = await supabase
-        .from('api.users') // This would need to be adjusted based on your actual user table
+      // First, get the user ID from the email
+      const { data: userData, error: userError } = await apiTable('users')
         .select('id')
         .eq('email', email)
         .single();
@@ -163,7 +184,7 @@ export function useOrganizationMembers(organizationId?: string) {
       if (userError) throw new Error('User not found');
       
       // Then add the member
-      const { data, error } = await apiSchema.from('organization_members')
+      const { data, error } = await apiTable('organization_members')
         .insert({
           organization_id: organizationId,
           user_id: userData.id,

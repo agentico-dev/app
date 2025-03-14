@@ -1,3 +1,4 @@
+
 export interface Organization {
   id: string;
   name: string;
@@ -7,6 +8,7 @@ export interface Organization {
   created_at: string;
   updated_at: string;
   role?: string; // Adding the optional role property
+  is_global?: boolean; // Flag to identify the global organization
 }
 
 export interface OrganizationMember {
@@ -63,4 +65,12 @@ export interface CreateToolPayload {
   category?: string;
   tags?: string[];
   status?: string;
+}
+
+// Organization selection dropdown
+export interface OrganizationSelectorProps {
+  onOrganizationChange: (orgId: string) => void;
+  selectedOrgId?: string;
+  includeGlobal?: boolean;
+  className?: string;
 }

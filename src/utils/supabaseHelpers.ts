@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
  * @returns A PostgrestQueryBuilder for the specified table
  */
 export const apiTable = (table: string) => {
-  return supabase.from(`api.${table}` as any);
+  return supabase.from(`api.${table}`);
 };
 
 /**
@@ -37,3 +37,22 @@ export const handleSupabaseError = (error: any): string => {
   }
   return 'An unexpected error occurred. Please try again.';
 };
+
+/**
+ * Get the global organization that all users belong to
+ * @returns Promise with the global organization
+ */
+export const getGlobalOrganization = async () => {
+  const { data, error } = await apiTable('organizations')
+    .select('*')
+    .eq('slug', 'global')
+    .single();
+  
+  if (error) {
+    console.error('Error fetching global organization:', error);
+    return null;
+  }
+  
+  return data;
+};
+
