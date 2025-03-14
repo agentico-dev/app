@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, apiSchema } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CreateProjectPayload } from '@/types/organization';
 import { useAuth } from '@/hooks/useAuth';
@@ -52,35 +51,30 @@ export function CreateProjectForm() {
       
       setIsLoadingOrgs(true);
       try {
-        const { data, error } = await supabase
-          .from('organization_members')
-          .select(`
-            organizations:organization_id(id, name)
-          `)
+        // Get organizations where user is a member
+        const { data: memberData, error: memberError } = await apiSchema.from('organization_members')
+          .select('organization_id')
           .eq('user_id', session.user.id);
-        
-        if (error) throw error;
-        
-        const orgs = data.map(item => ({
-          id: item.organizations.id,
-          name: item.organizations.name
-        }));
 
-        // public orgs
-        const { data: publicOrgs, error: publicError } = await supabase
-          .from('organizations')
-          .select('id, name')
-          .eq('is_public', true);
-        if (publicError) throw publicError;
-        orgs.push(...publicOrgs.map((org: { id: string; name: string; }) => ({
-          id: org.id,
-          name: org.name
-        })));
+        if (memberError) throw memberError;
         
-        setOrganizations(orgs);
-        
-        // select first by default
-        form.setValue('organization_id', orgs[0].id);
+        if (memberData && memberData.length > 0) {
+          const orgIds = memberData.map(item => item.organization_id);
+          
+          // Get organization details
+          const { data: orgsData, error: orgsError } = await apiSchema.from('organizations')
+            .select('id, name')
+            .in('id', orgIds);
+            
+          if (orgsError) throw orgsError;
+          
+          setOrganizations(orgsData as {id: string, name: string}[]);
+          
+          // Select first by default if available
+          if (orgsData && orgsData.length > 0) {
+            form.setValue('organization_id', orgsData[0].id);
+          }
+        }
       } catch (error) {
         console.error('Error fetching organizations:', error);
         toast.error('Failed to load organizations');
@@ -106,7 +100,7 @@ export function CreateProjectForm() {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase.from('projects').insert({
+      const { error } = await apiSchema.from('projects').insert({
         name: data.name,
         description: data.description,
         status: data.status,
@@ -119,7 +113,7 @@ export function CreateProjectForm() {
       
       toast.success('Project created successfully');
       navigate('/projects');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating project:', error);
       toast.error('Failed to create project');
     } finally {

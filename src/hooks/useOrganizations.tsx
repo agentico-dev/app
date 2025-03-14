@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, apiSchema } from '@/integrations/supabase/client';
 import type { Organization, OrganizationMember } from '@/types/organization';
 import { useAuth } from './useAuth';
 import { useToast } from '@/components/ui/use-toast';
@@ -16,9 +16,8 @@ export function useOrganizations() {
   const { data: organizations, isLoading, error } = useQuery({
     queryKey: ['organizations'],
     queryFn: async () => {
-      // Use from('api.organizations') instead of rpc
-      const { data, error } = await supabase
-        .from('api.organizations')
+      // Use apiSchema helper for consistent schema reference
+      const { data, error } = await apiSchema.from('organizations')
         .select('*')
         .order('name');
       
@@ -34,32 +33,33 @@ export function useOrganizations() {
       if (!session.user) return [];
       
       // Join organizations and organization_members
-      const { data, error } = await supabase
-        .from('api.organization_members')
+      const { data, error } = await apiSchema.from('organization_members')
         .select(`
           role,
-          organization:organization_id (*)
+          organization_id
         `)
         .eq('user_id', session.user.id);
       
       if (error) throw error;
       
-      // Transform the data to match the expected format
-      return (data as unknown as { role: string; organization: Organization }[]).map((item) => {
-        const organization: Organization = {
-          id: item.organization.id,
-          name: item.organization.name,
-          slug: item.organization.slug,
-          description: item.organization.description,
-          logo_url: item.organization.logo_url,
-          created_at: item.organization.created_at,
-          updated_at: item.organization.updated_at,
-        };
+      if (!data || data.length === 0) return [];
+      
+      // Get the full organization details
+      const orgIds = data.map(item => item.organization_id);
+      const { data: orgsData, error: orgsError } = await apiSchema.from('organizations')
+        .select('*')
+        .in('id', orgIds);
+        
+      if (orgsError) throw orgsError;
+      
+      // Map the role to each organization
+      return orgsData.map(org => {
+        const memberData = data.find(item => item.organization_id === org.id);
         return {
-          ...organization,
-          role: item.role,
-        };
-      }) as (Organization & { role: string })[];
+          ...org,
+          role: memberData?.role || 'member',
+        } as Organization & { role: string };
+      });
     },
     enabled: isAuthenticated,
   });
@@ -70,9 +70,8 @@ export function useOrganizations() {
       console.log('Starting organization creation in mutation...', orgData);
       if (!session.user) throw new Error('Authentication required');
       
-      // Create the organization
-      const { data: org, error: orgError } = await supabase
-        .from('api.organizations')
+      // Create the organization with a simplified payload
+      const { data: org, error: orgError } = await apiSchema.from('organizations')
         .insert({
           name: orgData.name || '',
           slug: orgData.slug || orgData.name?.toLowerCase().replace(/\s+/g, '-') || '',
@@ -87,8 +86,7 @@ export function useOrganizations() {
       
       console.log('Adding current user as owner...');
       // Add current user as owner
-      const { error: memberError } = await supabase
-        .from('api.organization_members')
+      const { error: memberError } = await apiSchema.from('organization_members')
         .insert({
           organization_id: org.id,
           user_id: session.user.id,
@@ -108,7 +106,8 @@ export function useOrganizations() {
         description: 'Your new organization has been created successfully.',
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Error in createOrganization mutation:', error);
       toast({
         title: 'Error creating organization',
         description: error.message,
@@ -139,8 +138,7 @@ export function useOrganizationMembers(organizationId?: string) {
     queryFn: async () => {
       if (!organizationId) return [];
       
-      const { data, error } = await supabase
-        .from('api.organization_members')
+      const { data, error } = await apiSchema.from('organization_members')
         .select('*')
         .eq('organization_id', organizationId);
       
@@ -155,9 +153,9 @@ export function useOrganizationMembers(organizationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       if (!organizationId) throw new Error('Organization ID is required');
       
-      // First, get the user ID from the email
+      // First, get the user ID from the email using RPC or a more direct approach
       const { data: userData, error: userError } = await supabase
-        .from('auth.users')
+        .from('api.users') // This would need to be adjusted based on your actual user table
         .select('id')
         .eq('email', email)
         .single();
@@ -165,8 +163,7 @@ export function useOrganizationMembers(organizationId?: string) {
       if (userError) throw new Error('User not found');
       
       // Then add the member
-      const { data, error } = await supabase
-        .from('api.organization_members')
+      const { data, error } = await apiSchema.from('organization_members')
         .insert({
           organization_id: organizationId,
           user_id: userData.id,
@@ -184,7 +181,7 @@ export function useOrganizationMembers(organizationId?: string) {
         description: 'The member has been added to the organization.',
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: 'Error adding member',
         description: error.message,

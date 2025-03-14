@@ -23,6 +23,7 @@ export default function OrganizationsPage() {
     slug: '',
     description: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCreateOrganization = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,53 +37,39 @@ export default function OrganizationsPage() {
       return;
     }
     
+    if (!newOrg.name) {
+      toast({
+        title: 'Required field missing',
+        description: 'Please provide a name for the organization.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
     try {
       console.log('Starting organization creation...', newOrg);      
-      // Set a timeout to handle cases where the promise might hang
-            const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timed out after 10 seconds')), 10000);
-      });
       
-      // Race between the actual request and the timeout
-      const result = await Promise.race([
-        createOrganization.mutateAsync(newOrg),
-        timeoutPromise
-      ]);
+      await createOrganization.mutateAsync(newOrg);
       
-      console.log('Organization creation completed:', result);
       toast({
         title: 'Success!',
         description: `Organization "${newOrg.name}" was created successfully.`,
       });
-    } catch (error: any) {
-      console.error('Error creating organization:', error);
-      // More detailed error logging to help diagnose the issue
-      if (error.message.includes('timeout')) {
-        console.error('Request timed out. Server response took too long.');
-        toast({
-          title: 'Request Timeout',
-          description: 'The server is taking too long to respond. Please try again later.',
-          variant: 'destructive',
-        });
-      } else if (error.response) {
-        // Axios or fetch response error
-        console.error('Server error response:', error.response);
-        toast({
-          title: `Server Error: ${error.response.status}`,
-          description: error.response.data?.message || 'The server returned an error. Please try again.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Failed to create organization',
-          description: error?.message || 'An unexpected error occurred. Please try again.',
-          variant: 'destructive',
-        });
-      }
-    } finally {
-      // Always close dialog and reset form, regardless of success/failure
+      
+      // Close the dialog and reset form
       setOpen(false);
       setNewOrg({ name: '', slug: '', description: '' });
+    } catch (error: any) {
+      console.error('Error creating organization:', error);
+      toast({
+        title: 'Failed to create organization',
+        description: error?.message || 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -160,8 +147,8 @@ export default function OrganizationsPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={createOrganization.isPending}>
-                  {createOrganization.isPending ? 'Creating...' : 'Create Organization'}
+                <Button type="submit" disabled={isSubmitting || createOrganization.isPending}>
+                  {isSubmitting || createOrganization.isPending ? 'Creating...' : 'Create Organization'}
                 </Button>
               </DialogFooter>
             </form>
