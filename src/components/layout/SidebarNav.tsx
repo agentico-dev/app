@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -50,7 +51,7 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
     },
     {
       title: 'Applications',
-      href: '/applications',
+      href: '/apps',
       icon: AppWindow,
     },
     {
@@ -60,7 +61,7 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
     },
     {
       title: 'AI Tools',
-      href: '/ai-tools',
+      href: '/tools',
       icon: CircuitBoard,
     },
   ];

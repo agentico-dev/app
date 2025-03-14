@@ -2,6 +2,7 @@
 export interface Application {
   id: string;
   name: string;
+  slug: string;
   description: string;
   category: string;
   status: ApplicationStatus;
@@ -12,7 +13,10 @@ export interface Application {
   created_at: string;
   updated_at: string;
   organization_id?: string;
+  organization_slug?: string;
   user_id?: string;
+  project_id?: string;
+  project_slug?: string;
 }
 
 export type ApplicationStatus = 'active' | 'development' | 'maintenance' | 'archived';
@@ -36,6 +40,7 @@ export interface ResourceTags {
 export interface ApplicationAPI {
   id: string;
   name: string;
+  slug: string;
   description?: string;
   application_id: string;
   status: 'active' | 'inactive' | 'deprecated';
@@ -50,6 +55,7 @@ export interface ApplicationAPI {
 export interface ApplicationService {
   id: string;
   name: string;
+  slug: string;
   description?: string;
   application_id: string;
   status: 'active' | 'inactive' | 'maintenance';

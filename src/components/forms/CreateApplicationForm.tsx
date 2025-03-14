@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CreateApplicationPayload } from '@/types/organization';
+import { CreateApplicationPayload, generateSlug } from '@/types/organization';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -52,19 +52,25 @@ export function CreateApplicationForm() {
         return;
       }
       
+      // Generate slug from name
+      const slug = generateSlug(data.name);
+      
       // Important: We need to explicitly set user_id to match the current user's ID
       // This is required by the RLS policy we just created
-      const { error } = await supabase
+      const { data: newApp, error } = await supabase
         .from('applications')
         .insert({
           name: data.name,
+          slug: slug,
           description: data.description,
           category: data.category,
           status: data.status,
           tags: data.tags,
           user_id: session.user.id, // This is crucial for RLS
           organization_id: organizationId,
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Error creating application:', error);
@@ -72,7 +78,24 @@ export function CreateApplicationForm() {
       }
       
       toast.success('Application created successfully');
-      navigate('/applications');
+      
+      // Navigate to the new application using the slug-based URL
+      if (newApp) {
+        // Fetch the organization slug
+        const { data: org } = await supabase
+          .from('organizations')
+          .select('slug')
+          .eq('id', organizationId)
+          .single();
+          
+        if (org) {
+          navigate(`/apps/${org.slug}@${slug}`);
+        } else {
+          navigate(`/apps/${newApp.id}`);
+        }
+      } else {
+        navigate('/applications');
+      }
     } catch (error: any) {
       console.error('Error creating application:', error);
       toast.error(`Failed to create application: ${error.message || 'Unknown error'}`);

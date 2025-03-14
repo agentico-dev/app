@@ -77,7 +77,6 @@ const AppRoutes = () => {
   if (!session.user && window.location.pathname === '/') {
     return (
       <Routes>
-        {/* <Route path="/" element={<LandingPage />} /> */}
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -100,34 +99,68 @@ const AppRoutes = () => {
         <Route path="/" element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
 
-        {/* Projects routes */}
+        {/* Organization routes */}
+        <Route path="/orgs" element={<OrganizationsPage />} />
+        <Route path="/orgs/:slug" element={<OrganizationDetailPage />} />
+        <Route path="/organizations/:slug" element={<Navigate to="/orgs/:slug" replace />} />
+
+        {/* Projects routes - both ID and slug-based */}
         <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projs" element={<Navigate to="/projects" replace />} />
         <Route path="/projects/new" element={<AuthenticatedRoute><NewProjectPage /></AuthenticatedRoute>} />
+        <Route path="/projs/new" element={<Navigate to="/projects/new" replace />} />
+        <Route path="/projects/:id" element={<ProjectsPage />} />
+        <Route path="/projects/:orgSlug@:projSlug" element={<ProjectsPage />} />
+        <Route path="/projs/:orgSlug@:projSlug" element={<Navigate to="/projects/:orgSlug@:projSlug" replace />} />
 
-        {/* Applications routes */}
+        {/* Applications routes - both ID and slug-based */}
         <Route path="/applications" element={<ApplicationsPage />} />
+        <Route path="/apps" element={<Navigate to="/applications" replace />} />
         <Route path="/applications/new" element={<AuthenticatedRoute><NewApplicationPage /></AuthenticatedRoute>} />
+        <Route path="/apps/new" element={<Navigate to="/applications/new" replace />} />
+        
+        {/* Application detail routes */}
         <Route path="/applications/:id" element={<AuthenticatedRoute><ApplicationDetailPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug" element={<AuthenticatedRoute><ApplicationDetailPage /></AuthenticatedRoute>} />
+        
+        {/* Application API routes */}
         <Route path="/applications/:applicationId/apis/new" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug/apis/new" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
         <Route path="/applications/:applicationId/apis/:apiId" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug/apis/:apiSlug" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
+        
+        {/* Application Service routes */}
         <Route path="/applications/:applicationId/services/new" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug/services/new" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
         <Route path="/applications/:applicationId/services/:serviceId" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug/services/:serviceSlug" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
+        
+        {/* Application Message routes */}
         <Route path="/applications/:applicationId/messages/new" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug/messages/new" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
         <Route path="/applications/:applicationId/messages/:messageId" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug/messages/:messageId" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
 
-        {/* Servers routes */}
+        {/* Servers routes - both ID and slug-based */}
         <Route path="/servers" element={<ServersPage />} />
         <Route path="/servers/new" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
+        <Route path="/servers/:id" element={<ServersPage />} />
+        <Route path="/servers/:projSlug@:serverSlug" element={<ServersPage />} />
 
-        {/* AI Tools routes */}
+        {/* AI Tools routes - both ID and slug-based */}
         <Route path="/ai-tools" element={<AIToolsPage />} />
+        <Route path="/tools" element={<Navigate to="/ai-tools" replace />} />
         <Route path="/ai-tools/new" element={<AuthenticatedRoute><NewToolPage /></AuthenticatedRoute>} />
+        <Route path="/tools/new" element={<Navigate to="/ai-tools/new" replace />} />
+        <Route path="/ai-tools/:id" element={<AIToolsPage />} />
+        <Route path="/tools/:serverSlug@:toolSlug" element={<AIToolsPage />} />
 
+        {/* Legacy routes that will be updated */}
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
         <Route path="/agents" element={<ProjectsPage />} />
-        <Route path="/orgs" element={<OrganizationsPage />} />
-        <Route path="/orgs/:slug" element={<OrganizationDetailPage />} />
+        
+        {/* User profile and settings */}
         <Route path="/profile" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
         <Route path="/settings" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
       </Route>

@@ -12,14 +12,56 @@ import MessagesList from '@/components/applications/MessagesList';
 import ApplicationSettings from '@/components/applications/ApplicationSettings';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { Application } from '@/types/application';
 
 export default function ApplicationDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id, orgSlug, appSlug } = useParams<{ id?: string; orgSlug?: string; appSlug?: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('apis');
   
-  const { data: application, isLoading, error } = useApplication(id);
+  // Function to get application by slug
+  const getApplicationBySlug = async () => {
+    if (!orgSlug || !appSlug) return null;
+    
+    // First, get the organization ID from the slug
+    const { data: org, error: orgError } = await supabase
+      .from('organizations')
+      .select('id')
+      .eq('slug', orgSlug)
+      .single();
+      
+    if (orgError) throw orgError;
+    
+    // Then get the application using org ID and app slug
+    const { data: app, error: appError } = await supabase
+      .from('applications')
+      .select('*')
+      .eq('organization_id', org.id)
+      .eq('slug', appSlug)
+      .single();
+      
+    if (appError) throw appError;
+    
+    return app as Application;
+  };
+  
+  // Query by ID if id is provided
+  const { data: applicationById, isLoading: isLoadingById, error: errorById } = useApplication(id);
+  
+  // Query by slug if orgSlug and appSlug are provided
+  const { data: applicationBySlug, isLoading: isLoadingBySlug, error: errorBySlug } = useQuery({
+    queryKey: ['application', orgSlug, appSlug],
+    queryFn: getApplicationBySlug,
+    enabled: !id && !!orgSlug && !!appSlug,
+  });
+  
+  // Combine the results
+  const application = applicationById || applicationBySlug;
+  const isLoading = isLoadingById || isLoadingBySlug;
+  const error = errorById || errorBySlug;
 
   useEffect(() => {
     if (error) {
@@ -28,14 +70,25 @@ export default function ApplicationDetailPage() {
         description: error.message,
         variant: 'destructive',
       });
-      navigate('/applications');
+      navigate('/apps');
     }
   }, [error, navigate, toast]);
+
+  // Determine the correct URL format for the application
+  const getApplicationUrl = () => {
+    if (orgSlug && appSlug) {
+      return `/apps/${orgSlug}@${appSlug}`;
+    }
+    if (application?.organization_slug && application?.slug) {
+      return `/apps/${application.organization_slug}@${application.slug}`;
+    }
+    return '/apps';
+  };
 
   return (
     <div className="container py-6 space-y-6">
       <Button variant="ghost" asChild>
-        <div onClick={() => navigate('/applications')}>
+        <div onClick={() => navigate('/apps')}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Applications
         </div>
       </Button>
@@ -70,31 +123,49 @@ export default function ApplicationDetailPage() {
             <TabsContent value="apis" className="space-y-4 mt-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Application APIs</h2>
-                <Button onClick={() => navigate(`/applications/${id}/apis/new`)}>
+                <Button onClick={() => {
+                  if (orgSlug && appSlug) {
+                    navigate(`/apps/${orgSlug}@${appSlug}/apis/new`);
+                  } else if (id) {
+                    navigate(`/applications/${id}/apis/new`);
+                  }
+                }}>
                   <PlusCircle className="h-4 w-4 mr-2" /> New API
                 </Button>
               </div>
-              <APIsList applicationId={id} />
+              <APIsList applicationId={application.id} />
             </TabsContent>
             
             <TabsContent value="services" className="space-y-4 mt-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Application Services</h2>
-                <Button onClick={() => navigate(`/applications/${id}/services/new`)}>
+                <Button onClick={() => {
+                  if (orgSlug && appSlug) {
+                    navigate(`/apps/${orgSlug}@${appSlug}/services/new`);
+                  } else if (id) {
+                    navigate(`/applications/${id}/services/new`);
+                  }
+                }}>
                   <PlusCircle className="h-4 w-4 mr-2" /> New Service
                 </Button>
               </div>
-              <ServicesList applicationId={id} />
+              <ServicesList applicationId={application.id} />
             </TabsContent>
             
             <TabsContent value="messages" className="space-y-4 mt-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Application Messages</h2>
-                <Button onClick={() => navigate(`/applications/${id}/messages/new`)}>
+                <Button onClick={() => {
+                  if (orgSlug && appSlug) {
+                    navigate(`/apps/${orgSlug}@${appSlug}/messages/new`);
+                  } else if (id) {
+                    navigate(`/applications/${id}/messages/new`);
+                  }
+                }}>
                   <PlusCircle className="h-4 w-4 mr-2" /> New Message
                 </Button>
               </div>
-              <MessagesList applicationId={id} />
+              <MessagesList applicationId={application.id} />
             </TabsContent>
             
             <TabsContent value="settings" className="space-y-4 mt-4">
@@ -118,7 +189,7 @@ export default function ApplicationDetailPage() {
           <p className="text-muted-foreground">
             The application you're looking for doesn't exist or you don't have access to it.
           </p>
-          <Button className="mt-4" onClick={() => navigate('/applications')}>
+          <Button className="mt-4" onClick={() => navigate('/apps')}>
             Go to Applications
           </Button>
         </div>

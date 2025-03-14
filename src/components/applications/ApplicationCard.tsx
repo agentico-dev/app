@@ -8,6 +8,8 @@ import { AppWindow, CircuitBoard, Star, Tag, X } from 'lucide-react';
 import { Application } from '@/types/application';
 import { useTags } from '@/contexts/TagsContext';
 import { toast } from '@/components/ui/use-toast';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ApplicationCardProps {
   application: Application;
@@ -15,6 +17,24 @@ interface ApplicationCardProps {
 
 export function ApplicationCard({ application }: ApplicationCardProps) {
   const { removeTagFromResource } = useTags();
+
+  // Fetch organization slug if needed
+  const { data: organization } = useQuery({
+    queryKey: ['organization', application.organization_id],
+    queryFn: async () => {
+      if (!application.organization_id) return null;
+      
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('slug')
+        .eq('id', application.organization_id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!application.organization_id && !application.organization_slug,
+  });
 
   const getStatusClassName = (status: string): string => {
     switch (status.toLowerCase()) {
@@ -42,6 +62,22 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
         variant: 'destructive',
       });
     }
+  };
+
+  // Generate the correct URL for the application
+  const getAppUrl = () => {
+    // First priority: Use org slug and app slug if both are available
+    if (application.organization_slug && application.slug) {
+      return `/apps/${application.organization_slug}@${application.slug}`;
+    }
+    
+    // Second priority: Use fetched org slug and app slug
+    if (organization?.slug && application.slug) {
+      return `/apps/${organization.slug}@${application.slug}`;
+    }
+    
+    // Fallback: Use ID
+    return `/applications/${application.id}`;
   };
 
   return (
@@ -94,7 +130,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
           {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
         </Badge>
         <Button asChild>
-          <Link to={`/applications/${application.id}`}>View API</Link>
+          <Link to={getAppUrl()}>View API</Link>
         </Button>
       </CardFooter>
     </Card>

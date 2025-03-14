@@ -1,3 +1,4 @@
+
 export interface Organization {
   id: string;
   name: string;
@@ -21,6 +22,7 @@ export interface OrganizationMember {
 export interface OrganizationProject {
   id: string;
   name: string;
+  slug: string;
   organization_id: string;
   description: string | null;
   status: 'active' | 'archived' | 'deleted';
@@ -53,6 +55,7 @@ export interface CreateServerPayload {
   name: string;
   description?: string;
   organization_id?: string;
+  project_id?: string;
   type?: string;
   status?: string;
 }
@@ -62,6 +65,7 @@ export interface CreateToolPayload {
   name: string;
   description?: string;
   organization_id?: string;
+  server_id?: string;
   category?: string;
   tags?: string[];
   status?: string;
@@ -73,4 +77,31 @@ export interface OrganizationSelectorProps {
   selectedOrgId?: string;
   includeGlobal?: boolean;
   className?: string;
+}
+
+// Utility function to generate a valid slug from a name
+export function generateSlug(name: string): string {
+  // Convert to lowercase
+  let slug = name.toLowerCase();
+  
+  // Replace spaces with dashes
+  slug = slug.replace(/\s+/g, '-');
+  
+  // Remove special characters and ensure it follows DNS label standard
+  slug = slug.replace(/[^a-z0-9-]/g, '');
+  
+  // Ensure it starts with an alphabetic character
+  if (!/^[a-z]/.test(slug)) {
+    slug = 'a-' + slug;
+  }
+  
+  // Ensure it ends with an alphanumeric character
+  if (!/[a-z0-9]$/.test(slug)) {
+    slug = slug + '0';
+  }
+  
+  // Limit to 63 characters
+  slug = slug.slice(0, 63);
+  
+  return slug;
 }
