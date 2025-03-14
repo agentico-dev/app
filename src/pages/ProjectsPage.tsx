@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,12 +47,19 @@ export function ProjectsPage() {
     const fetchProjects = async () => {
       setIsLoading(true);
       try {
+        console.log('Fetching projects from public schema');
         const { data, error } = await supabase
           .from('projects')
           .select('*')
           .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching projects:', error);
+          toast.error(`Failed to load projects: ${error.message}`);
+          throw error;
+        }
+        
+        console.log('Fetched projects:', data);
         
         // Normalize the data to match our interface
         const normalizedProjects = data.map(project => ({

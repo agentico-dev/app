@@ -131,6 +131,47 @@ export type Database = {
           },
         ]
       }
+      application_messages: {
+        Row: {
+          application_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          message_type: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          message_type?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          message_type?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_messages_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       application_service_messages: {
         Row: {
           created_at: string | null
@@ -484,6 +525,110 @@ export type Database = {
           },
         ]
       }
+      resource_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          resource_id: string
+          resource_type: string
+          tag_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          resource_id: string
+          resource_type: string
+          tag_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          resource_id?: string
+          resource_type?: string
+          tag_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      server_ai_tools: {
+        Row: {
+          ai_tool_id: string | null
+          created_at: string | null
+          id: string
+          server_id: string | null
+        }
+        Insert: {
+          ai_tool_id?: string | null
+          created_at?: string | null
+          id?: string
+          server_id?: string | null
+        }
+        Update: {
+          ai_tool_id?: string | null
+          created_at?: string | null
+          id?: string
+          server_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "server_ai_tools_ai_tool_id_fkey"
+            columns: ["ai_tool_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "server_ai_tools_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      server_applications: {
+        Row: {
+          application_id: string | null
+          created_at: string | null
+          id: string
+          server_id: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string | null
+          id?: string
+          server_id?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string | null
+          id?: string
+          server_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "server_applications_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "server_applications_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       servers: {
         Row: {
           created_at: string | null
@@ -533,6 +678,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
     }
     Views: {

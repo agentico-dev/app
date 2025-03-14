@@ -25,12 +25,18 @@ export function OrganizationProjectsTab({
   const { data: projects, isLoading } = useQuery({
     queryKey: ['organization-projects', organization.id],
     queryFn: async () => {
+      console.log('Fetching projects for organization:', organization.id);
       const { data, error } = await supabase
         .from('projects')
         .select('*')
         .eq('organization_id', organization.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching projects:', error);
+        throw error;
+      }
+      
+      console.log('Fetched projects:', data);
       return data;
     },
   });
