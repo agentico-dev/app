@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-
-// Helper functions for working with Supabase and the api schema
+import { Organization } from '@/types/organization';
 
 /**
  * Access a table in the api schema
@@ -42,17 +41,33 @@ export const handleSupabaseError = (error: any): string => {
  * Get the global organization that all users belong to
  * @returns Promise with the global organization
  */
-export const getGlobalOrganization = async () => {
-  const { data, error } = await apiTable('organizations')
-    .select('*')
-    .eq('slug', 'global')
-    .single();
-  
-  if (error) {
+export const getGlobalOrganization = async (): Promise<Organization | null> => {
+  try {
+    const { data, error } = await apiTable('organizations')
+      .select('*')
+      .eq('slug', 'global')
+      .single();
+    
+    if (error) {
+      console.error('Error fetching global organization:', error);
+      return null;
+    }
+    
+    // Ensure the response matches the Organization type
+    const organization: Organization = {
+      id: data.id,
+      name: data.name,
+      slug: data.slug,
+      description: data.description || '',
+      logo_url: data.logo_url,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      is_global: true
+    };
+    
+    return organization;
+  } catch (error) {
     console.error('Error fetching global organization:', error);
     return null;
   }
-  
-  return data;
 };
-

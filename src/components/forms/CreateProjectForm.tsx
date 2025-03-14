@@ -20,11 +20,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { apiTable } from '@/utils/supabaseHelpers';
-import OrganizationSelector from '@/components/organizations/OrganizationSelector';
 
 export function CreateProjectForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingOrgs, setIsLoadingOrgs] = useState(false);
   const navigate = useNavigate();
   const { session } = useAuth();
   
@@ -34,13 +32,16 @@ export function CreateProjectForm() {
       description: '',
       status: 'Development',
       tags: [],
-      organization_id: '',
     },
   });
 
-  const handleOrganizationChange = (orgId: string) => {
-    form.setValue('organization_id', orgId);
-  };
+  // Load the selected organization from localStorage
+  useEffect(() => {
+    const savedOrgId = localStorage.getItem('selectedOrganizationId');
+    if (savedOrgId) {
+      form.setValue('organization_id', savedOrgId);
+    }
+  }, [form]);
 
   const onSubmit = async (data: CreateProjectPayload) => {
     if (!session.user) {
@@ -48,8 +49,11 @@ export function CreateProjectForm() {
       return;
     }
     
-    if (!data.organization_id) {
-      toast.error("Please select an organization");
+    // Get organization from localStorage
+    const organizationId = localStorage.getItem('selectedOrganizationId');
+    
+    if (!organizationId) {
+      toast.error("Please select an organization from the top navigation bar");
       return;
     }
     
@@ -62,7 +66,7 @@ export function CreateProjectForm() {
         status: data.status,
         tags: data.tags,
         user_id: session.user.id,
-        organization_id: data.organization_id,
+        organization_id: organizationId,
       });
 
       if (error) throw error;
@@ -80,27 +84,6 @@ export function CreateProjectForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="organization_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Organization</FormLabel>
-              <FormControl>
-                <OrganizationSelector
-                  selectedOrgId={field.value}
-                  onOrganizationChange={handleOrganizationChange}
-                  includeGlobal={false}
-                />
-              </FormControl>
-              <FormDescription>
-                The organization this project belongs to.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
         <FormField
           control={form.control}
           name="name"

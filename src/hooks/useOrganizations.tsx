@@ -22,7 +22,20 @@ export function useOrganizations() {
         .order('name');
       
       if (error) throw error;
-      return data as unknown as Organization[];
+      
+      // Map the data to ensure it matches Organization type
+      const orgData = data.map((org: any): Organization => ({
+        id: org.id,
+        name: org.name,
+        slug: org.slug || '',
+        description: org.description || '',
+        logo_url: org.logo_url,
+        created_at: org.created_at,
+        updated_at: org.updated_at,
+        is_global: !!org.is_global
+      }));
+      
+      return orgData;
     },
   });
 
@@ -33,7 +46,7 @@ export function useOrganizations() {
       if (!session.user) {
         // Return just the global organization for non-authenticated users
         const globalOrg = await getGlobalOrganization();
-        return globalOrg ? [{ ...globalOrg, role: 'member', is_global: true }] : [];
+        return globalOrg ? [{ ...globalOrg, role: 'member' }] : [];
       }
       
       // Get user's organization memberships
@@ -49,11 +62,11 @@ export function useOrganizations() {
       if (!memberData || memberData.length === 0) {
         // If user has no explicit memberships, still include global org
         const globalOrg = await getGlobalOrganization();
-        return globalOrg ? [{ ...globalOrg, role: 'member', is_global: true }] : [];
+        return globalOrg ? [{ ...globalOrg, role: 'member' }] : [];
       }
       
       // Get all organizations the user is a member of
-      const orgIds = memberData.map(item => item.organization_id);
+      const orgIds = memberData.map((item: any) => item.organization_id);
       const { data: orgsData, error: orgsError } = await apiTable('organizations')
         .select('*')
         .in('id', orgIds);
@@ -62,20 +75,31 @@ export function useOrganizations() {
       
       // Also get the global organization if it's not already included
       const globalOrg = await getGlobalOrganization();
-      let userOrgs = orgsData.map(org => {
-        const memberInfo = memberData.find(item => item.organization_id === org.id);
-        return {
-          ...org,
+      
+      let userOrgs: (Organization & { role: string })[] = orgsData.map((org: any) => {
+        const memberInfo = memberData.find((item: any) => item.organization_id === org.id);
+        
+        // Create strongly typed Organization object
+        const typedOrg: Organization & { role: string } = {
+          id: org.id,
+          name: org.name,
+          slug: org.slug || '',
+          description: org.description || '',
+          logo_url: org.logo_url,
+          created_at: org.created_at,
+          updated_at: org.updated_at,
           role: memberInfo?.role || 'member',
-        } as Organization & { role: string };
+          is_global: !!org.is_global
+        };
+        
+        return typedOrg;
       });
       
       // Add global org if not already in the list
       if (globalOrg && !userOrgs.some(org => org.id === globalOrg.id)) {
         userOrgs.push({
           ...globalOrg,
-          role: 'member',
-          is_global: true
+          role: 'member'
         });
       }
       
@@ -118,7 +142,18 @@ export function useOrganizations() {
       
       if (memberError) throw memberError;
       
-      return org;
+      // Return a properly typed Organization object
+      const typedOrg: Organization = {
+        id: org.id,
+        name: org.name,
+        slug: org.slug || '',
+        description: org.description || '',
+        logo_url: org.logo_url,
+        created_at: org.created_at,
+        updated_at: org.updated_at
+      };
+      
+      return typedOrg;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
@@ -165,7 +200,16 @@ export function useOrganizationMembers(organizationId?: string) {
         .eq('organization_id', organizationId);
       
       if (error) throw error;
-      return data as OrganizationMember[];
+      
+      const typedMembers: OrganizationMember[] = data.map((member: any): OrganizationMember => ({
+        id: member.id,
+        organization_id: member.organization_id,
+        user_id: member.user_id,
+        role: member.role,
+        created_at: member.created_at
+      }));
+      
+      return typedMembers;
     },
     enabled: !!organizationId,
   });

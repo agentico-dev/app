@@ -31,8 +31,16 @@ const OrganizationSelector = ({
   const [filteredOrgs, setFilteredOrgs] = useState<Organization[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
 
+  // Effect to load the previously selected organization from localStorage
   useEffect(() => {
-    if (userOrganizations) {
+    const savedOrgId = localStorage.getItem('selectedOrganizationId');
+    if (savedOrgId && !selectedOrgId) {
+      onOrganizationChange(savedOrgId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (userOrganizations && userOrganizations.length > 0) {
       // Filter organizations based on the search query and if global should be included
       let orgs = [...userOrganizations];
       

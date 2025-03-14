@@ -23,16 +23,27 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { NotificationsPopover } from '@/components/notifications/NotificationsPopover';
 import { useAuth } from '@/hooks/useAuth';
+import OrganizationSelector from '@/components/organizations/OrganizationSelector';
+import { useNavigate } from 'react-router-dom';
 
 export function TopNav() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const { signOut, session } = useAuth();
   const isAuthenticated = !!session.user;
+  const [selectedOrgId, setSelectedOrgId] = useState<string>('');
+  const navigate = useNavigate();
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
+  };
+
+  const handleOrganizationChange = (orgId: string) => {
+    setSelectedOrgId(orgId);
+    // Store in localStorage to maintain selection across page loads
+    localStorage.setItem('selectedOrganizationId', orgId);
+    // You could add additional logic here like refreshing data based on selected org
   };
 
   return (
@@ -56,6 +67,16 @@ export function TopNav() {
         </form>
 
         <div className="flex flex-1 items-center justify-end gap-4">
+          {isAuthenticated && (
+            <div className="w-[200px] mr-2">
+              <OrganizationSelector
+                selectedOrgId={selectedOrgId}
+                onOrganizationChange={handleOrganizationChange}
+                includeGlobal={true}
+              />
+            </div>
+          )}
+          
           <Link to="/orgs">
             <Button variant="ghost" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
