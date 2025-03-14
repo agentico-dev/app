@@ -1,5 +1,9 @@
 
 import { Organization, OrganizationMember } from '@/types/organization';
+import { 
+  useCreateOrganizationMutation as createOrgMutation, 
+  useAddMemberMutation as addMemberMutation 
+} from '@/hooks/useOrganizationMutations';
 
 export interface UseOrganizationsResult {
   organizations: Organization[] | undefined;
@@ -7,7 +11,7 @@ export interface UseOrganizationsResult {
   isLoading: boolean;
   error: Error | null;
   isAuthenticated: boolean;
-  createOrganization: ReturnType<typeof useCreateOrganizationMutation>;
+  createOrganization: ReturnType<typeof createOrgMutation>;
 }
 
 export interface UseOrganizationMembersResult {
@@ -15,7 +19,7 @@ export interface UseOrganizationMembersResult {
   isLoading: boolean;
   error: Error | null;
   isAuthenticated: boolean;
-  addMember: ReturnType<typeof useAddMemberMutation>;
+  addMember: ReturnType<typeof addMemberMutation>;
 }
 
 export interface AddMemberParams {
