@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 interface TagBadgeProps {
   name: string;
   category?: string;
+  tagId?: string;
   onRemove?: () => void;
   variant?: 'default' | 'outline' | 'secondary' | 'destructive';
   className?: string;
@@ -15,6 +16,7 @@ interface TagBadgeProps {
 export function TagBadge({
   name,
   category,
+  tagId,
   onRemove,
   variant = 'secondary',
   className,

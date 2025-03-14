@@ -1,75 +1,130 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Filter, Search } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Application } from '@/types/application';
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tag } from "@/types/application";
+import { Check, Filter, Search, Tags } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
-interface FilterControlsProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  activeFilter: string | null;
-  setActiveFilter: (filter: string | null) => void;
-  applications: Application[];
+export interface FilterControlsProps {
+  searchValue: string;
+  onSearchValueChange: (value: string) => void;
+  statusOptions: { label: string; value: string | null }[];
+  selectedStatus: string | null;
+  onStatusChange: (value: string | null) => void;
+  tags: Tag[];
+  selectedTags: string[];
+  onTagsChange: (tags: string[]) => void;
 }
 
-export function FilterControls({ 
-  searchQuery, 
-  setSearchQuery, 
-  activeFilter, 
-  setActiveFilter, 
-  applications 
+export function FilterControls({
+  searchValue,
+  onSearchValueChange,
+  statusOptions,
+  selectedStatus,
+  onStatusChange,
+  tags,
+  selectedTags,
+  onTagsChange,
 }: FilterControlsProps) {
+  const handleToggleTag = (tagId: string) => {
+    if (selectedTags.includes(tagId)) {
+      onTagsChange(selectedTags.filter((id) => id !== tagId));
+    } else {
+      onTagsChange([...selectedTags, tagId]);
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center">
-      <div className="relative flex-1">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+    <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex-1 relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
-          type="search"
-          placeholder="Search applications..."
-          className="pl-8 w-full md:max-w-xs"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search..."
+          value={searchValue}
+          onChange={(e) => onSearchValueChange(e.target.value)}
+          className="pl-9"
         />
       </div>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="ml-auto">
-            <Filter className="mr-2 h-4 w-4" />
-            Filter
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setActiveFilter(null)}>
-            All Applications
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setActiveFilter('favorite')}>
-            Favorites
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setActiveFilter('active')}>
-            Active
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel>Categories</DropdownMenuLabel>
-          {[...new Set(applications.map(app => app.category))].map(category => (
-            <DropdownMenuItem key={category} onClick={() => setActiveFilter(category)}>
-              {category}
-            </DropdownMenuItem>
+
+      <Select
+        value={selectedStatus === null ? 'all' : selectedStatus}
+        onValueChange={(value) => onStatusChange(value === 'all' ? null : value)}
+      >
+        <SelectTrigger className="w-full md:w-[180px]">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          {statusOptions.map((option) => (
+            <SelectItem key={option.value ?? 'all'} value={option.value ?? 'all'}>
+              {option.label}
+            </SelectItem>
           ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </SelectContent>
+      </Select>
+
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="w-full md:w-[180px] justify-between">
+            <div className="flex items-center">
+              <Tags className="mr-2 h-4 w-4" />
+              <span>Tags</span>
+              {selectedTags.length > 0 && (
+                <Badge variant="secondary" className="ml-2 px-1 font-normal">
+                  {selectedTags.length}
+                </Badge>
+              )}
+            </div>
+            <Filter className="ml-2 h-4 w-4 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[200px] p-0" align="end">
+          <Command>
+            <CommandInput placeholder="Search tags..." />
+            <CommandList>
+              <CommandEmpty>No tags found.</CommandEmpty>
+              <CommandGroup>
+                <ScrollArea className="h-[200px]">
+                  {tags.map((tag) => {
+                    const isSelected = selectedTags.includes(tag.id);
+                    return (
+                      <CommandItem
+                        key={tag.id}
+                        onSelect={() => handleToggleTag(tag.id)}
+                        className="flex items-center gap-2"
+                      >
+                        <div
+                          className={`flex h-4 w-4 items-center justify-center rounded-sm border ${
+                            isSelected
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-muted opacity-50'
+                          }`}
+                        >
+                          {isSelected && <Check className="h-3 w-3" />}
+                        </div>
+                        <span>{tag.name}</span>
+                      </CommandItem>
+                    );
+                  })}
+                </ScrollArea>
+              </CommandGroup>
+              <Separator />
+              <CommandGroup>
+                <CommandItem
+                  onSelect={() => onTagsChange([])}
+                  className="justify-center text-center"
+                >
+                  Clear filters
+                </CommandItem>
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
-
-export default FilterControls;

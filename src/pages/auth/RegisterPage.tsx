@@ -1,189 +1,194 @@
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { toast } from 'sonner';
-import { AlertCircle, Github, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
+import { AlertCircle, ArrowLeft, ArrowRight, Key, User } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
 import PlanSelector from '@/components/PlanSelector';
-import { supabase } from '@/integrations/supabase/client';
+import { Plan } from '@/types/plans';
+import { usePlans } from '@/hooks/usePlans';
+
+const userSchema = z.object({
+  fullName: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
 
 export default function RegisterPage() {
+  const [step, setStep] = useState(1);
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [selectedPlanId, setSelectedPlanId] = useState('free');
-  const [registering, setRegistering] = useState(false);
+  const [planId, setPlanId] = useState('free');
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
   const { signUp } = useAuth();
+  const { plans } = usePlans();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password || !fullName) {
-      setError('Please fill in all fields.');
-      return;
-    }
-    
+    setIsLoading(true);
     setError(null);
-    setRegistering(true);
-    
+
     try {
-      // Sign up the user with Supabase Auth with metadata
-      const metadata = { 
-        full_name: fullName, 
-        plan_id: selectedPlanId 
-      };
+      const validatedData = userSchema.parse({ fullName, email, password });
       
-      await signUp(email, password, metadata);
+      const { error } = await signUp(
+        validatedData.email, 
+        validatedData.password, 
+        { full_name: validatedData.fullName, plan_id: planId }
+      );
       
-      // Wait for auth state to be updated
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      
-      if (user) {
-        // Create a personal organization for the user
-        const orgName = `${fullName}'s Organization`;
-        const orgSlug = orgName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-        
-        const { data: org, error: orgError } = await supabase
-          .rpc('create_organization', {
-            org_name: orgName,
-            org_slug: orgSlug,
-            org_description: `Personal organization for ${fullName}`,
-            org_logo_url: null
-          })
-          .select()
-          .single();
-        
-        if (orgError) throw orgError;
-        
-        // Add the user as an owner of the organization
-        const { error: memberError } = await supabase
-          .rpc('add_organization_member', {
-            org_id: org.id,
-            member_id: user.id,
-            member_role: 'owner'
-          });
-        
-        if (memberError) throw memberError;
-      }
-      
-      toast.success('Account created! Please log in.', {
-        description: 'Your account has been created successfully.',
+      if (error) throw error;
+
+      toast({
+        title: "Registration successful",
+        description: "Your account has been created and you are now logged in.",
       });
       
-      // Redirect to login
-      navigate('/login');
+      navigate('/');
     } catch (err: any) {
       console.error('Registration error:', err);
-      setError(err.message || 'Failed to register. Please try again.');
-      toast.error('Registration failed', {
-        description: err.message || 'Please try again.',
+      
+      if (err instanceof z.ZodError) {
+        setError(err.errors[0].message);
+      } else {
+        setError(err.message || 'Failed to register');
+      }
+      
+      toast({
+        title: "Registration failed",
+        description: err.message || "There was a problem creating your account.",
+        variant: "destructive",
       });
     } finally {
-      setRegistering(false);
+      setIsLoading(false);
+    }
+  };
+
+  const nextStep = () => {
+    try {
+      if (step === 1) {
+        userSchema.parse({ fullName, email, password });
+        setStep(2);
+      }
+    } catch (err: any) {
+      if (err instanceof z.ZodError) {
+        setError(err.errors[0].message);
+      }
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-muted/40">
+    <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>
-            Enter your details below to create your account
+          <CardTitle className="text-2xl text-center">Create an account</CardTitle>
+          <CardDescription className="text-center">
+            {step === 1 ? 'Enter your details to create an account' : 'Choose your plan (all free during beta)'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
           
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                placeholder="Enter your full name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
+          {step === 1 ? (
+            <form className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    id="fullName"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="pl-9"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-9"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <Button type="button" onClick={nextStep} className="w-full">
+                Continue <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </form>
+          ) : (
+            <div className="space-y-6">
+              <PlanSelector 
+                plans={plans}
+                selectedPlan={planId}
+                onSelectPlan={setPlanId}
               />
+              
+              <div className="flex space-x-4">
+                <Button 
+                  variant="outline" 
+                  type="button" 
+                  onClick={() => setStep(1)}
+                  className="flex-1"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                </Button>
+                <Button 
+                  type="button" 
+                  onClick={handleSignUp}
+                  className="flex-1"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Creating Account...' : 'Create Account'}
+                </Button>
+              </div>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Choose a password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                Password must be at least 6 characters long
-              </p>
-            </div>
-            
-            <div className="space-y-3">
-              <Label>Choose a Plan</Label>
-              <PlanSelector
-                selectedPlan={selectedPlanId}
-                onSelectPlan={setSelectedPlanId}
-              />
-            </div>
-            
-            <Button type="submit" className="w-full" disabled={registering}>
-              {registering ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
-                </>
-              ) : (
-                'Create account'
-              )}
-            </Button>
-          </form>
+          )}
           
-          <Separator />
-          
-          <Button variant="outline" className="w-full" disabled={registering}>
-            <Github className="mr-2 h-4 w-4" />
-            Continue with GitHub
-          </Button>
         </CardContent>
-        <CardFooter>
-          <p className="text-sm text-muted-foreground">
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
             <Link to="/login" className="text-primary hover:underline">
               Sign in
             </Link>
-          </p>
+          </div>
         </CardFooter>
       </Card>
     </div>

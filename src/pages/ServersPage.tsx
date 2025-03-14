@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { PlusCircle, Server, Star, StarIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useServers } from '@/hooks/useServers';
@@ -11,7 +10,7 @@ import { Server as ServerType } from '@/types/server';
 import { FilterControls } from '@/components/applications/FilterControls';
 import { useTags } from '@/contexts/TagsContext';
 
-// Define the component props interface
+// Define custom filter controls interface to match component props
 interface CustomFilterControlsProps {
   searchValue: string; 
   onSearchValueChange: (value: string) => void;
@@ -21,11 +20,6 @@ interface CustomFilterControlsProps {
   tags: { id: string; name: string }[];
   selectedTags: string[];
   onTagsChange: (tags: string[]) => void;
-}
-
-// Define the component props interface
-interface CustomTagBadgeProps {
-  tagId: string;
 }
 
 const statusColors = {
@@ -132,7 +126,6 @@ function ServersPage() {
         </Button>
       </div>
 
-      {/* Adapted to match the FilterControls component props */}
       <FilterControls
         searchValue={search}
         onSearchValueChange={setSearch}
@@ -203,8 +196,11 @@ function ServersPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {server.tags.slice(0, 3).map((tag) => (
-                      <TagBadge key={tag} tagId={tag} />
+                    {server.tags.slice(0, 3).map((tagId) => (
+                      <TagBadge 
+                        key={tagId} 
+                        name={tags.find(tag => tag.id === tagId)?.name || 'Unknown'} 
+                      />
                     ))}
                     {server.tags.length > 3 && (
                       <span className="text-xs text-muted-foreground">

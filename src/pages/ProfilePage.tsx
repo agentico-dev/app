@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,7 +19,7 @@ import { usePlans } from '@/hooks/usePlans';
 export default function ProfilePage() {
   const { user, profile, signOut, loading } = useAuth();
   const { toast } = useToast();
-  const { plans, activePlan, changePlan, cancelSubscription } = usePlans();
+  const { plans, currentPlan, updatePlan, cancelSubscription, isLoading: plansLoading } = usePlans();
   
   const [saving, setSaving] = useState(false);
   const [fullName, setFullName] = useState('');
@@ -120,7 +121,7 @@ export default function ProfilePage() {
 
   const handlePlanChange = async (planId: string) => {
     try {
-      await changePlan(planId);
+      await updatePlan.mutateAsync(planId);
       toast({
         title: "Plan updated",
         description: "Your subscription plan has been updated successfully.",
@@ -132,6 +133,10 @@ export default function ProfilePage() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleCancelSubscription = () => {
+    cancelSubscription.mutate();
   };
 
   return (
@@ -334,7 +339,7 @@ export default function ProfilePage() {
                 </Alert>
                 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Current Plan: <span className="text-primary capitalize">{activePlan?.name || 'Free'}</span></h3>
+                  <h3 className="text-lg font-medium">Current Plan: <span className="text-primary capitalize">{currentPlan?.name || 'Free'}</span></h3>
                   <p className="text-muted-foreground">Select a plan to change your subscription:</p>
                   
                   <PlanSelector
@@ -354,7 +359,7 @@ export default function ProfilePage() {
                   <Button
                     variant="outline"
                     className="mt-2"
-                    onClick={cancelSubscription}
+                    onClick={handleCancelSubscription}
                     disabled={profile?.plan_id === 'free' || !profile?.plan_id}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />

@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Plan } from '@/types/plans';
@@ -12,7 +13,7 @@ export function usePlans() {
   const isAuthenticated = !!session.user;
 
   // Fetch all available plans
-  const { data: plans, isLoading, error } = useQuery({
+  const { data: plans = [], isLoading, error } = useQuery({
     queryKey: ['plans'],
     queryFn: async () => {
       const { data, error } = await supabase

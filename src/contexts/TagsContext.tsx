@@ -151,8 +151,11 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
-      // Fix the type casting
-      return data?.map(item => item.tags as Tag) || [];
+      // Fix the type casting - properly map the response to Tag objects
+      if (data && Array.isArray(data)) {
+        return data.map(item => (item.tags as unknown) as Tag);
+      }
+      return [];
     } catch (err) {
       console.error('Error fetching resource tags:', err);
       toast({
