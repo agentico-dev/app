@@ -1,4 +1,3 @@
-
 export interface Organization {
   id: string;
   name: string;
@@ -43,6 +42,7 @@ export interface CreateApplicationPayload {
   name: string;
   description?: string;
   organization_id?: string;
+  project_id?: string;
   category?: string;
   tags?: string[];
   status?: string;

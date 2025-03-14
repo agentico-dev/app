@@ -17,7 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { CreateApplicationPayload } from '@/types/organization';
 import { useAuth } from '@/hooks/useAuth';
-import { apiTable } from '@/utils/supabaseHelpers';
+import { supabase } from '@/integrations/supabase/client';
 
 export function CreateApplicationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,7 +35,7 @@ export function CreateApplicationForm() {
   });
 
   const onSubmit = async (data: CreateApplicationPayload) => {
-    if (!session.user) {
+    if (!session?.user) {
       toast.error("You need to be logged in to create an application");
       return;
     }
@@ -48,26 +48,34 @@ export function CreateApplicationForm() {
       
       if (!organizationId) {
         toast.error("Please select an organization from the top navigation bar");
+        setIsSubmitting(false);
         return;
       }
       
-      const { error } = await apiTable('applications').insert({
-        name: data.name,
-        description: data.description,
-        category: data.category,
-        status: data.status,
-        tags: data.tags,
-        user_id: session.user.id,
-        organization_id: organizationId,
-      });
+      // Important: We need to explicitly set user_id to match the current user's ID
+      // This is required by the RLS policy we just created
+      const { error } = await supabase
+        .from('applications')
+        .insert({
+          name: data.name,
+          description: data.description,
+          category: data.category,
+          status: data.status,
+          tags: data.tags,
+          user_id: session.user.id, // This is crucial for RLS
+          organization_id: organizationId,
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating application:', error);
+        throw error;
+      }
       
       toast.success('Application created successfully');
       navigate('/applications');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating application:', error);
-      toast.error('Failed to create application');
+      toast.error(`Failed to create application: ${error.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
