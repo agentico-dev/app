@@ -1,4 +1,3 @@
-
 export interface Application {
   id: string;
   name: string;
@@ -47,6 +46,8 @@ export interface ApplicationAPI {
   version?: string;
   endpoint_url?: string;
   documentation_url?: string;
+  source_uri?: string;
+  source_content?: string;
   tags: string[];
   created_at: string;
   updated_at: string;
