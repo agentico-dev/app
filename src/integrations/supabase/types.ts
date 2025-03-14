@@ -749,6 +749,19 @@ export type Database = {
           updated_at: string | null
         }
       }
+      has_organization_role: {
+        Args: {
+          org_id: string
+          required_roles: string[]
+        }
+        Returns: boolean
+      }
+      is_member_of_organization: {
+        Args: {
+          org_id: string
+        }
+        Returns: boolean
+      }
       list_organization_members: {
         Args: {
           org_id: string

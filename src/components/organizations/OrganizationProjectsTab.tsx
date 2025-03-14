@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +10,20 @@ import { Link } from 'react-router-dom';
 import { Folder, FolderPlus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
+import { useToast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+
+interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  created_at: string;
+  organization_id: string;
+}
 
 interface OrganizationProjectsTabProps {
   organization: Organization;
@@ -22,7 +36,14 @@ export function OrganizationProjectsTab({
   isAuthenticated, 
   isOrgMember 
 }: OrganizationProjectsTabProps) {
-  const { data: projects, isLoading } = useQuery({
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [newProject, setNewProject] = useState({
+    name: '',
+    description: '',
+  });
+
+  const { data: projects, isLoading, refetch } = useQuery<Project[]>({
     queryKey: ['organization-projects', organization.id],
     queryFn: async () => {
       console.log('Fetching projects for organization:', organization.id);
@@ -33,6 +54,11 @@ export function OrganizationProjectsTab({
       
       if (error) {
         console.error('Error fetching projects:', error);
+        toast({
+          title: 'Error fetching projects',
+          description: error.message,
+          variant: 'destructive',
+        });
         throw error;
       }
       
@@ -40,6 +66,39 @@ export function OrganizationProjectsTab({
       return data;
     },
   });
+
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({
+          name: newProject.name,
+          description: newProject.description,
+          organization_id: organization.id,
+          status: 'active',
+        })
+        .select();
+
+      if (error) throw error;
+      
+      toast({
+        title: 'Project created',
+        description: 'Your new project has been created successfully.',
+      });
+      
+      setOpen(false);
+      setNewProject({ name: '', description: '' });
+      refetch();
+    } catch (error: any) {
+      console.error('Error creating project:', error);
+      toast({
+        title: 'Error creating project',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -74,10 +133,49 @@ export function OrganizationProjectsTab({
           <CardTitle>Projects</CardTitle>
           <CardDescription>Projects in this organization.</CardDescription>
         </div>
-        <Button disabled={!isAuthenticated || !isOrgMember}>
-          <FolderPlus className="h-4 w-4 mr-2" />
-          New Project
-        </Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button disabled={!isAuthenticated || !isOrgMember}>
+              <FolderPlus className="h-4 w-4 mr-2" />
+              New Project
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create a new project</DialogTitle>
+              <DialogDescription>
+                Add a new project to your organization.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreateProject}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Project Name</Label>
+                  <Input
+                    id="name"
+                    value={newProject.name}
+                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                    placeholder="My Awesome Project"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={newProject.description}
+                    onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                    placeholder="Project description"
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit">Create Project</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent>
         {!projects || projects.length === 0 ? (
@@ -88,7 +186,7 @@ export function OrganizationProjectsTab({
               This organization doesn't have any projects yet.
             </p>
             {isAuthenticated && isOrgMember && (
-              <Button>
+              <Button onClick={() => setOpen(true)}>
                 <FolderPlus className="h-4 w-4 mr-2" />
                 Create Project
               </Button>
