@@ -35,8 +35,13 @@ export default function RegisterPage() {
     setRegistering(true);
     
     try {
-      // Sign up the user with Supabase Auth
-      await signUp(email, password, fullName, selectedPlanId);
+      // Sign up the user with Supabase Auth with metadata
+      const metadata = { 
+        full_name: fullName, 
+        plan_id: selectedPlanId 
+      };
+      
+      await signUp(email, password, metadata);
       
       // Wait for auth state to be updated
       const {
@@ -148,8 +153,8 @@ export default function RegisterPage() {
             <div className="space-y-3">
               <Label>Choose a Plan</Label>
               <PlanSelector
+                selectedPlan={selectedPlanId}
                 onSelectPlan={setSelectedPlanId}
-                selectedPlanId={selectedPlanId}
               />
             </div>
             

@@ -46,9 +46,9 @@ const queryClient = new QueryClient({
 
 // Route guard component to protect routes that require authentication
 const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
 
-  if (session.isLoading) {
+  if (loading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
 
@@ -57,9 +57,9 @@ const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Public routes that redirect to dashboard if logged in
 const RedirectIfAuthenticated = ({ children }: { children: React.ReactNode }) => {
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
 
-  if (session.isLoading) {
+  if (loading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
 

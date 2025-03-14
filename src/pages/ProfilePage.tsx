@@ -1,431 +1,371 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import PlanSelector from '@/components/PlanSelector';
-import { type Plan } from "@/types/plans";
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { apiTable } from '@/utils/supabaseHelpers';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AlertCircle, CheckCircle, KeyRound, LogOut, Save, Trash2, User } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import PlanSelector from '@/components/PlanSelector';
 import { usePlans } from '@/hooks/usePlans';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
-import { AlertCircle, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
-function ProfilePage() {
-  const { session, signOut } = useAuth();
+export default function ProfilePage() {
+  const { user, profile, signOut, loading } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const { plans, currentPlan, updatePlan, cancelSubscription } = usePlans();
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [profileData, setProfileData] = useState({
-    full_name: '',
-    bio: '',
-    job_title: '',
-    company: '',
-  });
-  const [passwordData, setPasswordData] = useState({
-    current_password: '',
-    new_password: '',
-    confirm_password: '',
-  });
-  const [passwordError, setPasswordError] = useState('');
+  const { plans, activePlan, changePlan, cancelSubscription } = usePlans();
+  
+  const [saving, setSaving] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [bio, setBio] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
+  const [company, setCompany] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [currentTab, setCurrentTab] = useState('profile');
 
-  // Get current plan
-  const defaultPlan = plans && plans.length > 0 ? plans[0] : null;
-
-  // Handle loading and authentication state
-  if (session.isLoading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-6 h-6 border-t-2 border-blue-500 rounded-full animate-spin"></div>
-        <span className="ml-2">Loading...</span>
+      <div className="container py-10">
+        <div className="max-w-3xl mx-auto">
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle>Loading profile...</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="animate-pulse space-y-4">
+                <div className="h-10 bg-muted rounded" />
+                <div className="h-10 bg-muted rounded" />
+                <div className="h-20 bg-muted rounded" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
-  if (!session.user) {
-    navigate('/login');
-    return null;
+  if (!user) {
+    return (
+      <div className="container py-10">
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Not Available</CardTitle>
+            <CardDescription>
+              You need to be logged in to view your profile.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <a href="/login">Log In</a>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
-  // Load profile data
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user?.id)
-          .single();
-
-        if (error) {
-          console.error("Error fetching profile:", error);
-          return;
-        }
-
-        if (data) {
-          setProfileData({
-            full_name: data.full_name || '',
-            bio: data.bio || '',
-            job_title: data.job_title || '',
-            company: data.company || '',
-          });
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    };
-
-    if (session.user) {
-      fetchProfile();
+    if (profile) {
+      setFullName(profile.full_name || '');
+      setBio(profile.bio || '');
+      setJobTitle(profile.job_title || '');
+      setCompany(profile.company || '');
     }
-  }, [session.user]);
+  }, [profile]);
 
-  const handleProfileUpdate = async () => {
-    if (!session.user) return;
-
-    setIsUpdating(true);
+  const handleUpdateProfile = async () => {
+    if (!user) return;
+    
+    setSaving(true);
+    setError('');
+    setSuccessMessage('');
+    
     try {
-      // Update the profile in the database
-      const { error } = await supabase
-        .from('profiles')
+      const { error } = await apiTable('profiles')
         .update({
-          full_name: profileData.full_name,
-          bio: profileData.bio,
-          job_title: profileData.job_title,
-          company: profileData.company,
+          full_name: fullName,
+          bio: bio,
+          job_title: jobTitle,
+          company: company,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', session.user.id);
-
+        .eq('id', user.id);
+      
       if (error) throw error;
-
+      
+      setSuccessMessage('Profile updated successfully');
       toast({
         title: "Profile updated",
-        description: "Your profile has been updated successfully",
+        description: "Your profile has been updated successfully.",
       });
-    } catch (error: any) {
+    } catch (err: any) {
+      console.error('Error updating profile:', err);
+      setError(err.message || 'Failed to update profile');
       toast({
-        title: "Update failed",
-        description: error.message,
+        title: "Error updating profile",
+        description: err.message || "There was an error updating your profile.",
         variant: "destructive",
       });
     } finally {
-      setIsUpdating(false);
+      setSaving(false);
     }
   };
 
-  const handlePasswordChange = async () => {
-    setPasswordError('');
-    
-    if (passwordData.new_password !== passwordData.confirm_password) {
-      setPasswordError("New passwords don't match");
-      return;
-    }
-
-    if (passwordData.new_password.length < 6) {
-      setPasswordError("New password must be at least 6 characters");
-      return;
-    }
-
-    setIsUpdating(true);
+  const handlePlanChange = async (planId: string) => {
     try {
-      // First verify the current password
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: session.user?.email || '',
-        password: passwordData.current_password,
-      });
-
-      if (signInError) {
-        setPasswordError("Current password is incorrect");
-        return;
-      }
-
-      // Update the password
-      const { error } = await supabase.auth.updateUser({
-        password: passwordData.new_password,
-      });
-
-      if (error) throw error;
-
-      // Clear the form
-      setPasswordData({
-        current_password: '',
-        new_password: '',
-        confirm_password: '',
-      });
-
+      await changePlan(planId);
       toast({
-        title: "Password updated",
-        description: "Your password has been updated successfully",
+        title: "Plan updated",
+        description: "Your subscription plan has been updated successfully.",
       });
     } catch (error: any) {
       toast({
-        title: "Update failed",
-        description: error.message,
+        title: "Error updating plan",
+        description: error.message || "Failed to update your plan.",
         variant: "destructive",
       });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      // In a real app, you'd need a secure server-side endpoint to handle this
-      // This is a simplified version that only works with RLS properly set up
-      const { error } = await supabase.rpc('delete_user_account');
-      
-      if (error) throw error;
-
-      await signOut();
-      navigate('/');
-      
-      toast({
-        title: "Account deleted",
-        description: "Your account has been deleted successfully",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Deletion failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleUpdatePlan = (planId: string) => {
-    updatePlan.mutate(planId);
-  };
-
-  const handleCancelSubscription = () => {
-    if (window.confirm("Are you sure you want to cancel your subscription?")) {
-      cancelSubscription.mutate();
     }
   };
 
   return (
-    <div className="container py-10 max-w-5xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
-        <Button variant="outline" onClick={signOut} className="ml-auto">
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign out
-        </Button>
-      </div>
-      
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="plan">Plan</TabsTrigger>
-        </TabsList>
+    <div className="container py-8">
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Your Profile</h1>
         
-        <TabsContent value="profile">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
-                Update your account profile information.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input 
-                  id="name" 
-                  value={profileData.full_name} 
-                  onChange={(e) => setProfileData({...profileData, full_name: e.target.value})}
-                />
-              </div>
+        <Tabs defaultValue={currentTab} onValueChange={setCurrentTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="plan">Subscription</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="profile">
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Information</CardTitle>
+                <CardDescription>
+                  Update your personal information and public profile.
+                </CardDescription>
+              </CardHeader>
               
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea 
-                  id="bio" 
-                  value={profileData.bio} 
-                  onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-                  placeholder="Tell us a bit about yourself"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="job">Job Title</Label>
-                  <Input 
-                    id="job" 
-                    value={profileData.job_title} 
-                    onChange={(e) => setProfileData({...profileData, job_title: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company</Label>
-                  <Input 
-                    id="company" 
-                    value={profileData.company} 
-                    onChange={(e) => setProfileData({...profileData, company: e.target.value})}
-                  />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleProfileUpdate} disabled={isUpdating}>
-                {isUpdating ? 'Updating...' : 'Update profile'}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="security">
-          <Card>
-            <CardHeader>
-              <CardTitle>Security Settings</CardTitle>
-              <CardDescription>
-                Manage your account credentials and security settings.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" value={session.user?.email} disabled />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Your email address is used for login and communications.
-                </p>
-              </div>
-              
-              <Separator className="my-4" />
-              
-              <div>
-                <h3 className="font-medium mb-2">Change Password</h3>
-                {passwordError && (
-                  <Alert variant="destructive" className="mb-4">
+              <CardContent className="space-y-6">
+                {error && (
+                  <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Error</AlertTitle>
-                    <AlertDescription>{passwordError}</AlertDescription>
+                    <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="current-password">Current Password</Label>
-                    <Input 
-                      id="current-password" 
-                      type="password"
-                      value={passwordData.current_password}
-                      onChange={(e) => setPasswordData({...passwordData, current_password: e.target.value})}
-                    />
+                
+                {successMessage && (
+                  <Alert variant="default" className="bg-green-50 border-green-200">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <AlertTitle>Success</AlertTitle>
+                    <AlertDescription>{successMessage}</AlertDescription>
+                  </Alert>
+                )}
+                
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                  <div className="flex flex-col items-center space-y-2">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src={user.user_metadata?.avatar_url || ''} />
+                      <AvatarFallback className="text-lg">
+                        {fullName ? fullName.charAt(0).toUpperCase() : <User />}
+                      </AvatarFallback>
+                    </Avatar>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new-password">New Password</Label>
-                    <Input 
-                      id="new-password" 
-                      type="password"
-                      value={passwordData.new_password}
-                      onChange={(e) => setPasswordData({...passwordData, new_password: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirm New Password</Label>
-                    <Input 
-                      id="confirm-password" 
-                      type="password"
-                      value={passwordData.confirm_password}
-                      onChange={(e) => setPasswordData({...passwordData, confirm_password: e.target.value})}
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button 
-                variant="outline" 
-                onClick={handleDeleteAccount}
-                disabled={isDeleting}
-                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete Account'}
-              </Button>
-              <Button onClick={handlePasswordChange} disabled={isUpdating}>
-                {isUpdating ? 'Updating...' : 'Change Password'}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="plan">
-          <Card>
-            <CardHeader>
-              <CardTitle>Plan Settings</CardTitle>
-              <CardDescription>
-                Manage your subscription plan and billing.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium mb-2">Current Plan</h3>
-                  <div className="p-4 border rounded-md bg-muted/50">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-semibold text-lg">{currentPlan?.name || defaultPlan?.name || 'Free Plan'}</h4>
-                        <p className="text-sm text-muted-foreground">{currentPlan?.description || defaultPlan?.description || 'Basic features included'}</p>
+                  
+                  <div className="flex-1 space-y-4 w-full">
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <Input
+                        id="fullName"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Enter your full name"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="bio">Bio</Label>
+                      <Textarea
+                        id="bio"
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        placeholder="Tell us a bit about yourself"
+                        rows={4}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="jobTitle">Job Title</Label>
+                        <Input
+                          id="jobTitle"
+                          value={jobTitle}
+                          onChange={(e) => setJobTitle(e.target.value)}
+                          placeholder="Your position or role"
+                        />
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold">${currentPlan?.price || defaultPlan?.price || 0}/month</p>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="company">Company / Organization</Label>
+                        <Input
+                          id="company"
+                          value={company}
+                          onChange={(e) => setCompany(e.target.value)}
+                          placeholder="Where you work"
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
+              </CardContent>
+              
+              <CardFooter className="flex justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (profile) {
+                      setFullName(profile.full_name || '');
+                      setBio(profile.bio || '');
+                      setJobTitle(profile.job_title || '');
+                      setCompany(profile.company || '');
+                    }
+                    setError('');
+                    setSuccessMessage('');
+                  }}
+                >
+                  Reset
+                </Button>
+                <Button onClick={handleUpdateProfile} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="account">
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Settings</CardTitle>
+                <CardDescription>
+                  Manage your account settings and preferences.
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Email</h3>
+                  <p className="text-muted-foreground">{user.email}</p>
+                </div>
                 
-                <Separator className="my-4" />
+                <Separator />
                 
-                <div>
-                  <h3 className="font-medium mb-4">Change Plan</h3>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Password</h3>
+                  <p className="text-muted-foreground">Change your account password.</p>
+                  <Button variant="outline" className="mt-2">
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    Change Password
+                  </Button>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Logout</h3>
+                  <p className="text-muted-foreground">Sign out of your account.</p>
+                  <Button variant="outline" className="mt-2" onClick={signOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </Button>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium text-destructive">Danger Zone</h3>
+                  <p className="text-muted-foreground">
+                    Permanently delete your account and all associated data.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                    <Input
+                      placeholder="Type 'delete' to confirm"
+                      value={deleteConfirm}
+                      onChange={(e) => setDeleteConfirm(e.target.value)}
+                      className="max-w-xs"
+                    />
+                    <Button
+                      variant="destructive"
+                      disabled={deleteConfirm !== 'delete'}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Account
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="plan">
+            <Card>
+              <CardHeader>
+                <CardTitle>Subscription Plan</CardTitle>
+                <CardDescription>
+                  Manage your subscription and billing.
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    During the beta period, all plans are free. Choose the plan that best suits your needs.
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Current Plan: <span className="text-primary capitalize">{activePlan?.name || 'Free'}</span></h3>
+                  <p className="text-muted-foreground">Select a plan to change your subscription:</p>
+                  
                   <PlanSelector
-                    onSelectPlan={handleUpdatePlan}
-                    selectedPlanId={currentPlan?.id}
-                    plans={plans || []}
+                    plans={plans}
+                    selectedPlan={profile?.plan_id || 'free'}
+                    onSelectPlan={handlePlanChange}
                   />
                 </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                variant="outline" 
-                onClick={handleCancelSubscription}
-                disabled={cancelSubscription.isPending}
-              >
-                {cancelSubscription.isPending ? 'Cancelling...' : 'Cancel Subscription'}
-              </Button>
-              <Button 
-                className="ml-auto"
-                onClick={() => {
-                  if (currentPlan?.id) {
-                    handleUpdatePlan(currentPlan.id);
-                  }
-                }}
-                disabled={updatePlan.isPending}
-              >
-                {updatePlan.isPending ? 'Updating...' : 'Update Plan'}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium text-destructive">Cancel Subscription</h3>
+                  <p className="text-muted-foreground">
+                    Cancel your subscription and downgrade to the Free plan.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="mt-2"
+                    onClick={cancelSubscription}
+                    disabled={profile?.plan_id === 'free' || !profile?.plan_id}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Cancel Subscription
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
-
-export default ProfilePage;

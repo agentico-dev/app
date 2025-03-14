@@ -11,6 +11,23 @@ import { Server as ServerType } from '@/types/server';
 import { FilterControls } from '@/components/applications/FilterControls';
 import { useTags } from '@/contexts/TagsContext';
 
+// Define the component props interface
+interface CustomFilterControlsProps {
+  searchValue: string; 
+  onSearchValueChange: (value: string) => void;
+  statusOptions: { label: string; value: string | null }[];
+  selectedStatus: string | null;
+  onStatusChange: (value: string | null) => void;
+  tags: { id: string; name: string }[];
+  selectedTags: string[];
+  onTagsChange: (tags: string[]) => void;
+}
+
+// Define the component props interface
+interface CustomTagBadgeProps {
+  tagId: string;
+}
+
 const statusColors = {
   'active': 'bg-green-500',
   'inactive': 'bg-red-500',
@@ -115,9 +132,10 @@ function ServersPage() {
         </Button>
       </div>
 
+      {/* Adapted to match the FilterControls component props */}
       <FilterControls
-        search={search}
-        onSearchChange={setSearch}
+        searchValue={search}
+        onSearchValueChange={setSearch}
         statusOptions={statusOptions}
         selectedStatus={selectedStatus}
         onStatusChange={setSelectedStatus}
@@ -186,7 +204,7 @@ function ServersPage() {
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {server.tags.slice(0, 3).map((tag) => (
-                      <TagBadge key={tag} tag={tag} />
+                      <TagBadge key={tag} tagId={tag} />
                     ))}
                     {server.tags.length > 3 && (
                       <span className="text-xs text-muted-foreground">

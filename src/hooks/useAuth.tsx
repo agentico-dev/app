@@ -4,11 +4,21 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { apiTable } from '@/utils/supabaseHelpers';
 
-interface AuthContextType {
+interface AuthState {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
-  signIn: (email: string, password: string) => Promise<{ error: any; data: any }>;
+  loading: boolean;
+}
+
+interface AuthContextType {
+  session: {
+    user: User | null;
+    isLoading: boolean;
+  };
+  user: User | null;
+  profile: Profile | null;
+  signIn: (provider: string, email?: string, password?: string) => Promise<{ error: any; data: any }>;
   signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any; data: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -29,34 +39,43 @@ interface Profile {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authState, setAuthState] = useState<AuthState>({
+    session: null,
+    user: null,
+    profile: null,
+    loading: true,
+  });
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      setAuthState(prev => ({
+        ...prev,
+        session,
+        user: session?.user ?? null,
+        loading: session?.user ? true : false,
+      }));
       
       if (session?.user.id) {
         loadUserProfile(session.user.id);
       } else {
-        setLoading(false);
+        setAuthState(prev => ({ ...prev, loading: false }));
       }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      setAuthState(prev => ({
+        ...prev,
+        session,
+        user: session?.user ?? null,
+        loading: session?.user ? true : false,
+      }));
       
       if (session?.user.id) {
         loadUserProfile(session.user.id);
       } else {
-        setProfile(null);
-        setLoading(false);
+        setAuthState(prev => ({ ...prev, profile: null, loading: false }));
       }
     });
 
@@ -72,7 +91,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('Error loading user profile:', error);
-        setProfile(null);
+        setAuthState(prev => ({
+          ...prev,
+          profile: null,
+          loading: false,
+        }));
       } else if (data) {
         const userProfile: Profile = {
           id: data.id,
@@ -84,20 +107,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           job_title: data.job_title,
           company: data.company
         };
-        setProfile(userProfile);
+        setAuthState(prev => ({
+          ...prev,
+          profile: userProfile,
+          loading: false,
+        }));
       } else {
-        setProfile(null);
+        setAuthState(prev => ({
+          ...prev,
+          profile: null,
+          loading: false,
+        }));
       }
     } catch (error) {
       console.error('Failed to load user profile:', error);
-      setProfile(null);
-    } finally {
-      setLoading(false);
+      setAuthState(prev => ({
+        ...prev,
+        profile: null,
+        loading: false,
+      }));
     }
   };
 
-  const signIn = async (email: string, password: string) => {
-    return supabase.auth.signInWithPassword({ email, password });
+  const signIn = async (provider: string, email?: string, password?: string) => {
+    if (provider === 'email' && email && password) {
+      return supabase.auth.signInWithPassword({ email, password });
+    } else if (provider === 'github') {
+      return supabase.auth.signInWithOAuth({ provider: 'github' });
+    } else if (provider === 'google') {
+      return supabase.auth.signInWithOAuth({ provider: 'google' });
+    }
+    return { data: null, error: new Error('Invalid auth provider or credentials') };
   };
 
   const signUp = async (email: string, password: string, metadata?: any) => {
@@ -110,20 +150,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setProfile(null);
+    setAuthState(prev => ({
+      ...prev, 
+      profile: null
+    }));
   };
 
   return (
     <AuthContext.Provider
       value={{
-        session,
-        user,
-        profile,
+        session: {
+          user: authState.user,
+          isLoading: authState.loading,
+        },
+        user: authState.user,
+        profile: authState.profile,
         signIn,
         signUp,
         signOut,
-        loading,
-        isAuthenticated: !!user,
+        loading: authState.loading,
+        isAuthenticated: !!authState.user,
       }}
     >
       {children}

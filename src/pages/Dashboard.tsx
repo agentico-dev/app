@@ -8,6 +8,26 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
+interface ProjectData {
+  id: string;
+  name: string;
+  tools_count: number;
+  servers_count: number;
+  status: string;
+}
+
+interface ActivityData {
+  icon: React.ElementType;
+  description: string;
+  time: string;
+}
+
+interface NotificationData {
+  type?: string;
+  message: string;
+  created_at: string;
+}
+
 const recentProjects = [
   {
     id: '1',
@@ -96,7 +116,17 @@ export function Dashboard() {
 
   const stats = statsLoading || !statsSummary ? mockStats : statsSummary;
   const projects = projectsLoading || !projectsData ? recentProjects : projectsData;
-  const activity = activityLoading || !activityData ? recentActivity : activityData.map(notification => {
+  const activity = activityLoading || !activityData 
+    ? recentActivity 
+    : activityData.map((item: ActivityData) => {
+        return {
+          icon: item.icon,
+          description: item.description,
+          time: item.time
+        };
+      });
+
+  const transformNotificationToActivity = (notification: NotificationData): ActivityData => {
     const getIcon = () => {
       const type = notification.type || 'info';
       switch (type) {
@@ -113,7 +143,7 @@ export function Dashboard() {
       description: notification.message,
       time: new Date(notification.created_at).toLocaleDateString()
     };
-  });
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">

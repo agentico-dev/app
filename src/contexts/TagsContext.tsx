@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tag } from '@/types/application';
 import { toast } from '@/components/ui/use-toast';
+import { apiTable } from '@/utils/supabaseHelpers';
 
 interface TagsContextType {
   tags: Tag[];
@@ -26,8 +27,7 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     queryKey: ['tags'],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
-          .from('tags')
+        const { data, error } = await apiTable('tags')
           .select('*')
           .order('name');
         
@@ -49,8 +49,7 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addTag = async (tag: Omit<Tag, 'id'>): Promise<Tag | null> => {
     try {
-      const { data, error } = await supabase
-        .from('tags')
+      const { data, error } = await apiTable('tags')
         .insert(tag)
         .select()
         .single();
@@ -70,8 +69,7 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const deleteTag = async (tagId: string): Promise<boolean> => {
     try {
-      const { error } = await supabase
-        .from('tags')
+      const { error } = await apiTable('tags')
         .delete()
         .eq('id', tagId);
       
@@ -94,8 +92,7 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     tagId: string
   ): Promise<boolean> => {
     try {
-      const { data, error } = await supabase
-        .from('resource_tags')
+      const { data, error } = await apiTable('resource_tags')
         .insert({
           resource_type: resourceType,
           resource_id: resourceId,
@@ -122,8 +119,7 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     tagId: string
   ): Promise<boolean> => {
     try {
-      const { error } = await supabase
-        .from('resource_tags')
+      const { error } = await apiTable('resource_tags')
         .delete()
         .match({
           resource_type: resourceType,
@@ -146,8 +142,7 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const getResourceTags = async (resourceType: string, resourceId: string): Promise<Tag[]> => {
     try {
-      const { data, error } = await supabase
-        .from('resource_tags')
+      const { data, error } = await apiTable('resource_tags')
         .select(`
           tags:tag_id (*)
         `)
@@ -155,7 +150,9 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('resource_id', resourceId);
       
       if (error) throw error;
-      return data?.map(item => item.tags) || [];
+      
+      // Fix the type casting
+      return data?.map(item => item.tags as Tag) || [];
     } catch (err) {
       console.error('Error fetching resource tags:', err);
       toast({
