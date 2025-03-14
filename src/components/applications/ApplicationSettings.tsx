@@ -23,7 +23,6 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Application } from '@/types/application';
-import { useUpdateApplication, useDeleteApplication } from '@/hooks/useApplications';
 import {
   AlertDialog,
   AlertDialogAction,

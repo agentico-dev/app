@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,8 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import PlanSelector from '@/components/PlanSelector';
-import { PLAN_DATA } from '@/types/plans';
+import { type Plan } from "@/types/plans";
 import { useAuth } from '@/hooks/useAuth';
+import { usePlans } from '@/hooks/usePlans';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertCircle, LogOut } from 'lucide-react';
@@ -20,6 +20,7 @@ function ProfilePage() {
   const { session, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { plans, currentPlan, updatePlan, cancelSubscription } = usePlans();
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -36,9 +37,7 @@ function ProfilePage() {
   const [passwordError, setPasswordError] = useState('');
 
   // Get current plan
-  const currentPlan = session.profile?.plan_id 
-    ? PLAN_DATA.find((plan) => plan.id === session.profile.plan_id) 
-    : PLAN_DATA[0];
+  const defaultPlan = plans && plans.length > 0 ? plans[0] : null;
 
   // Handle loading and authentication state
   if (session.isLoading) {
@@ -208,6 +207,16 @@ function ProfilePage() {
     }
   };
 
+  const handleUpdatePlan = (planId: string) => {
+    updatePlan.mutate(planId);
+  };
+
+  const handleCancelSubscription = () => {
+    if (window.confirm("Are you sure you want to cancel your subscription?")) {
+      cancelSubscription.mutate();
+    }
+  };
+
   return (
     <div className="container py-10 max-w-5xl">
       <div className="flex items-center justify-between mb-6">
@@ -370,11 +379,11 @@ function ProfilePage() {
                   <div className="p-4 border rounded-md bg-muted/50">
                     <div className="flex justify-between items-center">
                       <div>
-                        <h4 className="font-semibold text-lg">{currentPlan?.name}</h4>
-                        <p className="text-sm text-muted-foreground">{currentPlan?.description}</p>
+                        <h4 className="font-semibold text-lg">{currentPlan?.name || defaultPlan?.name || 'Free Plan'}</h4>
+                        <p className="text-sm text-muted-foreground">{currentPlan?.description || defaultPlan?.description || 'Basic features included'}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">${currentPlan?.price}/month</p>
+                        <p className="font-semibold">${currentPlan?.price || defaultPlan?.price || 0}/month</p>
                       </div>
                     </div>
                   </div>
@@ -385,18 +394,32 @@ function ProfilePage() {
                 <div>
                   <h3 className="font-medium mb-4">Change Plan</h3>
                   <PlanSelector
-                    onSelectPlan={(planId) => toast({
-                      title: "Plan selected",
-                      description: `You selected the ${PLAN_DATA.find(p => p.id === planId)?.name} plan`,
-                    })}
-                    selectedPlanId={session.profile?.plan_id}
+                    onSelectPlan={handleUpdatePlan}
+                    selectedPlanId={currentPlan?.id}
+                    plans={plans || []}
                   />
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant="outline">Cancel Subscription</Button>
-              <Button className="ml-auto">Update Plan</Button>
+              <Button 
+                variant="outline" 
+                onClick={handleCancelSubscription}
+                disabled={cancelSubscription.isPending}
+              >
+                {cancelSubscription.isPending ? 'Cancelling...' : 'Cancel Subscription'}
+              </Button>
+              <Button 
+                className="ml-auto"
+                onClick={() => {
+                  if (currentPlan?.id) {
+                    handleUpdatePlan(currentPlan.id);
+                  }
+                }}
+                disabled={updatePlan.isPending}
+              >
+                {updatePlan.isPending ? 'Updating...' : 'Update Plan'}
+              </Button>
             </CardFooter>
           </Card>
         </TabsContent>

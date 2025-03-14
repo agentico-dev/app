@@ -56,7 +56,7 @@ export function TopNav() {
         </form>
 
         <div className="flex flex-1 items-center justify-end gap-4">
-          <Link to="/organizations">
+          <Link to="/orgs">
             <Button variant="ghost" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               <span className="hidden md:inline">Organizations</span>
@@ -110,7 +110,7 @@ export function TopNav() {
                     <Link to="/settings">Settings</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/organizations">Organizations</Link>
+                    <Link to="/orgs">Organizations</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => signOut()}>

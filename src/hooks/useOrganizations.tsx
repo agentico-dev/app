@@ -45,10 +45,21 @@ export function useOrganizations() {
       if (error) throw error;
       
       // Transform the data to match the expected format
-      return data.map(item => ({
-        ...item.organization,
-        role: item.role
-      })) as (Organization & { role: string })[];
+      return (data as unknown as { role: string; organization: Organization }[]).map((item) => {
+        const organization: Organization = {
+          id: item.organization.id,
+          name: item.organization.name,
+          slug: item.organization.slug,
+          description: item.organization.description,
+          logo_url: item.organization.logo_url,
+          created_at: item.organization.created_at,
+          updated_at: item.organization.updated_at,
+        };
+        return {
+          ...organization,
+          role: item.role,
+        };
+      }) as (Organization & { role: string })[];
     },
     enabled: isAuthenticated,
   });
@@ -56,6 +67,7 @@ export function useOrganizations() {
   // Create a new organization
   const createOrganization = useMutation({
     mutationFn: async (orgData: Partial<Organization>) => {
+      console.log('Starting organization creation in mutation...', orgData);
       if (!session.user) throw new Error('Authentication required');
       
       // Create the organization
@@ -69,9 +81,11 @@ export function useOrganizations() {
         })
         .select()
         .single();
+      console.log('Organization creation completed:', org);
       
       if (orgError) throw orgError;
       
+      console.log('Adding current user as owner...');
       // Add current user as owner
       const { error: memberError } = await supabase
         .from('api.organization_members')
@@ -80,6 +94,7 @@ export function useOrganizations() {
           user_id: session.user.id,
           role: 'owner'
         });
+      console.log('Member added:', memberError);
       
       if (memberError) throw memberError;
       

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,7 +10,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Organization } from '@/types/organization';
 import OrganizationsList from '@/components/organizations/OrganizationsList';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -39,11 +37,52 @@ export default function OrganizationsPage() {
     }
     
     try {
-      await createOrganization.mutateAsync(newOrg);
+      console.log('Starting organization creation...', newOrg);      
+      // Set a timeout to handle cases where the promise might hang
+            const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out after 10 seconds')), 10000);
+      });
+      
+      // Race between the actual request and the timeout
+      const result = await Promise.race([
+        createOrganization.mutateAsync(newOrg),
+        timeoutPromise
+      ]);
+      
+      console.log('Organization creation completed:', result);
+      toast({
+        title: 'Success!',
+        description: `Organization "${newOrg.name}" was created successfully.`,
+      });
+    } catch (error: any) {
+      console.error('Error creating organization:', error);
+      // More detailed error logging to help diagnose the issue
+      if (error.message.includes('timeout')) {
+        console.error('Request timed out. Server response took too long.');
+        toast({
+          title: 'Request Timeout',
+          description: 'The server is taking too long to respond. Please try again later.',
+          variant: 'destructive',
+        });
+      } else if (error.response) {
+        // Axios or fetch response error
+        console.error('Server error response:', error.response);
+        toast({
+          title: `Server Error: ${error.response.status}`,
+          description: error.response.data?.message || 'The server returned an error. Please try again.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Failed to create organization',
+          description: error?.message || 'An unexpected error occurred. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      // Always close dialog and reset form, regardless of success/failure
       setOpen(false);
       setNewOrg({ name: '', slug: '', description: '' });
-    } catch (error) {
-      console.error('Error creating organization:', error);
     }
   };
 
@@ -63,7 +102,16 @@ export default function OrganizationsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
           <p className="text-muted-foreground">Manage your organizations, teams and projects.</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog 
+          open={open} 
+          onOpenChange={(isOpen) => {
+            // Reset the form when dialog is closed
+            if (!isOpen) {
+              setNewOrg({ name: '', slug: '', description: '' });
+            }
+            setOpen(isOpen);
+          }}
+        >
           <DialogTrigger asChild>
             <Button disabled={!isAuthenticated}>
               <Plus className="mr-2 h-4 w-4" />

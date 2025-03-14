@@ -126,8 +126,8 @@ const AppRoutes = () => {
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
         <Route path="/agents" element={<ProjectsPage />} />
-        <Route path="/organizations" element={<OrganizationsPage />} />
-        <Route path="/organizations/:slug" element={<OrganizationDetailPage />} />
+        <Route path="/orgs" element={<OrganizationsPage />} />
+        <Route path="/orgs/:slug" element={<OrganizationDetailPage />} />
         <Route path="/profile" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
         <Route path="/settings" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
       </Route>

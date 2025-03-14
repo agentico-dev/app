@@ -45,7 +45,7 @@ export function CreateProjectForm() {
     },
   });
 
-  // Fetch user's organizations
+  // Fetch user's organizations and public ones
   useEffect(() => {
     const fetchOrganizations = async () => {
       if (!session.user) return;
@@ -65,13 +65,22 @@ export function CreateProjectForm() {
           id: item.organizations.id,
           name: item.organizations.name
         }));
+
+        // public orgs
+        const { data: publicOrgs, error: publicError } = await supabase
+          .from('organizations')
+          .select('id, name')
+          .eq('is_public', true);
+        if (publicError) throw publicError;
+        orgs.push(...publicOrgs.map((org: { id: string; name: string; }) => ({
+          id: org.id,
+          name: org.name
+        })));
         
         setOrganizations(orgs);
         
-        // If there's only one organization, select it by default
-        if (orgs.length === 1) {
-          form.setValue('organization_id', orgs[0].id);
-        }
+        // select first by default
+        form.setValue('organization_id', orgs[0].id);
       } catch (error) {
         console.error('Error fetching organizations:', error);
         toast.error('Failed to load organizations');
@@ -130,7 +139,7 @@ export function CreateProjectForm() {
               <Button 
                 variant="link" 
                 className="p-0 h-auto font-normal"
-                onClick={() => navigate('/organizations')}
+                onClick={() => navigate('/orgs')}
               >
                 Go to Organizations
               </Button>

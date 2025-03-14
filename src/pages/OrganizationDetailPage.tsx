@@ -57,7 +57,7 @@ export default function OrganizationDetailPage() {
   if (!organization) {
     return (
       <div className="container py-6 space-y-6">
-        <Button variant="ghost" onClick={() => navigate('/organizations')}>
+        <Button variant="ghost" onClick={() => navigate('/orgs')}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Organizations
         </Button>
         <Card className="p-8 flex flex-col items-center justify-center">
@@ -66,7 +66,7 @@ export default function OrganizationDetailPage() {
           <p className="text-muted-foreground text-center max-w-md mb-4">
             The organization you're looking for doesn't exist or you don't have permission to view it.
           </p>
-          <Button onClick={() => navigate('/organizations')}>
+          <Button onClick={() => navigate('/orgs')}>
             View All Organizations
           </Button>
         </Card>
@@ -76,7 +76,7 @@ export default function OrganizationDetailPage() {
 
   return (
     <div className="container py-6 space-y-6">
-      <Button variant="ghost" onClick={() => navigate('/organizations')}>
+      <Button variant="ghost" onClick={() => navigate('/orgs')}>
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Organizations
       </Button>
       

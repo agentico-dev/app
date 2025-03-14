@@ -129,7 +129,7 @@ export function CreateToolForm() {
               <Button 
                 variant="link" 
                 className="p-0 h-auto font-normal"
-                onClick={() => navigate('/organizations')}
+                onClick={() => navigate('/orgs')}
               >
                 Go to Organizations
               </Button>

@@ -12,7 +12,7 @@ const AuthContext = createContext<{
   signUp: (email: string, password: string, fullName: string, planId: string) => Promise<void>;
   signOut: () => Promise<void>;
 }>({
-  session: { user: null, profile: null, isLoading: true },
+  session: { user: null, profile: null, isLoading: false },
   signIn: async () => {},
   signUp: async () => {},
   signOut: async () => {},
@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthState>({
     user: null,
     profile: null,
-    isLoading: true,
+    isLoading: false,
   });
   const navigate = useNavigate();
   const { toast } = useToast();

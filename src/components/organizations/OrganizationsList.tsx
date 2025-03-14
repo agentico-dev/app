@@ -81,7 +81,7 @@ export default function OrganizationsList({ organizations, isLoading }: Organiza
               <span className="text-sm">Members</span>
             </div>
             <Button asChild>
-              <Link to={`/organizations/${org.slug}`}>View</Link>
+              <Link to={`/orgs/${org.slug}`}>View</Link>
             </Button>
           </CardFooter>
         </Card>
