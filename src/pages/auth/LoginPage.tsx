@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
-import { AlertCircle, GitHub, Mail } from 'lucide-react';
+import { AlertCircle, Github, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
@@ -159,7 +158,7 @@ export default function LoginPage() {
           
           <div className="grid grid-cols-2 gap-4">
             <Button variant="outline" type="button" onClick={handleGithubLogin} disabled={isLoading}>
-              <GitHub className="mr-2 h-4 w-4" />
+              <Github className="mr-2 h-4 w-4" />
               GitHub
             </Button>
             <Button variant="outline" type="button" onClick={handleGoogleLogin} disabled={isLoading}>

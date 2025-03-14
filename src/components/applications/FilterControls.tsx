@@ -11,22 +11,31 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
 export interface FilterControlsProps {
-  searchValue: string;
-  onSearchValueChange: (value: string) => void;
+  searchQuery?: string;
+  setSearchQuery?: (value: string) => void;
+  searchValue?: string;
+  onSearchValueChange?: (value: string) => void;
   statusOptions: { label: string; value: string | null }[];
   selectedStatus: string | null;
   onStatusChange: (value: string | null) => void;
+  activeFilter?: string | null;
+  setActiveFilter?: (value: string | null) => void;
   tags: Tag[];
   selectedTags: string[];
   onTagsChange: (tags: string[]) => void;
+  applications?: any[];
 }
 
 export function FilterControls({
+  searchQuery,
+  setSearchQuery,
   searchValue,
   onSearchValueChange,
   statusOptions,
   selectedStatus,
   onStatusChange,
+  activeFilter,
+  setActiveFilter,
   tags,
   selectedTags,
   onTagsChange,
@@ -39,14 +48,24 @@ export function FilterControls({
     }
   };
 
+  // Use either searchQuery/setSearchQuery or searchValue/onSearchValueChange
+  const actualSearchValue = searchQuery ?? searchValue ?? "";
+  const handleSearchChange = (value: string) => {
+    if (setSearchQuery) {
+      setSearchQuery(value);
+    } else if (onSearchValueChange) {
+      onSearchValueChange(value);
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-6">
       <div className="flex-1 relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
           placeholder="Search..."
-          value={searchValue}
-          onChange={(e) => onSearchValueChange(e.target.value)}
+          value={actualSearchValue}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="pl-9"
         />
       </div>
