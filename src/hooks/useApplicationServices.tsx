@@ -19,7 +19,7 @@ export function useApplicationServices(applicationId?: string) {
       if (!applicationId) return [];
       
       const { data, error } = await supabase
-        .from('api.application_services')
+        .from('application_services')
         .select('*')
         .eq('application_id', applicationId)
         .order('created_at', { ascending: false });
@@ -36,7 +36,7 @@ export function useApplicationServices(applicationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
-        .from('api.application_services')
+        .from('application_services')
         .insert({
           name: serviceData.name,
           description: serviceData.description,
@@ -73,7 +73,7 @@ export function useApplicationServices(applicationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { data: updatedService, error } = await supabase
-        .from('api.application_services')
+        .from('application_services')
         .update({
           name: data.name,
           description: data.description,
@@ -111,7 +111,7 @@ export function useApplicationServices(applicationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { error } = await supabase
-        .from('api.application_services')
+        .from('application_services')
         .delete()
         .eq('id', id);
       
@@ -139,7 +139,7 @@ export function useApplicationServices(applicationId?: string) {
     queryKey: ['all-services'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('api.application_services')
+        .from('application_services')
         .select('*, application:application_id(name)')
         .order('created_at', { ascending: false });
       
@@ -170,7 +170,7 @@ export function useApplicationService(id?: string) {
       if (!id) return null;
       
       const { data, error } = await supabase
-        .from('api.application_services')
+        .from('application_services')
         .select('*')
         .eq('id', id)
         .single();

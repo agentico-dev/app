@@ -17,7 +17,7 @@ export function useAITools() {
     queryKey: ['ai-tools'],
     queryFn: async () => {
       const query = supabase
-        .from('api.ai_tools')
+        .from('ai_tools')
         .select('*, application_service:application_service_id(id, name, application_id)')
         .order('created_at', { ascending: false });
       
@@ -34,7 +34,7 @@ export function useAITools() {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
-        .from('api.ai_tools')
+        .from('ai_tools')
         .insert({
           name: toolData.name,
           description: toolData.description,
@@ -73,7 +73,7 @@ export function useAITools() {
       if (!session.user) throw new Error('Authentication required');
       
       const { data: updatedTool, error } = await supabase
-        .from('api.ai_tools')
+        .from('ai_tools')
         .update({
           name: data.name,
           description: data.description,
@@ -112,7 +112,7 @@ export function useAITools() {
       if (!session.user) throw new Error('Authentication required');
       
       const { error } = await supabase
-        .from('api.ai_tools')
+        .from('ai_tools')
         .delete()
         .eq('id', id);
       
@@ -141,7 +141,7 @@ export function useAITools() {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
-        .from('api.ai_tools')
+        .from('ai_tools')
         .update({ favorite })
         .eq('id', id)
         .select()
@@ -184,7 +184,7 @@ export function useAITool(id?: string) {
       if (!id) return null;
       
       const { data, error } = await supabase
-        .from('api.ai_tools')
+        .from('ai_tools')
         .select('*, application_service:application_service_id(id, name, application_id)')
         .eq('id', id)
         .single();

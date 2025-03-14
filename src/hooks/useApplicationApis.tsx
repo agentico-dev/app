@@ -19,7 +19,7 @@ export function useApplicationApis(applicationId?: string) {
       if (!applicationId) return [];
       
       const { data, error } = await supabase
-        .from('api.application_apis')
+        .from('application_apis')
         .select('*')
         .eq('application_id', applicationId)
         .order('created_at', { ascending: false });
@@ -36,7 +36,7 @@ export function useApplicationApis(applicationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
-        .from('api.application_apis')
+        .from('application_apis')
         .insert({
           name: apiData.name,
           description: apiData.description,
@@ -75,7 +75,7 @@ export function useApplicationApis(applicationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { data: updatedApi, error } = await supabase
-        .from('api.application_apis')
+        .from('application_apis')
         .update({
           name: data.name,
           description: data.description,
@@ -115,7 +115,7 @@ export function useApplicationApis(applicationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { error } = await supabase
-        .from('api.application_apis')
+        .from('application_apis')
         .delete()
         .eq('id', id);
       
@@ -159,7 +159,7 @@ export function useApplicationApi(id?: string) {
       if (!id) return null;
       
       const { data, error } = await supabase
-        .from('api.application_apis')
+        .from('application_apis')
         .select('*')
         .eq('id', id)
         .single();

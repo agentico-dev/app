@@ -3,22 +3,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { Organization } from '@/types/organization';
 
 /**
- * Access a table in the api schema
- * @param table The table name (without the schema prefix)
+ * Access a table in the public schema
+ * @param table The table name
  * @returns A PostgrestQueryBuilder for the specified table
  */
 export const apiTable = (table: string) => {
-  return supabase.from(`api.${table}`);
+  return supabase.from(table);
 };
 
 /**
- * Create a relationship query string for tables in the api schema
+ * Create a relationship query string for tables in the public schema
  * @param table The related table name
  * @param fields The fields to select from the related table
  * @returns A properly formatted select string for use in join queries
  */
 export const apiJoin = (table: string, fields: string) => {
-  return `api.${table}(${fields})`;
+  return `${table}(${fields})`;
 };
 
 /**

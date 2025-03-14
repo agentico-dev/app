@@ -19,7 +19,7 @@ export function useApplicationMessages(applicationId?: string) {
       if (!applicationId) return [];
       
       const { data, error } = await supabase
-        .from('api.application_messages')
+        .from('application_messages')
         .select('*')
         .eq('application_id', applicationId)
         .order('created_at', { ascending: false });
@@ -36,7 +36,7 @@ export function useApplicationMessages(applicationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
-        .from('api.application_messages')
+        .from('application_messages')
         .insert({
           title: messageData.title,
           content: messageData.content,
@@ -72,7 +72,7 @@ export function useApplicationMessages(applicationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { data: updatedMessage, error } = await supabase
-        .from('api.application_messages')
+        .from('application_messages')
         .update({
           title: data.title,
           content: data.content,
@@ -109,7 +109,7 @@ export function useApplicationMessages(applicationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { error } = await supabase
-        .from('api.application_messages')
+        .from('application_messages')
         .delete()
         .eq('id', id);
       
@@ -138,7 +138,7 @@ export function useApplicationMessages(applicationId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
-        .from('api.application_messages')
+        .from('application_messages')
         .update({ status: 'read' })
         .eq('id', id)
         .select()
@@ -181,7 +181,7 @@ export function useApplicationMessage(id?: string) {
       if (!id) return null;
       
       const { data, error } = await supabase
-        .from('api.application_messages')
+        .from('application_messages')
         .select('*')
         .eq('id', id)
         .single();

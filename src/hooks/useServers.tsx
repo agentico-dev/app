@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -17,7 +16,7 @@ export function useServers() {
     queryKey: ['servers'],
     queryFn: async () => {
       let query = supabase
-        .from('api.servers')
+        .from('servers')
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -34,7 +33,7 @@ export function useServers() {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
-        .from('api.servers')
+        .from('servers')
         .insert({
           name: serverData.name,
           description: serverData.description,
@@ -72,7 +71,7 @@ export function useServers() {
       if (!session.user) throw new Error('Authentication required');
       
       const { data: updatedServer, error } = await supabase
-        .from('api.servers')
+        .from('servers')
         .update({
           name: data.name,
           description: data.description,
@@ -110,7 +109,7 @@ export function useServers() {
       if (!session.user) throw new Error('Authentication required');
       
       const { error } = await supabase
-        .from('api.servers')
+        .from('servers')
         .delete()
         .eq('id', id);
       
@@ -139,7 +138,7 @@ export function useServers() {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
-        .from('api.servers')
+        .from('servers')
         .update({ favorite })
         .eq('id', id)
         .select()
@@ -182,7 +181,7 @@ export function useServer(id?: string) {
       if (!id) return null;
       
       const { data, error } = await supabase
-        .from('api.servers')
+        .from('servers')
         .select('*')
         .eq('id', id)
         .single();
@@ -207,7 +206,7 @@ export function useServerApplications(serverId?: string) {
       if (!serverId) return [];
       
       const { data, error } = await supabase
-        .from('api.server_applications')
+        .from('server_applications')
         .select('*, application:application_id(*)')
         .eq('server_id', serverId);
       
@@ -223,7 +222,7 @@ export function useServerApplications(serverId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
-        .from('api.server_applications')
+        .from('server_applications')
         .insert({
           server_id: serverId,
           application_id: applicationId,
@@ -256,7 +255,7 @@ export function useServerApplications(serverId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { error } = await supabase
-        .from('api.server_applications')
+        .from('server_applications')
         .delete()
         .eq('server_id', serverId)
         .eq('application_id', applicationId);
@@ -302,7 +301,7 @@ export function useServerAITools(serverId?: string) {
       if (!serverId) return [];
       
       const { data, error } = await supabase
-        .from('api.server_ai_tools')
+        .from('server_ai_tools')
         .select('*, ai_tool:ai_tool_id(*)')
         .eq('server_id', serverId);
       
@@ -318,7 +317,7 @@ export function useServerAITools(serverId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
-        .from('api.server_ai_tools')
+        .from('server_ai_tools')
         .insert({
           server_id: serverId,
           ai_tool_id: aiToolId,
@@ -351,7 +350,7 @@ export function useServerAITools(serverId?: string) {
       if (!session.user) throw new Error('Authentication required');
       
       const { error } = await supabase
-        .from('api.server_ai_tools')
+        .from('server_ai_tools')
         .delete()
         .eq('server_id', serverId)
         .eq('ai_tool_id', aiToolId);

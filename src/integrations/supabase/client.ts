@@ -8,5 +8,5 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Create the Supabase client with the api schema set as default
+// Create the Supabase client
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
