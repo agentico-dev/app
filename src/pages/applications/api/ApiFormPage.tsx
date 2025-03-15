@@ -40,38 +40,31 @@ export default function ApiFormPage() {
 
   useEffect(() => {
     if (api && !isNew) {
-      // Don't reset the form if it already has user-entered values (prevents data loss on tab switch)
-      const formValues = form.getValues();
-      const hasUserEnteredData = Object.values(formValues).some(val => 
-        (typeof val === 'string' && val !== '') || 
-        (Array.isArray(val) && val.length > 0)
-      );
-
-      if (!hasUserEnteredData) {
-        form.reset({
-          name: api.name,
-          description: api.description,
-          status: api.status,
-          version: api.version,
-          source_uri: api.source_uri,
-          source_content: api.source_content,
-          tags: api.tags,
-        });
+      console.log("API data loaded:", api);
+      
+      form.reset({
+        name: api.name,
+        description: api.description,
+        status: api.status || 'active',
+        version: api.version,
+        source_uri: api.source_uri,
+        source_content: api.source_content,
+        tags: api.tags || [],
+      });
+      
+      // Set source type based on which field has data
+      if (api.source_content) {
+        setSourceType('content');
         
-        // Set source type based on which field has data
-        if (api.source_content) {
-          setSourceType('content');
-          
-          // Try to determine the language type from the content
-          try {
-            JSON.parse(api.source_content);
-            setCodeLanguage('json');
-          } catch {
-            setCodeLanguage('yaml');
-          }
-        } else {
-          setSourceType('uri');
+        // Try to determine the language type from the content
+        try {
+          JSON.parse(api.source_content);
+          setCodeLanguage('json');
+        } catch {
+          setCodeLanguage('yaml');
         }
+      } else {
+        setSourceType('uri');
       }
     }
   }, [api, form, isNew]);
@@ -80,23 +73,25 @@ export default function ApiFormPage() {
     if (!applicationId) return;
     
     // Ensure only one source type is saved based on the selected option
+    const submissionData = { ...data };
+    
     if (sourceType === 'uri') {
-      data.source_content = '';
+      submissionData.source_content = '';
     } else {
-      data.source_uri = '';
+      submissionData.source_uri = '';
     }
     
     setIsSubmitting(true);
     try {
       if (isNew) {
         await createApi.mutateAsync({
-          ...data,
+          ...submissionData,
           application_id: applicationId,
         });
         toast.success('API created successfully');
       } else if (apiId) {
         await updateApi.mutateAsync({
-          ...data,
+          ...submissionData,
           id: apiId,
         });
         toast.success('API updated successfully');

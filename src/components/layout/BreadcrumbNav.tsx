@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { 
@@ -24,7 +25,7 @@ export function BreadcrumbNav({ items }: BreadcrumbNavProps) {
   return (
     <Breadcrumb className="mb-4">
       <BreadcrumbList>
-        <BreadcrumbItem key={`breadcrumb-home`}>
+        <BreadcrumbItem key="breadcrumb-home">
           <BreadcrumbLink asChild>
             <Link to="/">
               <Home className="h-4 w-4 mr-1" />
@@ -34,30 +35,30 @@ export function BreadcrumbNav({ items }: BreadcrumbNavProps) {
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         
-        {items.map((item, index) => (
-          <React.Fragment key={index}>
-            {index === items.length - 1 ? (
+        {items.map((item, index) => {
+          const isLastItem = index === items.length - 1;
+          
+          return isLastItem ? (
+            <BreadcrumbItem key={`item-${index}`}>
+              <BreadcrumbPage>
+                {item.icon && <span className="mr-1">{item.icon}</span>}
+                {item.label}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          ) : (
+            <React.Fragment key={`fragment-${index}`}>
               <BreadcrumbItem>
-                <BreadcrumbPage>
-                  {item.icon && <span className="mr-1">{item.icon}</span>}
-                  {item.label}
-                </BreadcrumbPage>
+                <BreadcrumbLink asChild>
+                  <Link to={item.path || '#'}>
+                    {item.icon && <span className="mr-1">{item.icon}</span>}
+                    {item.label}
+                  </Link>
+                </BreadcrumbLink>
               </BreadcrumbItem>
-            ) : (
-              [
-                <BreadcrumbItem key={`item-${index}`}>
-                  <BreadcrumbLink asChild>
-                    <Link to={item.path || '#'}>
-                      {item.icon && <span className="mr-1">{item.icon}</span>}
-                      {item.label}
-                    </Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>,
-                <BreadcrumbSeparator key={`separator-${index}`} />
-              ]
-            )}
-          </React.Fragment>
-        ))}
+              <BreadcrumbSeparator />
+            </React.Fragment>
+          );
+        })}
       </BreadcrumbList>
     </Breadcrumb>
   );

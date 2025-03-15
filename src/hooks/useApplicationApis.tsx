@@ -167,7 +167,12 @@ export function useApplicationApi(id?: string) {
         .eq('id', id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching API:', error);
+        throw error;
+      }
+      
+      console.log('Fetched API data:', data);
       return data as ApplicationAPI;
     },
     enabled: !!id,

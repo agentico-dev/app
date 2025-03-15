@@ -134,23 +134,6 @@ export function ApiForm({
       />
 
       <div className="space-y-4">
-        {/* <FormLabel>API Source</FormLabel>
-        <RadioGroup
-          onValueChange={(value) => setSourceType(value as 'uri' | 'content')}
-          defaultValue={sourceType}
-          value={sourceType}
-          className="flex flex-col space-y-1"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="uri" id="uri" />
-            <Label htmlFor="uri">External URI</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="content" id="content" />
-            <Label htmlFor="content">Content</Label>
-          </div>
-        </RadioGroup> */}
-
         <ApiSourceSection
           form={form}
           sourceType={sourceType}
