@@ -154,6 +154,7 @@ export function ApiForm({
         <ApiSourceSection
           form={form}
           sourceType={sourceType}
+          setSourceType={setSourceType}
           codeLanguage={codeLanguage}
           setCodeLanguage={setCodeLanguage}
         />
