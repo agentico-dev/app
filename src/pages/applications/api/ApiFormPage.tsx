@@ -42,9 +42,7 @@ export default function ApiFormPage() {
   });
 
   useEffect(() => {
-    if (api && !isNew) {
-      console.log("API data loaded for form:", api);
-      
+    if (api && !isNew) {      
       // Reset form with existing API data
       form.reset({
         name: api.name || '',
@@ -75,17 +73,8 @@ export default function ApiFormPage() {
       return;
     }
     
-    console.log('Form submission data:', data);
-    
     // Add fetchContent flag
     data.fetchContent = shouldFetchContent;
-    
-    // Ensure only one source type is saved based on the selected option
-    if (sourceType === 'uri') {
-      data.source_content = '';
-    } else {
-      data.source_uri = '';
-    }
     
     // Set content format based on code language
     data.content_format = codeLanguage;

@@ -77,10 +77,32 @@ export const isJsonString = (str: string): boolean => {
  */
 export const fetchContentFromUri = async (uri: string): Promise<{ content: string, format: 'json' | 'yaml' }> => {
   try {
-    const response = await fetch(uri);
+    // Check if we need to use a proxy for cross-origin requests
+    const useDirectFetch = uri.startsWith(window.location.origin) || uri.startsWith('data:');
+    
+    let response;
+    const headers = {
+      'Accept': '*/*',
+      'User-Agent': 'Agentico/0.1.0',
+    };
+    if (useDirectFetch) {
+      // Direct fetch for same-origin or data URIs
+      response = await fetch(uri, { 
+        headers,
+      });
+    } else {
+      // For cross-origin requests, you have several options:
+      // 1. Use a CORS proxy
+      const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(uri)}`;
+      // 2. Or use your own backend proxy API if available - @note - uncomment the line below if we provide a backend proxy (in the future?)
+      // const corsProxyUrl = `/api/proxy?url=${encodeURIComponent(uri)}`;      
+      response = await fetch(corsProxyUrl, {
+        headers,
+      });
+    }
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch from URI: ${response.statusText}`);
+      throw new Error(`Failed to fetch from URI: ${response.status} ${response.statusText}`);
     }
     
     const content = await response.text();
@@ -89,6 +111,7 @@ export const fetchContentFromUri = async (uri: string): Promise<{ content: strin
     return { content, format };
   } catch (error) {
     console.error('Error fetching content:', error);
+    toast.error(`Failed to fetch content: ${error instanceof Error ? error.message : String(error)}`);
     throw error;
   }
 };
