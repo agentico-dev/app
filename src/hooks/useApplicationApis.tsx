@@ -72,28 +72,37 @@ export function useApplicationApis(applicationId?: string) {
     },
   });
 
-  // Update an API
+  // Update an API - Fixed to properly handle the update
   const updateApi = useMutation({
     mutationFn: async ({ id, ...data }: Partial<ApplicationAPI> & { id: string }) => {
       if (!session?.user) throw new Error('Authentication required');
       
+      console.log('Updating API with data:', { id, ...data });
+      
+      // Create an update object with only the fields we want to update
+      const updateData: any = {};
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.description !== undefined) updateData.description = data.description;
+      if (data.status !== undefined) updateData.status = data.status;
+      if (data.version !== undefined) updateData.version = data.version;
+      if (data.source_uri !== undefined) updateData.source_uri = data.source_uri;
+      if (data.source_content !== undefined) updateData.source_content = data.source_content;
+      if (data.tags !== undefined) updateData.tags = data.tags;
+      
+      // Add updated_at field
+      updateData.updated_at = new Date().toISOString();
+      
       const { data: updatedApi, error } = await supabase
         .from('application_apis')
-        .update({
-          name: data.name,
-          description: data.description,
-          status: data.status,
-          version: data.version,
-          source_uri: data.source_uri,
-          source_content: data.source_content,
-          tags: data.tags,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating API:', error);
+        throw error;
+      }
       return updatedApi;
     },
     onSuccess: () => {
@@ -104,6 +113,7 @@ export function useApplicationApis(applicationId?: string) {
       });
     },
     onError: (error) => {
+      console.error('Update API error:', error);
       toast({
         title: 'Error updating API',
         description: error.message,

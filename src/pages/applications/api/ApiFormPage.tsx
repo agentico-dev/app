@@ -40,15 +40,16 @@ export default function ApiFormPage() {
 
   useEffect(() => {
     if (api && !isNew) {
-      console.log("API data loaded:", api);
+      console.log("API data loaded for form:", api);
       
+      // Reset form with existing API data
       form.reset({
-        name: api.name,
-        description: api.description,
+        name: api.name || '',
+        description: api.description || '',
         status: api.status || 'active',
-        version: api.version,
-        source_uri: api.source_uri,
-        source_content: api.source_content,
+        version: api.version || '',
+        source_uri: api.source_uri || '',
+        source_content: api.source_content || '',
         tags: api.tags || [],
       });
       
@@ -70,7 +71,12 @@ export default function ApiFormPage() {
   }, [api, form, isNew]);
 
   const onSubmit = async (data: Partial<ApplicationAPI>) => {
-    if (!applicationId) return;
+    if (!applicationId) {
+      toast.error('Application ID is required');
+      return;
+    }
+    
+    console.log('Form submission data:', data);
     
     // Ensure only one source type is saved based on the selected option
     const submissionData = { ...data };
@@ -97,9 +103,9 @@ export default function ApiFormPage() {
         toast.success('API updated successfully');
       }
       navigate(`/applications/${applicationId}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving API:', error);
-      toast.error('Failed to save API');
+      toast.error(`Failed to save API: ${error.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -120,10 +126,8 @@ export default function ApiFormPage() {
     <div className="container py-6 space-y-6">
       <BreadcrumbNav items={breadcrumbItems} />
       
-      <Button variant="ghost" asChild>
-        <div onClick={() => navigate(`/applications/${applicationId}`)}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Application
-        </div>
+      <Button variant="ghost" onClick={() => navigate(`/applications/${applicationId}`)}>
+        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Application
       </Button>
       
       <div>

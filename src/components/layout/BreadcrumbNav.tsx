@@ -25,7 +25,7 @@ export function BreadcrumbNav({ items }: BreadcrumbNavProps) {
   return (
     <Breadcrumb className="mb-4">
       <BreadcrumbList>
-        <BreadcrumbItem key="breadcrumb-home">
+        <BreadcrumbItem>
           <BreadcrumbLink asChild>
             <Link to="/">
               <Home className="h-4 w-4 mr-1" />
@@ -38,24 +38,28 @@ export function BreadcrumbNav({ items }: BreadcrumbNavProps) {
         {items.map((item, index) => {
           const isLastItem = index === items.length - 1;
           
-          return isLastItem ? (
-            <BreadcrumbItem key={`item-${index}`}>
-              <BreadcrumbPage>
-                {item.icon && <span className="mr-1">{item.icon}</span>}
-                {item.label}
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          ) : (
-            <React.Fragment key={`fragment-${index}`}>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to={item.path || '#'}>
+          return (
+            <React.Fragment key={`breadcrumb-item-${index}`}>
+              {isLastItem ? (
+                <BreadcrumbItem>
+                  <BreadcrumbPage>
                     {item.icon && <span className="mr-1">{item.icon}</span>}
                     {item.label}
-                  </Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              ) : (
+                <>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to={item.path || '#'}>
+                        {item.icon && <span className="mr-1">{item.icon}</span>}
+                        {item.label}
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                </>
+              )}
             </React.Fragment>
           );
         })}
