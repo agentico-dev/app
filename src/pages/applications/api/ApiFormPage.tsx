@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { useApplicationApi, useApplicationApis } from '@/hooks/useApplicationApis';
@@ -25,8 +25,9 @@ export default function ApiFormPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sourceType, setSourceType] = useState<'uri' | 'content'>('uri');
   const [codeLanguage, setCodeLanguage] = useState<'json' | 'yaml'>('json');
+  const [shouldFetchContent, setShouldFetchContent] = useState(false);
   
-  const form = useForm<Partial<ApplicationAPI>>({
+  const form = useForm<Partial<ApplicationAPI> & { fetchContent?: boolean }>({
     defaultValues: {
       name: '',
       description: '',
@@ -34,7 +35,9 @@ export default function ApiFormPage() {
       version: '',
       source_uri: '',
       source_content: '',
+      content_format: 'json',
       tags: [],
+      fetchContent: false
     },
   });
 
@@ -50,6 +53,7 @@ export default function ApiFormPage() {
         version: api.version || '',
         source_uri: api.source_uri || '',
         source_content: api.source_content || '',
+        content_format: api.content_format || 'json',
         tags: api.tags || [],
       });
       
@@ -57,20 +61,15 @@ export default function ApiFormPage() {
       if (api.source_content) {
         setSourceType('content');
         
-        // Try to determine the language type from the content
-        try {
-          JSON.parse(api.source_content);
-          setCodeLanguage('json');
-        } catch {
-          setCodeLanguage('yaml');
-        }
+        // Set code language from content_format
+        setCodeLanguage(api.content_format === 'yaml' ? 'yaml' : 'json');
       } else {
         setSourceType('uri');
       }
     }
   }, [api, form, isNew]);
 
-  const onSubmit = async (data: Partial<ApplicationAPI>) => {
+  const onSubmit = async (data: Partial<ApplicationAPI> & { fetchContent?: boolean }) => {
     if (!applicationId) {
       toast.error('Application ID is required');
       return;
@@ -78,26 +77,30 @@ export default function ApiFormPage() {
     
     console.log('Form submission data:', data);
     
-    // Ensure only one source type is saved based on the selected option
-    const submissionData = { ...data };
+    // Add fetchContent flag
+    data.fetchContent = shouldFetchContent;
     
+    // Ensure only one source type is saved based on the selected option
     if (sourceType === 'uri') {
-      submissionData.source_content = '';
+      data.source_content = '';
     } else {
-      submissionData.source_uri = '';
+      data.source_uri = '';
     }
+    
+    // Set content format based on code language
+    data.content_format = codeLanguage;
     
     setIsSubmitting(true);
     try {
       if (isNew) {
         await createApi.mutateAsync({
-          ...submissionData,
+          ...data,
           application_id: applicationId,
         });
         toast.success('API created successfully');
       } else if (apiId) {
         await updateApi.mutateAsync({
-          ...submissionData,
+          ...data,
           id: apiId,
         });
         toast.success('API updated successfully');
@@ -106,6 +109,32 @@ export default function ApiFormPage() {
     } catch (error: any) {
       console.error('Error saving API:', error);
       toast.error(`Failed to save API: ${error.message || 'Unknown error'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleFetchContent = async () => {
+    const sourceUri = form.watch('source_uri');
+    
+    if (!sourceUri) {
+      toast.error('Please enter a source URI first');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const { fetchContentFromUri } = await import('@/utils/apiContentUtils');
+      const { content, format } = await fetchContentFromUri(sourceUri);
+      
+      form.setValue('source_content', content);
+      setCodeLanguage(format);
+      setSourceType('content');
+      
+      toast.success('Content fetched successfully');
+    } catch (error: any) {
+      console.error('Error fetching content:', error);
+      toast.error(`Failed to fetch content: ${error.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -158,6 +187,9 @@ export default function ApiFormPage() {
               setSourceType={setSourceType}
               codeLanguage={codeLanguage}
               setCodeLanguage={setCodeLanguage}
+              onFetchContent={handleFetchContent}
+              setShouldFetchContent={setShouldFetchContent}
+              shouldFetchContent={shouldFetchContent}
             />
           </Form>
         </CardContent>

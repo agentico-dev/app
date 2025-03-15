@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -12,7 +11,7 @@ import { ApiSourceSection } from './ApiSourceSection';
 import TagsSelector from '@/components/applications/TagSelector';
 
 interface ApiFormProps {
-  form: UseFormReturn<Partial<ApplicationAPI>>;
+  form: UseFormReturn<Partial<ApplicationAPI> & { fetchContent?: boolean }>;
   onSubmit: (data: Partial<ApplicationAPI>) => Promise<void>;
   isSubmitting: boolean;
   isNew: boolean;
@@ -21,6 +20,9 @@ interface ApiFormProps {
   setSourceType: (type: 'uri' | 'content') => void;
   codeLanguage: 'json' | 'yaml';
   setCodeLanguage: (lang: 'json' | 'yaml') => void;
+  onFetchContent?: () => void;
+  shouldFetchContent?: boolean;
+  setShouldFetchContent?: (value: boolean) => void;
 }
 
 export function ApiForm({
@@ -32,7 +34,10 @@ export function ApiForm({
   sourceType,
   setSourceType,
   codeLanguage,
-  setCodeLanguage
+  setCodeLanguage,
+  onFetchContent,
+  shouldFetchContent,
+  setShouldFetchContent
 }: ApiFormProps) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -140,6 +145,9 @@ export function ApiForm({
           setSourceType={setSourceType}
           codeLanguage={codeLanguage}
           setCodeLanguage={setCodeLanguage}
+          onFetchContent={onFetchContent}
+          shouldFetchContent={shouldFetchContent}
+          setShouldFetchContent={setShouldFetchContent}
         />
       </div>
 

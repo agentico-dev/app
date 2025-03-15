@@ -84,6 +84,7 @@ export type Database = {
       application_apis: {
         Row: {
           application_id: string | null
+          content_format: string | null
           created_at: string | null
           description: string | null
           id: string
@@ -99,6 +100,7 @@ export type Database = {
         }
         Insert: {
           application_id?: string | null
+          content_format?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -114,6 +116,7 @@ export type Database = {
         }
         Update: {
           application_id?: string | null
+          content_format?: string | null
           created_at?: string | null
           description?: string | null
           id?: string

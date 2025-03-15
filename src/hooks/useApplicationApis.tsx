@@ -2,12 +2,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import type { ApplicationAPI } from '@/types/application';
+import { compressContent, decompressContent, base64ToUint8Array, uint8ArrayToBase64, fetchContentFromUri } from '@/utils/apiContentUtils';
 
 export function useApplicationApis(applicationId?: string) {
   const { session } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const isAuthenticated = !!session?.user;
@@ -25,27 +25,71 @@ export function useApplicationApis(applicationId?: string) {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as ApplicationAPI[];
+
+      // Process the APIs to handle binary data
+      return data.map((api: any) => {
+        // The source_content comes as base64 from Supabase when it's bytea
+        if (api.source_content) {
+          try {
+            const compressedData = base64ToUint8Array(api.source_content);
+            api.source_content = decompressContent(compressedData);
+          } catch (err) {
+            console.error('Error decompressing API content:', err);
+            api.source_content = ''; // Reset if decompression fails
+          }
+        }
+        return api as ApplicationAPI;
+      });
     },
     enabled: !!applicationId,
   });
 
   // Create a new API
   const createApi = useMutation({
-    mutationFn: async (apiData: Partial<ApplicationAPI>) => {
+    mutationFn: async (apiData: Partial<ApplicationAPI> & { fetchContent?: boolean }) => {
       if (!session?.user) throw new Error('Authentication required');
+      
+      // Extract the fetchContent flag and remove it from the data
+      const { fetchContent, ...restData } = apiData;
+      let contentToSave = restData.source_content || '';
+      let contentFormat = restData.content_format || 'json';
+      
+      // If fetchContent is true and we have a source_uri, fetch the content
+      if (fetchContent && restData.source_uri) {
+        try {
+          const { content, format } = await fetchContentFromUri(restData.source_uri);
+          contentToSave = content;
+          contentFormat = format;
+        } catch (error) {
+          console.error('Failed to fetch content from URI:', error);
+          toast.error(`Failed to fetch content from URI: ${error.message}`);
+        }
+      }
+      
+      // Compress the content if it exists
+      let compressedContent = null;
+      if (contentToSave) {
+        try {
+          compressedContent = uint8ArrayToBase64(compressContent(contentToSave));
+        } catch (error) {
+          console.error('Error compressing content:', error);
+          toast.error(`Error compressing content: ${error.message}`);
+          throw error;
+        }
+      }
       
       const { data, error } = await supabase
         .from('application_apis')
         .insert({
-          name: apiData.name,
-          description: apiData.description,
-          application_id: apiData.application_id,
-          status: apiData.status || 'active',
-          version: apiData.version,
-          source_uri: apiData.source_uri,
-          source_content: apiData.source_content,
-          tags: apiData.tags || [],
+          name: restData.name,
+          description: restData.description,
+          application_id: restData.application_id,
+          status: restData.status || 'active',
+          version: restData.version,
+          source_uri: restData.source_uri,
+          source_content: compressedContent,
+          content_format: contentFormat,
+          tags: restData.tags || [],
         })
         .select()
         .single();
@@ -54,6 +98,17 @@ export function useApplicationApis(applicationId?: string) {
         console.error('Error creating API:', error);
         throw error;
       }
+      
+      // Return the data with decompressed content for immediate use
+      if (data.source_content) {
+        try {
+          data.source_content = contentToSave;
+        } catch (err) {
+          console.error('Error with returned source_content:', err);
+          data.source_content = '';
+        }
+      }
+      
       return data;
     },
     onSuccess: () => {
@@ -72,9 +127,13 @@ export function useApplicationApis(applicationId?: string) {
     },
   });
 
-  // Update an API - Fixed to properly handle the update
+  // Update an API
   const updateApi = useMutation({
-    mutationFn: async ({ id, ...data }: Partial<ApplicationAPI> & { id: string }) => {
+    mutationFn: async ({ 
+      id, 
+      fetchContent = false,
+      ...data 
+    }: Partial<ApplicationAPI> & { id: string, fetchContent?: boolean }) => {
       if (!session?.user) throw new Error('Authentication required');
       
       console.log('Updating API with data:', { id, ...data });
@@ -86,8 +145,39 @@ export function useApplicationApis(applicationId?: string) {
       if (data.status !== undefined) updateData.status = data.status;
       if (data.version !== undefined) updateData.version = data.version;
       if (data.source_uri !== undefined) updateData.source_uri = data.source_uri;
-      if (data.source_content !== undefined) updateData.source_content = data.source_content;
       if (data.tags !== undefined) updateData.tags = data.tags;
+      
+      // Handle source content and fetching from URI
+      let contentToSave = data.source_content;
+      let contentFormat = data.content_format || 'json';
+      
+      // If fetchContent is true and we have a source_uri, fetch the content
+      if (fetchContent && updateData.source_uri) {
+        try {
+          const { content, format } = await fetchContentFromUri(updateData.source_uri);
+          contentToSave = content;
+          contentFormat = format;
+        } catch (error) {
+          console.error('Failed to fetch content from URI:', error);
+          toast.error(`Failed to fetch content from URI: ${error.message}`);
+        }
+      }
+      
+      // Compress the content if it exists
+      if (contentToSave !== undefined) {
+        try {
+          if (contentToSave) {
+            updateData.source_content = uint8ArrayToBase64(compressContent(contentToSave));
+            updateData.content_format = contentFormat;
+          } else {
+            updateData.source_content = null;
+          }
+        } catch (error) {
+          console.error('Error compressing content:', error);
+          toast.error(`Error compressing content: ${error.message}`);
+          throw error;
+        }
+      }
       
       // Add updated_at field
       updateData.updated_at = new Date().toISOString();
@@ -103,6 +193,17 @@ export function useApplicationApis(applicationId?: string) {
         console.error('Error updating API:', error);
         throw error;
       }
+      
+      // Return the data with decompressed content for immediate use
+      if (updatedApi.source_content) {
+        try {
+          updatedApi.source_content = contentToSave;
+        } catch (err) {
+          console.error('Error with returned source_content:', err);
+          updatedApi.source_content = '';
+        }
+      }
+      
       return updatedApi;
     },
     onSuccess: () => {
@@ -180,6 +281,17 @@ export function useApplicationApi(id?: string) {
       if (error) {
         console.error('Error fetching API:', error);
         throw error;
+      }
+      
+      // Process the binary data
+      if (data.source_content) {
+        try {
+          const compressedData = base64ToUint8Array(data.source_content);
+          data.source_content = decompressContent(compressedData);
+        } catch (err) {
+          console.error('Error decompressing API content:', err);
+          data.source_content = ''; // Reset if decompression fails
+        }
       }
       
       console.log('Fetched API data:', data);

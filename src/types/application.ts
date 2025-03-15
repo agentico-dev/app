@@ -1,78 +1,93 @@
+
 export interface Application {
   id: string;
   name: string;
-  slug: string;
-  description: string;
-  category: string;
-  status: ApplicationStatus;
-  favorite: boolean;
-  endpoints_count: number;
-  tools_count: number;
-  tags: string[];
-  created_at: string;
-  updated_at: string;
-  organization_id?: string;
-  organization_slug?: string;
-  user_id?: string;
-  project_id?: string;
-  project_slug?: string;
-}
-
-export type ApplicationStatus = 'active' | 'development' | 'maintenance' | 'archived';
-
-export interface ApplicationTag {
-  tag_id: string;
-  tag_name: string;
-}
-
-export interface Tag {
-  id: string;
-  name: string;
+  description?: string;
+  status?: string;
   category?: string;
-}
-
-export interface ResourceTags {
-  resourceId: string;
-  tags: Tag[];
+  slug: string;
+  tags?: string[];
+  endpoints_count?: number;
+  tools_count?: number;
+  organization_id?: string;
+  project_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  is_public?: boolean;
+  favorite?: boolean;
 }
 
 export interface ApplicationAPI {
   id: string;
   name: string;
-  slug: string;
   description?: string;
-  application_id: string;
-  status: 'active' | 'inactive' | 'deprecated';
+  status?: string;
   version?: string;
-  endpoint_url?: string;
-  documentation_url?: string;
+  application_id?: string;
   source_uri?: string;
   source_content?: string;
-  tags: string[];
-  created_at: string;
-  updated_at: string;
+  content_format?: 'json' | 'yaml';
+  protocol?: 'REST' | 'gRPC' | 'WebSockets' | 'GraphQL';
+  is_public?: boolean;
+  tags?: string[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ApplicationService {
   id: string;
   name: string;
-  slug: string;
   description?: string;
-  application_id: string;
-  status: 'active' | 'inactive' | 'maintenance';
-  service_type?: string;
-  tags: string[];
-  created_at: string;
-  updated_at: string;
+  summary?: string;
+  api_id?: string;
+  path?: string;
+  method?: string;
+  tags?: string[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ApplicationServiceMessage {
+  id: string;
+  name: string;
+  description?: string;
+  service_id?: string;
+  message_type?: 'request' | 'response';
+  schema?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ApplicationMessage {
   id: string;
   title: string;
   content: string;
-  application_id: string;
-  message_type: 'notification' | 'alert' | 'info';
-  status: 'read' | 'unread';
-  created_at: string;
-  updated_at: string;
+  application_id?: string;
+  message_type?: string;
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateApplicationRequest {
+  name: string;
+  description?: string;
+  category?: string;
+  status?: string;
+  tags?: string[];
+  organization_id?: string;
+  project_id?: string;
+  is_public?: boolean;
+}
+
+export interface UpdateApplicationRequest {
+  id: string;
+  name?: string;
+  description?: string;
+  category?: string;
+  status?: string;
+  tags?: string[];
+  organization_id?: string;
+  project_id?: string;
+  is_public?: boolean;
 }

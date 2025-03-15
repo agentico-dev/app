@@ -7,13 +7,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CodeEditor } from '@/components/editor/CodeEditor';
 import { UseFormReturn } from 'react-hook-form';
 import { ApplicationAPI } from '@/types/application';
+import { Button } from '@/components/ui/button';
+import { Download, RefreshCw } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface ApiSourceSectionProps {
-  form: UseFormReturn<Partial<ApplicationAPI>>;
+  form: UseFormReturn<Partial<ApplicationAPI> & { fetchContent?: boolean }>;
   sourceType: 'uri' | 'content';
   setSourceType: (type: 'uri' | 'content') => void;
   codeLanguage: 'json' | 'yaml';
   setCodeLanguage: (language: 'json' | 'yaml') => void;
+  onFetchContent?: () => void;
+  shouldFetchContent?: boolean;
+  setShouldFetchContent?: (value: boolean) => void;
 }
 
 export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
@@ -22,6 +28,9 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
   setSourceType,
   codeLanguage,
   setCodeLanguage,
+  onFetchContent,
+  shouldFetchContent,
+  setShouldFetchContent
 }) => {
   return (
     <div className="space-y-4 border p-4 rounded-md">
@@ -43,22 +52,52 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
       </RadioGroup>
       
       {sourceType === 'uri' ? (
-        <FormField
-          control={form.control}
-          name="source_uri"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Source URI</FormLabel>
-              <FormControl>
-                <Input placeholder="https://example.com/api-spec.json" {...field} />
-              </FormControl>
-              <FormDescription>
-                Link to the API specification file (OpenAPI, Swagger, etc.)
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="source_uri"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Source URI</FormLabel>
+                <div className="flex space-x-2">
+                  <FormControl>
+                    <Input placeholder="https://example.com/api-spec.json" {...field} />
+                  </FormControl>
+                  {onFetchContent && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={onFetchContent}
+                      title="Fetch and load content from URI"
+                    >
+                      <Download className="h-4 w-4 mr-2" /> Fetch
+                    </Button>
+                  )}
+                </div>
+                <FormDescription>
+                  Link to the API specification file (OpenAPI, Swagger, etc.)
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          {setShouldFetchContent && (
+            <div className="flex items-center space-x-2 mt-2">
+              <Checkbox 
+                id="fetch-on-save" 
+                checked={shouldFetchContent}
+                onCheckedChange={(checked) => setShouldFetchContent(checked as boolean)}
+              />
+              <label 
+                htmlFor="fetch-on-save" 
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              >
+                Fetch content from URI when saving
+              </label>
+            </div>
           )}
-        />
+        </div>
       ) : (
         <div className="space-y-3">
           <div className="flex items-center space-x-2">
