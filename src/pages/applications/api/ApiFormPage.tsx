@@ -81,9 +81,9 @@ export default function ApiFormPage() {
     
     // Ensure only one source type is saved based on the selected option
     if (sourceType === 'uri') {
-      data.source_content = undefined;
+      data.source_content = '';
     } else {
-      data.source_uri = undefined;
+      data.source_uri = '';
     }
     
     setIsSubmitting(true);

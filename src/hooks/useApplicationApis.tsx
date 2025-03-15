@@ -10,7 +10,7 @@ export function useApplicationApis(applicationId?: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const isAuthenticated = !!session.user;
+  const isAuthenticated = !!session?.user;
 
   // Fetch all APIs for an application
   const { data: apis, isLoading, error } = useQuery({
@@ -33,7 +33,7 @@ export function useApplicationApis(applicationId?: string) {
   // Create a new API
   const createApi = useMutation({
     mutationFn: async (apiData: Partial<ApplicationAPI>) => {
-      if (!session.user) throw new Error('Authentication required');
+      if (!session?.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
         .from('application_apis')
@@ -50,7 +50,10 @@ export function useApplicationApis(applicationId?: string) {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating API:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -72,7 +75,7 @@ export function useApplicationApis(applicationId?: string) {
   // Update an API
   const updateApi = useMutation({
     mutationFn: async ({ id, ...data }: Partial<ApplicationAPI> & { id: string }) => {
-      if (!session.user) throw new Error('Authentication required');
+      if (!session?.user) throw new Error('Authentication required');
       
       const { data: updatedApi, error } = await supabase
         .from('application_apis')
@@ -112,7 +115,7 @@ export function useApplicationApis(applicationId?: string) {
   // Delete an API
   const deleteApi = useMutation({
     mutationFn: async (id: string) => {
-      if (!session.user) throw new Error('Authentication required');
+      if (!session?.user) throw new Error('Authentication required');
       
       const { error } = await supabase
         .from('application_apis')
