@@ -7,9 +7,11 @@ import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { useApplicationApi, useApplicationApis } from '@/hooks/useApplicationApis';
+import { useApplication } from '@/hooks/useApplications';
 import { ApplicationAPI } from '@/types/application';
 import { toast } from 'sonner';
 import { ApiForm } from './components/ApiForm';
+import { BreadcrumbNav } from '@/components/layout/BreadcrumbNav';
 
 export default function ApiFormPage() {
   const { applicationId, apiId } = useParams<{ applicationId: string; apiId?: string }>();
@@ -17,6 +19,7 @@ export default function ApiFormPage() {
   const isNew = !apiId;
   
   const { data: api, isLoading: isLoadingApi } = useApplicationApi(apiId);
+  const { data: application } = useApplication(applicationId);
   const { createApi, updateApi } = useApplicationApis(applicationId);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,8 +114,17 @@ export default function ApiFormPage() {
     return <div>Application ID is required</div>;
   }
 
+  // Prepare breadcrumb items
+  const breadcrumbItems = [
+    { label: 'Applications', path: '/applications' },
+    { label: application?.name || 'Application', path: `/applications/${applicationId}` },
+    { label: isNew ? 'New API' : (api?.name || 'Edit API') }
+  ];
+
   return (
     <div className="container py-6 space-y-6">
+      <BreadcrumbNav items={breadcrumbItems} />
+      
       <Button variant="ghost" asChild>
         <div onClick={() => navigate(`/applications/${applicationId}`)}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Application

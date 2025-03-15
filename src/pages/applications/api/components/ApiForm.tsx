@@ -1,14 +1,15 @@
 
-import React from 'react';
+import { useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { ApplicationAPI } from '@/types/application';
 import { ApiSourceSection } from './ApiSourceSection';
-import { useNavigate } from 'react-router-dom';
+import TagsSelector from '@/components/applications/TagSelector';
 
 interface ApiFormProps {
   form: UseFormReturn<Partial<ApplicationAPI>>;
@@ -19,10 +20,10 @@ interface ApiFormProps {
   sourceType: 'uri' | 'content';
   setSourceType: (type: 'uri' | 'content') => void;
   codeLanguage: 'json' | 'yaml';
-  setCodeLanguage: (language: 'json' | 'yaml') => void;
+  setCodeLanguage: (lang: 'json' | 'yaml') => void;
 }
 
-export const ApiForm: React.FC<ApiFormProps> = ({
+export function ApiForm({
   form,
   onSubmit,
   isSubmitting,
@@ -32,72 +33,19 @@ export const ApiForm: React.FC<ApiFormProps> = ({
   setSourceType,
   codeLanguage,
   setCodeLanguage
-}) => {
-  const navigate = useNavigate();
-
+}: ApiFormProps) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      <FormField
-        control={form.control}
-        name="name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>API Name</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter API name" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      <FormField
-        control={form.control}
-        name="description"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Description</FormLabel>
-            <FormControl>
-              <Textarea
-                placeholder="Describe your API"
-                className="min-h-[120px]"
-                {...field}
-              />
-            </FormControl>
-            <FormDescription>
-              Provide a brief description of what this API does.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           control={form.control}
-          name="status"
+          name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                value={field.value} // Important for persistence
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="deprecated">Deprecated</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                The current status of this API.
-              </FormDescription>
+              <FormLabel>API Name *</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter API name" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -108,28 +56,66 @@ export const ApiForm: React.FC<ApiFormProps> = ({
           name="version"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Version</FormLabel>
+              <FormLabel>API Version</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., 1.0.0" {...field} />
+                <Input placeholder="e.g. 1.0, v2, etc." {...field} />
               </FormControl>
-              <FormDescription>
-                The version of this API.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
-      
-      {/* Source Configuration - Using the ApiSourceSection component */}
-      <ApiSourceSection 
-        form={form}
-        sourceType={sourceType}
-        setSourceType={setSourceType}
-        codeLanguage={codeLanguage}
-        setCodeLanguage={setCodeLanguage}
+
+      <FormField
+        control={form.control}
+        name="description"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Description</FormLabel>
+            <FormControl>
+              <Textarea 
+                placeholder="Describe the purpose and functionality of this API"
+                className="min-h-[100px]"
+                {...field} 
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
       />
-      
+
+      <FormField
+        control={form.control}
+        name="status"
+        render={({ field }) => (
+          <FormItem className="space-y-3">
+            <FormLabel>Status</FormLabel>
+            <FormControl>
+              <RadioGroup
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                value={field.value}
+                className="flex flex-col space-y-1"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="active" id="active" />
+                  <Label htmlFor="active">Active</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="inactive" id="inactive" />
+                  <Label htmlFor="inactive">Inactive</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="deprecated" id="deprecated" />
+                  <Label htmlFor="deprecated">Deprecated</Label>
+                </div>
+              </RadioGroup>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <FormField
         control={form.control}
         name="tags"
@@ -137,44 +123,58 @@ export const ApiForm: React.FC<ApiFormProps> = ({
           <FormItem>
             <FormLabel>Tags</FormLabel>
             <FormControl>
-              <Input
-                placeholder="Enter tags separated by commas"
-                value={field.value?.join(', ') || ''}
-                onChange={(e) => {
-                  const tags = e.target.value
-                    .split(',')
-                    .map((tag) => tag.trim())
-                    .filter(Boolean);
-                  field.onChange(tags);
-                }}
+              <TagsSelector
+                selectedTags={field.value || []}
+                onChange={field.onChange}
               />
             </FormControl>
-            <FormDescription>
-              Tags help categorize and find your APIs.
-            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
-      
-      <div className="flex justify-end space-x-4">
+
+      <div className="space-y-4">
+        <FormLabel>API Source</FormLabel>
+        <RadioGroup
+          onValueChange={(value) => setSourceType(value as 'uri' | 'content')}
+          defaultValue={sourceType}
+          value={sourceType}
+          className="flex flex-col space-y-1"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="uri" id="uri" />
+            <Label htmlFor="uri">External URI</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="content" id="content" />
+            <Label htmlFor="content">Content</Label>
+          </div>
+        </RadioGroup>
+
+        <ApiSourceSection
+          form={form}
+          sourceType={sourceType}
+          codeLanguage={codeLanguage}
+          setCodeLanguage={setCodeLanguage}
+        />
+      </div>
+
+      <div className="flex justify-end space-x-2">
         <Button
           type="button"
           variant="outline"
-          onClick={() => navigate(`/applications/${applicationId}`)}
+          onClick={() => {
+            // Navigate back to application page without saving
+            window.history.back();
+          }}
+          disabled={isSubmitting}
         >
           Cancel
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting
-            ? isNew
-              ? 'Creating...'
-              : 'Updating...'
-            : isNew
-            ? 'Create API'
-            : 'Update API'}
+          {isSubmitting ? 'Saving...' : isNew ? 'Create API' : 'Update API'}
         </Button>
       </div>
     </form>
   );
-};
+}

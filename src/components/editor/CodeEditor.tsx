@@ -42,7 +42,6 @@ export function CodeEditor({ value, onChange, language = 'json', className }: Co
         onChange(formatted);
       }
       // For YAML we would need to use a library like js-yaml which requires installation
-      // For now we'll skip YAML formatting but this could be added with a library
     } catch (error) {
       console.error("Failed to format code:", error);
     }

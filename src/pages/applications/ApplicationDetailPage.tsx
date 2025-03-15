@@ -15,6 +15,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Application } from '@/types/application';
+import { BreadcrumbNav } from '@/components/layout/BreadcrumbNav';
 
 export default function ApplicationDetailPage() {
   const { id, orgSlug, appSlug } = useParams<{ id?: string; orgSlug?: string; appSlug?: string }>();
@@ -85,8 +86,15 @@ export default function ApplicationDetailPage() {
     return '/apps';
   };
 
+  const breadcrumbItems = [
+    { label: 'Applications', path: '/applications' },
+    { label: application?.name || 'Application Details', path: getApplicationUrl() }
+  ];
+
   return (
     <div className="container py-6 space-y-6">
+      <BreadcrumbNav items={breadcrumbItems} />
+      
       <Button variant="ghost" asChild>
         <div onClick={() => navigate('/apps')}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Applications
