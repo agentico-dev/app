@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Function to ensure table operations use the correct schema
 export const apiTable = (tableName: string) => {
-  return supabase.from('public.' + tableName);
+  return supabase.from(tableName);
 };
 
 // Generate a valid slug from a name
