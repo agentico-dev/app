@@ -134,7 +134,7 @@ export function ApiForm({
       />
 
       <div className="space-y-4">
-        <FormLabel>API Source</FormLabel>
+        {/* <FormLabel>API Source</FormLabel>
         <RadioGroup
           onValueChange={(value) => setSourceType(value as 'uri' | 'content')}
           defaultValue={sourceType}
@@ -149,7 +149,7 @@ export function ApiForm({
             <RadioGroupItem value="content" id="content" />
             <Label htmlFor="content">Content</Label>
           </div>
-        </RadioGroup>
+        </RadioGroup> */}
 
         <ApiSourceSection
           form={form}

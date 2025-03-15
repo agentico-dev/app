@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { 
@@ -25,7 +24,7 @@ export function BreadcrumbNav({ items }: BreadcrumbNavProps) {
   return (
     <Breadcrumb className="mb-4">
       <BreadcrumbList>
-        <BreadcrumbItem>
+        <BreadcrumbItem key={`breadcrumb-home`}>
           <BreadcrumbLink asChild>
             <Link to="/">
               <Home className="h-4 w-4 mr-1" />
@@ -45,17 +44,17 @@ export function BreadcrumbNav({ items }: BreadcrumbNavProps) {
                 </BreadcrumbPage>
               </BreadcrumbItem>
             ) : (
-              <>
-                <BreadcrumbItem>
+              [
+                <BreadcrumbItem key={`item-${index}`}>
                   <BreadcrumbLink asChild>
                     <Link to={item.path || '#'}>
                       {item.icon && <span className="mr-1">{item.icon}</span>}
                       {item.label}
                     </Link>
                   </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-              </>
+                </BreadcrumbItem>,
+                <BreadcrumbSeparator key={`separator-${index}`} />
+              ]
             )}
           </React.Fragment>
         ))}
