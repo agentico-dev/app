@@ -113,14 +113,10 @@ export function useApplicationApis(applicationId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['application-apis', applicationId] });
-      toast.success('API created', {
-        description: 'The API has been created successfully.',
-      });
+      toast.success('API created successfully');
     },
     onError: (error) => {
-      toast.error('Error creating API', {
-        description: error.message,
-      });
+      toast.error('Error creating API: ' + error.message);
     },
   });
 
@@ -134,17 +130,6 @@ export function useApplicationApis(applicationId?: string) {
       if (!session?.user) throw new Error('Authentication required');
 
       console.log('Updating API with data:', { id, ...data });
-
-      // Create an update object with only the fields we want to update
-      // const updateData: any = {};
-      // if (data.name !== undefined) updateData.name = data.name;
-      // if (data.description !== undefined) updateData.description = data.description;
-      // if (data.status !== undefined) updateData.status = data.status;
-      // if (data.version !== undefined) updateData.version = data.version;
-      // if (data.source_uri !== undefined) updateData.source_uri = data.source_uri;
-      // if (data.source_content !== undefined) updateData.source_content = data.source_content;
-      // if (data.content_format !== undefined) updateData.content_format = data.content_format;
-      // if (data.tags !== undefined) updateData.tags = data.tags;
 
       // Handle source content and fetching from URI
       let contentToSave = data.source_content;
@@ -162,15 +147,25 @@ export function useApplicationApis(applicationId?: string) {
         }
       }
 
-      // Compress the content if it exists
+      // Create update object with only fields we want to update
+      const updateData: Record<string, any> = {};
+      
+      // Only include fields that are defined
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.description !== undefined) updateData.description = data.description;
+      if (data.status !== undefined) updateData.status = data.status;
+      if (data.version !== undefined) updateData.version = data.version;
+      if (data.source_uri !== undefined) updateData.source_uri = data.source_uri;
+      if (data.tags !== undefined) updateData.tags = data.tags;
+      
+      // Compress the content if it exists and add to update data
       if (contentToSave !== undefined) {
-        // Compress the content
         try {
           if (contentToSave) {
-            data.source_content = uint8ArrayToBase64(compressContent(contentToSave));
-            data.content_format = contentFormat;
+            updateData.source_content = uint8ArrayToBase64(compressContent(contentToSave));
+            updateData.content_format = contentFormat;
           } else {
-            data.source_content = null;
+            updateData.source_content = null;
           }
         } catch (error) {
           console.error('Error compressing content:', error);
@@ -180,35 +175,30 @@ export function useApplicationApis(applicationId?: string) {
       }
 
       // Add updated_at field
-      data.updated_at = new Date().toISOString();
-      console.log('Final update data:', data);
+      updateData.updated_at = new Date().toISOString();
+      
+      console.log('Final update data:', updateData);
 
       const { error } = await supabase
         .from('application_apis')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
-      // prevent PATCH https://...&select=* 406 (Not Acceptable)
-      // .select()
-      // .single();
 
       if (error) {
         console.error('Error updating API:', error);
         throw error;
       }
 
-      return data;
+      // Return the updated data for optimistic updates
+      return { id, ...data };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['application-apis', applicationId] });
-      toast.success('API updated', {
-        description: 'The API has been updated successfully.'
-      });
+      toast.success('API updated successfully');
     },
     onError: (error) => {
       console.error('Update API error:', error);
-      toast.error('Error updating API', {
-        description: error.message
-      });
+      toast.error('Error updating API: ' + error.message);
     },
   });
 
@@ -227,14 +217,10 @@ export function useApplicationApis(applicationId?: string) {
     },
     onSuccess: (id) => {
       queryClient.invalidateQueries({ queryKey: ['application-apis', applicationId] });
-      toast.success('API deleted', {
-        description: 'The API has been deleted successfully.',
-      });
+      toast.success('API deleted successfully');
     },
     onError: (error) => {
-      toast.error('Error deleting API', {
-        description: error.message,
-      });
+      toast.error('Error deleting API: ' + error.message);
     },
   });
 

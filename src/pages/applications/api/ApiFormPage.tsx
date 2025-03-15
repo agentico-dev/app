@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { useApplicationApi, useApplicationApis } from '@/hooks/useApplicationApis';
@@ -73,24 +73,22 @@ export default function ApiFormPage() {
       return;
     }
     
-    // Add fetchContent flag
-    data.fetchContent = shouldFetchContent;
-    
-    // Set content format based on code language
-    data.content_format = codeLanguage;
-    
     setIsSubmitting(true);
     try {
       if (isNew) {
         await createApi.mutateAsync({
           ...data,
           application_id: applicationId,
+          fetchContent: shouldFetchContent,
+          content_format: codeLanguage
         });
         toast.success('API created successfully');
       } else if (apiId) {
         await updateApi.mutateAsync({
           ...data,
           id: apiId,
+          fetchContent: shouldFetchContent,
+          content_format: codeLanguage
         });
         toast.success('API updated successfully');
       }
