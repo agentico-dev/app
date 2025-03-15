@@ -82,6 +82,7 @@ export const ApiForm: React.FC<ApiFormProps> = ({
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
+                value={field.value} // Important for persistence
               >
                 <FormControl>
                   <SelectTrigger>
@@ -120,41 +121,7 @@ export const ApiForm: React.FC<ApiFormProps> = ({
         />
       </div>
       
-      <FormField
-        control={form.control}
-        name="endpoint_url"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Endpoint URL</FormLabel>
-            <FormControl>
-              <Input placeholder="https://api.example.com/v1" {...field} />
-            </FormControl>
-            <FormDescription>
-              The base URL for this API.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      <FormField
-        control={form.control}
-        name="documentation_url"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Documentation URL</FormLabel>
-            <FormControl>
-              <Input placeholder="https://docs.example.com/api" {...field} />
-            </FormControl>
-            <FormDescription>
-              Link to the API documentation.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      {/* Source Configuration - Extracted to ApiSourceSection component */}
+      {/* Source Configuration - Using the ApiSourceSection component */}
       <ApiSourceSection 
         form={form}
         sourceType={sourceType}

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -28,7 +28,7 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
       <h3 className="text-lg font-medium">API Source</h3>
       
       <RadioGroup 
-        defaultValue={sourceType} 
+        value={sourceType} 
         onValueChange={(value) => setSourceType(value as 'uri' | 'content')}
         className="flex space-x-4"
       >

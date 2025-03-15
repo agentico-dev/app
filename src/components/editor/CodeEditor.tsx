@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -12,10 +13,13 @@ interface CodeEditorProps {
 
 export function CodeEditor({ value, onChange, language = 'json', className }: CodeEditorProps) {
   const [copied, setCopied] = useState(false);
-  const [localValue, setLocalValue] = useState(value);
+  const [localValue, setLocalValue] = useState(value || '');
 
+  // Update local state when the parent value changes
   useEffect(() => {
-    setLocalValue(value);
+    if (value !== undefined && value !== localValue) {
+      setLocalValue(value);
+    }
   }, [value]);
 
   const handleCopy = () => {

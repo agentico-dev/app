@@ -43,8 +43,8 @@ export function useApplicationApis(applicationId?: string) {
           application_id: apiData.application_id,
           status: apiData.status || 'active',
           version: apiData.version,
-          endpoint_url: apiData.endpoint_url,
-          documentation_url: apiData.documentation_url,
+          source_uri: apiData.source_uri,
+          source_content: apiData.source_content,
           tags: apiData.tags || [],
         })
         .select()
@@ -81,8 +81,8 @@ export function useApplicationApis(applicationId?: string) {
           description: data.description,
           status: data.status,
           version: data.version,
-          endpoint_url: data.endpoint_url,
-          documentation_url: data.documentation_url,
+          source_uri: data.source_uri,
+          source_content: data.source_content,
           tags: data.tags,
           updated_at: new Date().toISOString(),
         })

@@ -29,8 +29,6 @@ export default function ApiFormPage() {
       description: '',
       status: 'active',
       version: '',
-      endpoint_url: '',
-      documentation_url: '',
       source_uri: '',
       source_content: '',
       tags: [],
@@ -39,31 +37,38 @@ export default function ApiFormPage() {
 
   useEffect(() => {
     if (api && !isNew) {
-      form.reset({
-        name: api.name,
-        description: api.description,
-        status: api.status,
-        version: api.version,
-        endpoint_url: api.endpoint_url,
-        documentation_url: api.documentation_url,
-        source_uri: api.source_uri,
-        source_content: api.source_content,
-        tags: api.tags,
-      });
-      
-      // Set source type based on which field has data
-      if (api.source_content) {
-        setSourceType('content');
+      // Don't reset the form if it already has user-entered values (prevents data loss on tab switch)
+      const formValues = form.getValues();
+      const hasUserEnteredData = Object.values(formValues).some(val => 
+        (typeof val === 'string' && val !== '') || 
+        (Array.isArray(val) && val.length > 0)
+      );
+
+      if (!hasUserEnteredData) {
+        form.reset({
+          name: api.name,
+          description: api.description,
+          status: api.status,
+          version: api.version,
+          source_uri: api.source_uri,
+          source_content: api.source_content,
+          tags: api.tags,
+        });
         
-        // Try to determine the language type from the content
-        try {
-          JSON.parse(api.source_content);
-          setCodeLanguage('json');
-        } catch {
-          setCodeLanguage('yaml');
+        // Set source type based on which field has data
+        if (api.source_content) {
+          setSourceType('content');
+          
+          // Try to determine the language type from the content
+          try {
+            JSON.parse(api.source_content);
+            setCodeLanguage('json');
+          } catch {
+            setCodeLanguage('yaml');
+          }
+        } else {
+          setSourceType('uri');
         }
-      } else {
-        setSourceType('uri');
       }
     }
   }, [api, form, isNew]);
