@@ -43,6 +43,8 @@ export default function ApiFormPage() {
 
   useEffect(() => {
     if (api && !isNew) {      
+      console.log('Loading API data into form:', api);
+      
       // Reset form with existing API data
       form.reset({
         name: api.name || '',
@@ -75,6 +77,12 @@ export default function ApiFormPage() {
     
     setIsSubmitting(true);
     try {
+      console.log('Submitting form with data:', {
+        ...data,
+        fetchContent: shouldFetchContent,
+        content_format: codeLanguage
+      });
+      
       if (isNew) {
         await createApi.mutateAsync({
           ...data,
@@ -84,12 +92,13 @@ export default function ApiFormPage() {
         });
         toast.success('API created successfully');
       } else if (apiId) {
-        await updateApi.mutateAsync({
+        const result = await updateApi.mutateAsync({
           ...data,
           id: apiId,
           fetchContent: shouldFetchContent,
           content_format: codeLanguage
         });
+        console.log('Update result:', result);
         toast.success('API updated successfully');
       }
       navigate(`/applications/${applicationId}`);

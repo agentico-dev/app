@@ -1,35 +1,41 @@
 
+// Define types for applications and related entities
+
 export interface Application {
   id: string;
   name: string;
   description?: string;
-  status?: string;
   category?: string;
-  slug: string;
+  status: 'active' | 'inactive' | 'archived';
   tags?: string[];
-  endpoints_count?: number;
-  tools_count?: number;
+  favorite?: boolean;
+  user_id?: string;
   organization_id?: string;
   project_id?: string;
+  is_public?: boolean;
+  endpoints_count?: number;
+  tools_count?: number;
   created_at?: string;
   updated_at?: string;
-  is_public?: boolean;
-  favorite?: boolean;
 }
+
+export type ApplicationStatus = 'active' | 'inactive' | 'archived';
 
 export interface ApplicationAPI {
   id: string;
   name: string;
   description?: string;
-  status?: string;
+  application_id: string;
+  status?: 'active' | 'inactive' | 'archived';
   version?: string;
-  application_id?: string;
   source_uri?: string;
   source_content?: string;
-  content_format?: 'json' | 'yaml';
+  endpoint_url?: string;
+  documentation_url?: string;
   protocol?: 'REST' | 'gRPC' | 'WebSockets' | 'GraphQL';
-  is_public?: boolean;
   tags?: string[];
+  content_format?: 'json' | 'yaml';
+  is_public?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -39,21 +45,13 @@ export interface ApplicationService {
   name: string;
   description?: string;
   summary?: string;
-  api_id?: string;
+  api_id: string;
+  application_id?: string;
+  status?: 'active' | 'inactive' | 'archived';
+  service_type?: string;
   path?: string;
   method?: string;
   tags?: string[];
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface ApplicationServiceMessage {
-  id: string;
-  name: string;
-  description?: string;
-  service_id?: string;
-  message_type?: 'request' | 'response';
-  schema?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -62,32 +60,14 @@ export interface ApplicationMessage {
   id: string;
   title: string;
   content: string;
-  application_id?: string;
+  application_id: string;
   message_type?: string;
   status?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface CreateApplicationRequest {
-  name: string;
-  description?: string;
-  category?: string;
-  status?: string;
-  tags?: string[];
-  organization_id?: string;
-  project_id?: string;
-  is_public?: boolean;
-}
-
-export interface UpdateApplicationRequest {
+export interface Tag {
   id: string;
-  name?: string;
-  description?: string;
-  category?: string;
-  status?: string;
-  tags?: string[];
-  organization_id?: string;
-  project_id?: string;
-  is_public?: boolean;
+  name: string;
 }

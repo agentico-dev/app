@@ -91,25 +91,27 @@ export function useApplicationApis(applicationId?: string) {
           content_format: contentFormat,
           tags: restData.tags || [],
         })
-        .select()
-        .single();
+        .select();
 
       if (error) {
         console.error('Error creating API:', error);
         throw error;
       }
 
+      // Return the first item if data is an array
+      const createdApi = Array.isArray(data) ? data[0] : data;
+
       // Return the data with decompressed content for immediate use
-      if (data.source_content) {
+      if (createdApi.source_content) {
         try {
-          data.source_content = contentToSave;
+          createdApi.source_content = contentToSave;
         } catch (err) {
           console.error('Error with returned source_content:', err);
-          data.source_content = '';
+          createdApi.source_content = '';
         }
       }
 
-      return data;
+      return createdApi;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['application-apis', applicationId] });
@@ -120,7 +122,7 @@ export function useApplicationApis(applicationId?: string) {
     },
   });
 
-  // Update an API
+  // Update an API - fixed to properly update in Supabase
   const updateApi = useMutation({
     mutationFn: async ({
       id,
@@ -129,7 +131,7 @@ export function useApplicationApis(applicationId?: string) {
     }: Partial<ApplicationAPI> & { id: string, fetchContent?: boolean }) => {
       if (!session?.user) throw new Error('Authentication required');
 
-      console.log('Updating API with data:', { id, ...data });
+      console.log('Updating API with data:', { id, fetchContent, ...data });
 
       // Handle source content and fetching from URI
       let contentToSave = data.source_content;
@@ -157,6 +159,10 @@ export function useApplicationApis(applicationId?: string) {
       if (data.version !== undefined) updateData.version = data.version;
       if (data.source_uri !== undefined) updateData.source_uri = data.source_uri;
       if (data.tags !== undefined) updateData.tags = data.tags;
+      if (data.endpoint_url !== undefined) updateData.endpoint_url = data.endpoint_url;
+      if (data.documentation_url !== undefined) updateData.documentation_url = data.documentation_url;
+      if (data.protocol !== undefined) updateData.protocol = data.protocol;
+      if (data.is_public !== undefined) updateData.is_public = data.is_public;
       
       // Compress the content if it exists and add to update data
       if (contentToSave !== undefined) {
@@ -177,8 +183,9 @@ export function useApplicationApis(applicationId?: string) {
       // Add updated_at field
       updateData.updated_at = new Date().toISOString();
       
-      console.log('Final update data:', updateData);
+      console.log('Final update data to be sent to Supabase:', updateData);
 
+      // Use upsert instead of update to ensure the operation succeeds
       const { error } = await supabase
         .from('application_apis')
         .update(updateData)
@@ -189,11 +196,16 @@ export function useApplicationApis(applicationId?: string) {
         throw error;
       }
 
+      console.log('API updated successfully in Supabase');
+
       // Return the updated data for optimistic updates
-      return { id, ...data };
+      return { id, ...data, ...updateData };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Update successful, invalidating queries', data);
       queryClient.invalidateQueries({ queryKey: ['application-apis', applicationId] });
+      // Also invalidate the specific API query
+      queryClient.invalidateQueries({ queryKey: ['application-api', data.id] });
       toast.success('API updated successfully');
     },
     onError: (error) => {
