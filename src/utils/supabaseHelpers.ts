@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 // Function to ensure table operations use the correct schema
@@ -108,4 +109,20 @@ export async function getGlobalOrganization() {
   }
   
   return data;
+}
+
+/**
+ * Helper function to handle errors from Supabase operations
+ * @param error The error object from a Supabase operation
+ * @param fallbackMessage A fallback message if the error doesn't have a message
+ * @returns A user-friendly error message
+ */
+export function handleSupabaseError(error: any, fallbackMessage = "An unknown error occurred"): string {
+  if (!error) return fallbackMessage;
+  
+  // Log the full error for debugging
+  console.error("Supabase error:", error);
+  
+  // Return a user-friendly message
+  return error.message || error.error_description || fallbackMessage;
 }

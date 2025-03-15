@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Check, Copy, FileJson, FileText } from 'lucide-react';
@@ -13,17 +12,29 @@ interface CodeEditorProps {
 
 export function CodeEditor({ value, onChange, language = 'json', className }: CodeEditorProps) {
   const [copied, setCopied] = useState(false);
+  const [localValue, setLocalValue] = useState(value);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(value);
+    navigator.clipboard.writeText(localValue);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setLocalValue(newValue);
+    onChange(newValue);
   };
 
   const formatCode = () => {
     try {
       if (language === 'json') {
-        const formatted = JSON.stringify(JSON.parse(value || '{}'), null, 2);
+        const formatted = JSON.stringify(JSON.parse(localValue || '{}'), null, 2);
+        setLocalValue(formatted);
         onChange(formatted);
       }
       // For YAML we would need to use a library like js-yaml which requires installation
@@ -72,8 +83,8 @@ export function CodeEditor({ value, onChange, language = 'json', className }: Co
         </div>
       </div>
       <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={localValue}
+        onChange={handleChange}
         className="font-mono text-sm p-3 w-full min-h-[200px] outline-none focus:ring-0 resize-y"
         spellCheck="false"
         data-gramm="false"

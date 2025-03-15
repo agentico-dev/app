@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -62,15 +61,31 @@ export default function ApplicationSettings({ application }: ApplicationSettings
   const [isSubmitting, setIsSubmitting] = useState(false);
   const updateApplication = useUpdateApplication();
   const deleteApplication = useDeleteApplication();
+  const [formValues, setFormValues] = useState({
+    name: application.name,
+    description: application.description || '',
+    category: application.category || '',
+    status: application.status,
+  });
 
   const form = useForm({
-    defaultValues: {
+    defaultValues: formValues
+  });
+
+  useEffect(() => {
+    setFormValues({
       name: application.name,
       description: application.description || '',
       category: application.category || '',
       status: application.status,
-    },
-  });
+    });
+    form.reset({
+      name: application.name,
+      description: application.description || '',
+      category: application.category || '',
+      status: application.status,
+    });
+  }, [application, form]);
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
@@ -160,6 +175,7 @@ export default function ApplicationSettings({ application }: ApplicationSettings
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>

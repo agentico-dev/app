@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -21,30 +22,46 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Some chunks are larger than 500 kB after minification, 
-  // below to fix the chunk size issues by implementing code-splitting and dynamic imports
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-components': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-toast',
-            '@radix-ui/react-tooltip',
-          ],
-          'form-components': [
-            'react-hook-form',
-            '@hookform/resolvers',
-            'zod',
-          ],
-          'data-management': [
-            '@tanstack/react-query',
-            '@supabase/supabase-js',
-          ],
-          'charts': ['recharts'],
+        manualChunks: (id) => {
+          // Core React packages
+          if (id.includes('node_modules/react') || 
+              id.includes('node_modules/react-dom') || 
+              id.includes('node_modules/react-router-dom')) {
+            return 'react-vendor';
+          }
+          
+          // UI components from Radix
+          if (id.includes('node_modules/@radix-ui')) {
+            return 'ui-components';
+          }
+          
+          // Form handling libraries
+          if (id.includes('node_modules/react-hook-form') || 
+              id.includes('node_modules/@hookform') || 
+              id.includes('node_modules/zod')) {
+            return 'form-components';
+          }
+          
+          // Data management libraries
+          if (id.includes('node_modules/@tanstack/react-query') || 
+              id.includes('node_modules/@supabase/supabase-js')) {
+            return 'data-management';
+          }
+          
+          // Charting libraries
+          if (id.includes('node_modules/recharts')) {
+            return 'charts';
+          }
+          
+          // Utils and other libraries
+          if (id.includes('node_modules/date-fns') || 
+              id.includes('node_modules/clsx') || 
+              id.includes('node_modules/tailwind-merge')) {
+            return 'utils';
+          }
         }
       }
     },

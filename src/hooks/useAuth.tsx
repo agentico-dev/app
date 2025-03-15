@@ -2,7 +2,8 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { apiTable } from '@/utils/supabaseHelpers';
+import { apiTable, handleSupabaseError } from '@/utils/supabaseHelpers';
+import { toast } from 'sonner';
 
 interface AuthState {
   session: Session | null;
@@ -87,10 +88,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await apiTable('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
-      if (error) {
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" which is fine for new users
         console.error('Error loading user profile:', error);
+        toast.error(`Error loading profile: ${handleSupabaseError(error)}`);
         setAuthState(prev => ({
           ...prev,
           profile: null,
@@ -113,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           loading: false,
         }));
       } else {
+        // No profile found but user exists - this is a valid state for new users
         setAuthState(prev => ({
           ...prev,
           profile: null,
@@ -121,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Failed to load user profile:', error);
+      toast.error(`Failed to load profile: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setAuthState(prev => ({
         ...prev,
         profile: null,
