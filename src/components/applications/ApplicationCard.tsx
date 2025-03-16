@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { AppWindow, CircuitBoard, Star, Tag, X } from 'lucide-react';
 import { Application } from '@/types/application';
 import { useTags } from '@/contexts/TagsContext';

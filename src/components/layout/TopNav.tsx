@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { 
   Moon, 
   CircuitBoard, 
@@ -24,7 +24,7 @@ import {
 import { NotificationsPopover } from '@/components/notifications/NotificationsPopover';
 import { useAuth } from '@/hooks/useAuth';
 import OrganizationSelector from '@/components/organizations/OrganizationSelector';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 export function TopNav() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');

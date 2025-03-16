@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppWindow, CircuitBoard, Filter, Plus, Search, Shield, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import {
   DropdownMenu,
   DropdownMenuContent,

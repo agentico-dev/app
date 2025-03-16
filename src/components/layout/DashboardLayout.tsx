@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router';
 import { SidebarNav } from './SidebarNav';
 import { TopNav } from './TopNav';
 import { cn } from '@/lib/utils';

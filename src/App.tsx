@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { TagsProvider } from "./contexts/TagsContext";
 import { lazy, Suspense } from "react";
@@ -70,6 +70,20 @@ const RedirectIfAuthenticated = ({ children }: { children: React.ReactNode }) =>
   return <>{children}</>;
 };
 
+interface RedirectWithSlugProps {
+  path: string;
+}
+
+interface RedirectWithSlugParams extends Record<string, string> {
+  parentSlug: string;
+  childSlug: string;
+}
+// Redirect component for slug-based routes
+const RedirectWithSlug: React.FC<RedirectWithSlugProps> = ({ path }) => {
+  const { parentSlug, childSlug } = useParams<RedirectWithSlugParams>();
+  return <Navigate to={`/${path}/${parentSlug}@${childSlug}`} replace />;
+};
+
 const AppRoutes = () => {
   const { session } = useAuth();
 
@@ -102,10 +116,10 @@ const AppRoutes = () => {
         {/* Organization routes */}
         <Route path="/orgs" element={<OrganizationsPage />} />
         <Route path="/orgs/:slug" element={<OrganizationDetailPage />} />
-        
+
         {/* Fix: Use parent route with specific path and child route for redirection */}
         <Route path="/organizations">
-          <Route path=":slug" element={<Navigate to={({ params }) => `/orgs/${params.slug}`} replace />} />
+          <Route path=":slug" element={<Navigate to={`/orgs/${useParams().slug}`} replace />} />
         </Route>
 
         {/* Projects routes - both ID and slug-based */}
@@ -115,30 +129,30 @@ const AppRoutes = () => {
         <Route path="/projs/new" element={<Navigate to="/projects/new" replace />} />
         <Route path="/projects/:id" element={<ProjectsPage />} />
         <Route path="/projects/:orgSlug@:projSlug" element={<ProjectsPage />} />
-        <Route path="/projs/:orgSlug@:projSlug" element={<Navigate to={({ params }) => `/projects/${params.orgSlug}@${params.projSlug}`} replace />} />
+        <Route path="/projs/:orgSlug@:projSlug" element={<RedirectWithSlug path="projects" />} />
 
         {/* Applications routes - both ID and slug-based */}
         <Route path="/applications" element={<ApplicationsPage />} />
         <Route path="/apps" element={<Navigate to="/applications" replace />} />
         <Route path="/applications/new" element={<AuthenticatedRoute><NewApplicationPage /></AuthenticatedRoute>} />
         <Route path="/apps/new" element={<Navigate to="/applications/new" replace />} />
-        
+
         {/* Application detail routes */}
         <Route path="/applications/:id" element={<AuthenticatedRoute><ApplicationDetailPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug" element={<AuthenticatedRoute><ApplicationDetailPage /></AuthenticatedRoute>} />
-        
+
         {/* Application API routes */}
         <Route path="/applications/:applicationId/apis/new" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/apis/new" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
         <Route path="/applications/:applicationId/apis/:apiId" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/apis/:apiSlug" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
-        
+
         {/* Application Service routes */}
         <Route path="/applications/:applicationId/services/new" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/services/new" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
         <Route path="/applications/:applicationId/services/:serviceId" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/services/:serviceSlug" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
-        
+
         {/* Application Message routes */}
         <Route path="/applications/:applicationId/messages/new" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/messages/new" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
@@ -157,13 +171,13 @@ const AppRoutes = () => {
         <Route path="/ai-tools/new" element={<AuthenticatedRoute><NewToolPage /></AuthenticatedRoute>} />
         <Route path="/tools/new" element={<Navigate to="/ai-tools/new" replace />} />
         <Route path="/ai-tools/:id" element={<AIToolsPage />} />
-        <Route path="/tools/:serverSlug@:toolSlug" element={<Navigate to={({ params }) => `/ai-tools/${params.serverSlug}@${params.toolSlug}`} replace />} />
+        <Route path="/tools/:serverSlug@:toolSlug" element={<Navigate to={`/ai-tools/${window.location.pathname.split('/')[2]}`} replace />} />
 
         {/* Legacy routes that will be updated */}
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
         <Route path="/agents" element={<ProjectsPage />} />
-        
+
         {/* User profile and settings */}
         <Route path="/profile" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
         <Route path="/settings" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />

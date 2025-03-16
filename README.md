@@ -9,3 +9,12 @@ We need to start with strong foundations, and that is why we are building a dash
 ## Future Work
 
 With our dashboard, you can easily track and analyze your agents' activities, monitor their performance, and make data-driven decisions to improve your business.
+
+
+## Stack
+
+- React Router v7
+- Vite
+- TypeScript
+- shadcn-ui
+- Tailwind CSS

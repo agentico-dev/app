@@ -1,5 +1,5 @@
 
-import { Navigate } from "react-router-dom";
+import { Navigate } from "react-router";
 
 const Index = () => {
   // Redirects to the dashboard

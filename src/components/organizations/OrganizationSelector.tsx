@@ -13,7 +13,7 @@ import { Check, ChevronDown, Building, Search, PlusCircle } from 'lucide-react';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Organization, OrganizationSelectorProps } from '@/types/organization';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 

@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Organization } from '@/types/organization';
 import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Folder, FolderPlus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';

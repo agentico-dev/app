@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Building, Users, Calendar } from 'lucide-react';
 import { Organization } from '@/types/organization';
 import { format } from 'date-fns';
