@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { TagsProvider } from "./contexts/TagsContext";
 import { lazy, Suspense } from "react";
@@ -81,8 +81,8 @@ interface RedirectWithSlugParams extends Record<string, string> {
 
 // Redirect component for slug-based routes
 const RedirectWithSlug: React.FC<RedirectWithSlugProps> = ({ path }) => {
-  const { parentSlug, childSlug } = useParams<RedirectWithSlugParams>();
-  return <Navigate to={`/${path}/${parentSlug}@${childSlug}`} replace />;
+  const params = useParams<RedirectWithSlugParams>();
+  return <Navigate to={`/${path}/${params.parentSlug}@${params.childSlug}`} replace />;
 };
 
 const AppRoutes = () => {
@@ -130,7 +130,7 @@ const AppRoutes = () => {
         <Route path="/projs/new" element={<Navigate to="/projects/new" replace />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
         <Route path="/projects/:orgSlug@:projSlug" element={<ProjectDetailPage />} />
-        <Route path="/projs/:orgSlug@:projSlug" element={<RedirectWithSlug path="projects" />} />
+        <Route path="/projs/:orgSlug@:projSlug" element={<Navigate to={`/projects/${useParams().orgSlug}@${useParams().projSlug}`} replace />} />
 
         {/* Applications routes - both ID and slug-based */}
         <Route path="/applications" element={<ApplicationsPage />} />
