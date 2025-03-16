@@ -1,9 +1,8 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { TagsProvider } from "./contexts/TagsContext";
 import { lazy, Suspense } from "react";
@@ -12,6 +11,7 @@ import { lazy, Suspense } from "react";
 const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
+const ProjectDetailPage = lazy(() => import("./pages/projects/ProjectDetailPage"));
 const AIToolsPage = lazy(() => import("./pages/AIToolsPage"));
 const ApplicationsPage = lazy(() => import("./pages/ApplicationsPage"));
 const ServersPage = lazy(() => import("./pages/ServersPage"));
@@ -78,6 +78,7 @@ interface RedirectWithSlugParams extends Record<string, string> {
   parentSlug: string;
   childSlug: string;
 }
+
 // Redirect component for slug-based routes
 const RedirectWithSlug: React.FC<RedirectWithSlugProps> = ({ path }) => {
   const { parentSlug, childSlug } = useParams<RedirectWithSlugParams>();
@@ -127,8 +128,8 @@ const AppRoutes = () => {
         <Route path="/projs" element={<Navigate to="/projects" replace />} />
         <Route path="/projects/new" element={<AuthenticatedRoute><NewProjectPage /></AuthenticatedRoute>} />
         <Route path="/projs/new" element={<Navigate to="/projects/new" replace />} />
-        <Route path="/projects/:id" element={<ProjectsPage />} />
-        <Route path="/projects/:orgSlug@:projSlug" element={<ProjectsPage />} />
+        <Route path="/projects/:id" element={<ProjectDetailPage />} />
+        <Route path="/projects/:orgSlug@:projSlug" element={<ProjectDetailPage />} />
         <Route path="/projs/:orgSlug@:projSlug" element={<RedirectWithSlug path="projects" />} />
 
         {/* Applications routes - both ID and slug-based */}
