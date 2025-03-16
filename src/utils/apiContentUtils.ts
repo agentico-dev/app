@@ -1,31 +1,35 @@
-import { compress, decompress } from 'lz-string';
+import pako from 'pako';
 
 /**
  * Compresses a string using lz-string
  * @param content The string to compress
  * @returns The compressed string
  */
-export function compressContent(content: string): Uint8Array {
-  const compressed = compress(content);
-  const uint8Array = new Uint8Array(compressed.length);
-  for (let i = 0; i < compressed.length; i++) {
-    uint8Array[i] = compressed.charCodeAt(i);
+/**
+ * Convert a string to a compressed Uint8Array
+ */
+export const compressContent = (content: string): Uint8Array => {
+  try {
+    const data = new TextEncoder().encode(content);
+    return pako.deflate(data);
+  } catch (error) {
+    console.error('Error compressing content:', error);
+    throw new Error('Failed to compress content');
   }
-  return uint8Array;
-}
+};
 
 /**
- * Decompresses a string using lz-string
- * @param compressedContent The compressed string
- * @returns The decompressed string
+ * Convert a compressed Uint8Array back to a string
  */
-export function decompressContent(compressedContent: Uint8Array): string {
-  let compressed = '';
-  for (let i = 0; i < compressedContent.length; i++) {
-    compressed += String.fromCharCode(compressedContent[i]);
+export const decompressContent = (compressedData: Uint8Array): string => {
+  try {
+    const decompressed = pako.inflate(compressedData);
+    return new TextDecoder().decode(decompressed);
+  } catch (error) {
+    console.error('Error decompressing content:', error);
+    throw new Error('Failed to decompress content');
   }
-  return decompress(compressed) || '';
-}
+};
 
 /**
  * Converts a base64 string to a Uint8Array
@@ -65,11 +69,29 @@ export async function fetchContentFromUri(uri: string): Promise<{ content: strin
   console.log('Fetching content from URI:', uri);
   
   try {
-    const response = await fetch(uri, {
-      headers: {
-        'Accept': 'application/json, application/yaml, text/yaml, text/plain',
-      },
-    });
+    let response;
+    const headers = {
+      'Accept': 'application/json, application/yaml, text/yaml, text/plain',
+      'User-Agent': 'Agentico/0.1.0',
+    };
+    // Check if we need to use a proxy for cross-origin requests
+    const useDirectFetch = uri.startsWith(window.location.origin) || uri.startsWith('data:');
+    
+    if (useDirectFetch) {
+      // Direct fetch for same-origin or data URIs
+      response = await fetch(uri, { 
+        headers,
+      });
+    } else {
+      // For cross-origin requests, you have several options:
+      // 1. Use a CORS proxy
+      const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(uri)}`;
+      // 2. Or use your own backend proxy API if available - @note - uncomment the line below if we provide a backend proxy (in the future?)
+      // const corsProxyUrl = `/api/proxy?url=${encodeURIComponent(uri)}`;      
+      response = await fetch(corsProxyUrl, {
+        headers,
+      });
+    }
 
     if (!response.ok) {
       throw new Error(`Failed to fetch content: ${response.status} ${response.statusText}`);
