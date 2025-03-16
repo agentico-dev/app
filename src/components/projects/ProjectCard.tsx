@@ -19,6 +19,7 @@ export interface Project {
   tools_count?: number;
   applications_count?: number;
   servers_count?: number;
+  slug: string;
 }
 
 export function ProjectCard({ project }: { project: Project }) {
@@ -70,7 +71,7 @@ export function ProjectCard({ project }: { project: Project }) {
           {project.status}
         </Badge>
         <Button asChild>
-          <Link to={`/projects/${project.id}`}>View Details</Link>
+          <Link to={`/projects/${project.slug}`}>View Details</Link>
         </Button>
       </CardFooter>
     </Card>

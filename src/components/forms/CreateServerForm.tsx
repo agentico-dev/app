@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -73,20 +72,9 @@ export function CreateServerForm() {
       
       toast.success('Server created successfully');
       
-      // Navigate to the new server using the slug-based URL
+      // Navigate directly to the new server using the slug
       if (newServer) {
-        // Fetch the organization slug
-        const { data: org } = await supabase
-          .from('organizations')
-          .select('slug')
-          .eq('id', organizationId)
-          .single();
-          
-        if (org) {
-          navigate(`/servers/${org.slug}@${newServer.slug}`);
-        } else {
-          navigate(`/servers/${newServer.id}`);
-        }
+        navigate(`/servers/${newServer.slug}`);
       } else {
         navigate('/servers');
       }

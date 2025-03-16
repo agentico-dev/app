@@ -23,13 +23,11 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 const OrganizationsPage = lazy(() => import("./pages/OrganizationsPage"));
 const OrganizationDetailPage = lazy(() => import("./pages/OrganizationDetailPage"));
 
-// New pages for creating resources
 const NewProjectPage = lazy(() => import("./pages/projects/NewProjectPage"));
 const NewApplicationPage = lazy(() => import("./pages/applications/NewApplicationPage"));
 const NewServerPage = lazy(() => import("./pages/servers/NewServerPage"));
 const NewToolPage = lazy(() => import("./pages/ai-tools/NewToolPage"));
 
-// Application detail and resource pages
 const ApplicationDetailPage = lazy(() => import("./pages/applications/ApplicationDetailPage"));
 const ApiFormPage = lazy(() => import("./pages/applications/api/ApiFormPage"));
 const ServiceFormPage = lazy(() => import("./pages/applications/service/ServiceFormPage"));
@@ -45,7 +43,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Route guard component to protect routes that require authentication
 const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth();
 
@@ -56,7 +53,6 @@ const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Public routes that redirect to dashboard if logged in
 const RedirectIfAuthenticated = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth();
 
@@ -80,7 +76,6 @@ interface RedirectWithSlugParams extends Record<string, string> {
   childSlug: string;
 }
 
-// Redirect component for slug-based routes
 const RedirectWithSlug: React.FC<RedirectWithSlugProps> = ({ path }) => {
   const params = useParams<RedirectWithSlugParams>();
   return <Navigate to={`/${path}/${params.parentSlug}@${params.childSlug}`} replace />;
@@ -89,7 +84,6 @@ const RedirectWithSlug: React.FC<RedirectWithSlugProps> = ({ path }) => {
 const AppRoutes = () => {
   const { session } = useAuth();
 
-  // If user is not logged in and is visiting the root path, show landing page
   if (!session.user && window.location.pathname === '/') {
     return (
       <Routes>
@@ -106,68 +100,58 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      {/* Auth routes */}
       <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
       <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
 
-      {/* Dashboard layout routes - now accessible to all users */}
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
 
-        {/* Organization routes */}
         <Route path="/orgs" element={<OrganizationsPage />} />
         <Route path="/orgs/:slug" element={<OrganizationDetailPage />} />
 
-        {/* Fix: Use parent route with specific path and child route for redirection */}
         <Route path="/organizations">
           <Route path=":slug" element={<Navigate to={`/orgs/${useParams().slug}`} replace />} />
         </Route>
 
-        {/* Projects routes - both ID and slug-based */}
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projs" element={<Navigate to="/projects" replace />} />
         <Route path="/projects/new" element={<AuthenticatedRoute><NewProjectPage /></AuthenticatedRoute>} />
         <Route path="/projs/new" element={<Navigate to="/projects/new" replace />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
+        <Route path="/projects/:id/edit" element={<AuthenticatedRoute><NewProjectPage /></AuthenticatedRoute>} />
         <Route path="/projects/:orgSlug@:projSlug" element={<ProjectDetailPage />} />
         <Route path="/projs/:orgSlug@:projSlug" element={<Navigate to={`/projects/${useParams().orgSlug}@${useParams().projSlug}`} replace />} />
 
-        {/* Applications routes - both ID and slug-based */}
         <Route path="/applications" element={<ApplicationsPage />} />
         <Route path="/apps" element={<Navigate to="/applications" replace />} />
         <Route path="/applications/new" element={<AuthenticatedRoute><NewApplicationPage /></AuthenticatedRoute>} />
         <Route path="/apps/new" element={<Navigate to="/applications/new" replace />} />
 
-        {/* Application detail routes */}
         <Route path="/applications/:id" element={<AuthenticatedRoute><ApplicationDetailPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug" element={<AuthenticatedRoute><ApplicationDetailPage /></AuthenticatedRoute>} />
 
-        {/* Application API routes */}
         <Route path="/applications/:applicationId/apis/new" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/apis/new" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
         <Route path="/applications/:applicationId/apis/:apiId" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/apis/:apiSlug" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
 
-        {/* Application Service routes */}
         <Route path="/applications/:applicationId/services/new" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/services/new" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
         <Route path="/applications/:applicationId/services/:serviceId" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/services/:serviceSlug" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
 
-        {/* Application Message routes */}
         <Route path="/applications/:applicationId/messages/new" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/messages/new" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
         <Route path="/applications/:applicationId/messages/:messageId" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/messages/:messageId" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
 
-        {/* Servers routes - both ID and slug-based */}
         <Route path="/servers" element={<ServersPage />} />
         <Route path="/servers/new" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
         <Route path="/servers/:id" element={<AuthenticatedRoute><ServerDetailPage /></AuthenticatedRoute>} />
+        <Route path="/servers/:id/edit" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
         <Route path="/servers/:projSlug@:serverSlug" element={<AuthenticatedRoute><ServerDetailPage /></AuthenticatedRoute>} />
 
-        {/* AI Tools routes - both ID and slug-based */}
         <Route path="/ai-tools" element={<AIToolsPage />} />
         <Route path="/tools" element={<Navigate to="/ai-tools" replace />} />
         <Route path="/ai-tools/new" element={<AuthenticatedRoute><NewToolPage /></AuthenticatedRoute>} />
@@ -175,17 +159,14 @@ const AppRoutes = () => {
         <Route path="/ai-tools/:id" element={<AIToolsPage />} />
         <Route path="/tools/:serverSlug@:toolSlug" element={<Navigate to={`/ai-tools/${window.location.pathname.split('/')[2]}`} replace />} />
 
-        {/* Legacy routes that will be updated */}
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
         <Route path="/agents" element={<ProjectsPage />} />
 
-        {/* User profile and settings */}
         <Route path="/profile" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
         <Route path="/settings" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
       </Route>
 
-      {/* Catch-all route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

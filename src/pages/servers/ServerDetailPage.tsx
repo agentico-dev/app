@@ -24,13 +24,19 @@ export default function ServerDetailPage() {
       
       setIsLoading(true);
       try {
-        console.log('Fetching server details for ID:', id);
+        console.log('Fetching server details for ID/slug:', id);
         
-        const { data, error } = await supabase
-          .from('servers')
-          .select('*')
-          .eq('id', id)
-          .single();
+        let query = supabase.from('servers').select('*');
+        
+        // Check if the ID is a UUID format or a slug
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUuid) {
+          query = query.eq('id', id);
+        } else {
+          query = query.eq('slug', id);
+        }
+        
+        const { data, error } = await query.single();
         
         if (error) {
           console.error('Error fetching server details:', error);
@@ -56,18 +62,20 @@ export default function ServerDetailPage() {
   };
 
   const handleEditServer = () => {
-    // Navigate to edit server page
-    navigate(`/servers/${id}/edit`);
+    // Navigate to edit server page using slug
+    if (server) {
+      navigate(`/servers/${server.slug}/edit`);
+    }
   };
 
   const handleDeleteServer = async () => {
-    if (!id) return;
+    if (!server) return;
     
     try {
       const { error } = await supabase
         .from('servers')
         .delete()
-        .eq('id', id);
+        .eq('id', server.id);
       
       if (error) throw error;
       

@@ -21,13 +21,19 @@ export default function ProjectDetailPage() {
       
       setIsLoading(true);
       try {
-        console.log('Fetching project details for ID:', id);
+        console.log('Fetching project details for ID/slug:', id);
         
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('id', id)
-          .single();
+        let query = supabase.from('projects').select('*');
+        
+        // Check if the ID is a UUID format or a slug
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUuid) {
+          query = query.eq('id', id);
+        } else {
+          query = query.eq('slug', id);
+        }
+        
+        const { data, error } = await query.single();
         
         if (error) {
           console.error('Error fetching project details:', error);
@@ -53,18 +59,20 @@ export default function ProjectDetailPage() {
   };
 
   const handleEditProject = () => {
-    // Navigate to edit project page
-    navigate(`/projects/${id}/edit`);
+    // Navigate to edit project page using slug
+    if (project) {
+      navigate(`/projects/${project.slug}/edit`);
+    }
   };
 
   const handleDeleteProject = async () => {
-    if (!id) return;
+    if (!project) return;
     
     try {
       const { error } = await supabase
         .from('projects')
         .delete()
-        .eq('id', id);
+        .eq('id', project.id);
       
       if (error) throw error;
       

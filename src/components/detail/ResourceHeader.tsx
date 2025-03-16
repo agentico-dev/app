@@ -35,6 +35,7 @@ interface ResourceHeaderProps {
   onDelete?: () => void;
   resourceId?: string;
   resourceType?: 'Project' | 'Server';
+  resourceSlug?: string;
 }
 
 export function ResourceHeader({
@@ -47,7 +48,8 @@ export function ResourceHeader({
   onEdit,
   onDelete,
   resourceId,
-  resourceType
+  resourceType,
+  resourceSlug
 }: ResourceHeaderProps) {
   const navigate = useNavigate();
 
@@ -58,14 +60,16 @@ export function ResourceHeader({
   const handleEdit = () => {
     if (onEdit) {
       onEdit();
-    } else if (resourceType && resourceId) {
+    } else if (resourceType && (resourceSlug || resourceId)) {
       // Redirect to the appropriate edit page based on resourceType
+      // Prefer slug over ID when available
+      const resourceIdentifier = resourceSlug || resourceId;
       switch (resourceType) {
         case 'Project':
-          navigate(`/projects/${resourceId}/edit`);
+          navigate(`/projects/${resourceIdentifier}/edit`);
           break;
         case 'Server':
-          navigate(`/servers/${resourceId}/edit`);
+          navigate(`/servers/${resourceIdentifier}/edit`);
           break;
       }
     }

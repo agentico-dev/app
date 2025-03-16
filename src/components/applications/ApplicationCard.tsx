@@ -66,14 +66,16 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
 
   // Generate the correct URL for the application
   const getAppUrl = () => {
-    // First priority: Use org slug and app slug if both are available
-    if (application.organization_slug && application.slug) {
-      return `/apps/${application.organization_slug}@${application.slug}`;
-    }
-    
-    // Second priority: Use fetched org slug and app slug
-    if (organization?.slug && application.slug) {
-      return `/apps/${organization.slug}@${application.slug}`;
+    // Prefer to use slug over ID
+    if (application.slug) {
+      // Use org slug if available, otherwise fall back to ID
+      if (application.organization_slug) {
+        return `/apps/${application.organization_slug}@${application.slug}`;
+      }
+      
+      if (organization?.slug) {
+        return `/apps/${organization.slug}@${application.slug}`;
+      }
     }
     
     // Fallback: Use ID
