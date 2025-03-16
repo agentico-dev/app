@@ -34,6 +34,7 @@ const ApplicationDetailPage = lazy(() => import("./pages/applications/Applicatio
 const ApiFormPage = lazy(() => import("./pages/applications/api/ApiFormPage"));
 const ServiceFormPage = lazy(() => import("./pages/applications/service/ServiceFormPage"));
 const MessageFormPage = lazy(() => import("./pages/applications/message/MessageFormPage"));
+const ServerDetailPage = lazy(() => import("./pages/servers/ServerDetailPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -163,8 +164,8 @@ const AppRoutes = () => {
         {/* Servers routes - both ID and slug-based */}
         <Route path="/servers" element={<ServersPage />} />
         <Route path="/servers/new" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
-        <Route path="/servers/:id" element={<ServersPage />} />
-        <Route path="/servers/:projSlug@:serverSlug" element={<ServersPage />} />
+        <Route path="/servers/:id" element={<AuthenticatedRoute><ServerDetailPage /></AuthenticatedRoute>} />
+        <Route path="/servers/:projSlug@:serverSlug" element={<AuthenticatedRoute><ServerDetailPage /></AuthenticatedRoute>} />
 
         {/* AI Tools routes - both ID and slug-based */}
         <Route path="/ai-tools" element={<AIToolsPage />} />

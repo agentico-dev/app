@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +9,6 @@ import { Server as ServerType } from '@/types/server';
 import { FilterControls } from '@/components/applications/FilterControls';
 import { useTags } from '@/contexts/TagsContext';
 
-// Define custom filter controls interface to match component props
 interface CustomFilterControlsProps {
   searchValue: string; 
   onSearchValueChange: (value: string) => void;
@@ -39,7 +37,6 @@ function ServersPage() {
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   
-  // Filter the servers based on search, status, and tags
   const filteredServers = (servers || []).filter((server) => {
     const matchesSearch = search === '' || 
       server.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -60,6 +57,10 @@ function ServersPage() {
     } catch (error) {
       console.error('Error toggling favorite:', error);
     }
+  };
+
+  const handleServerClick = (server: ServerType) => {
+    navigate(`/servers/${server.id}`);
   };
 
   const statusOptions = [
@@ -158,7 +159,11 @@ function ServersPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredServers.map((server: ServerType) => (
-            <Card key={server.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+            <Card 
+              key={server.id} 
+              className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => handleServerClick(server)}
+            >
               <div className="relative">
                 <CardHeader className="pb-0">
                   <div className="flex justify-between items-start">
