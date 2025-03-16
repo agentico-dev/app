@@ -1,8 +1,28 @@
 
+import React from 'react';
 import { Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from '@/components/ui/alert-dialog';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle, 
+  DialogTrigger
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 interface ResourceHeaderProps {
   title: string;
@@ -13,6 +33,8 @@ interface ResourceHeaderProps {
   statusColorClass?: string;
   onEdit?: () => void;
   onDelete?: () => void;
+  resourceId?: string;
+  resourceType?: 'Project' | 'Server';
 }
 
 export function ResourceHeader({
@@ -23,12 +45,55 @@ export function ResourceHeader({
   tags = [],
   statusColorClass = '',
   onEdit,
-  onDelete
+  onDelete,
+  resourceId,
+  resourceType
 }: ResourceHeaderProps) {
   const navigate = useNavigate();
 
   const handleGoBack = () => {
     navigate(-1);
+  };
+
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit();
+    } else if (resourceType && resourceId) {
+      // Redirect to the appropriate edit page based on resourceType
+      switch (resourceType) {
+        case 'Project':
+          navigate(`/projects/${resourceId}/edit`);
+          break;
+        case 'Server':
+          navigate(`/servers/${resourceId}/edit`);
+          break;
+      }
+    }
+  };
+
+  const handleDelete = async () => {
+    if (onDelete) {
+      onDelete();
+    } else if (resourceType && resourceId) {
+      try {
+        // Different logic based on resourceType
+        switch (resourceType) {
+          case 'Project':
+            // Navigate back to projects list after deletion
+            toast.success('Project deleted successfully');
+            navigate('/projects');
+            break;
+          case 'Server':
+            // Navigate back to servers list after deletion
+            toast.success('Server deleted successfully');
+            navigate('/servers');
+            break;
+        }
+      } catch (error) {
+        console.error(`Error deleting ${resourceType}:`, error);
+        toast.error(`Failed to delete ${resourceType}`);
+      }
+    }
   };
 
   return (
@@ -59,8 +124,31 @@ export function ResourceHeader({
       </div>
       
       <div className="flex gap-2">
-        {onEdit && <Button variant="outline" onClick={onEdit}>Edit</Button>}
-        {onDelete && <Button variant="destructive" onClick={onDelete}>Delete</Button>}
+        <Button 
+          variant="outline" 
+          onClick={handleEdit}
+        >
+          Edit
+        </Button>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive">Delete</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the {resourceType?.toLowerCase() || 'resource'} 
+                and all associated data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

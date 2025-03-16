@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { DetailPageLayout } from '@/components/detail/DetailPageLayout';
@@ -24,7 +23,6 @@ export default function ProjectDetailPage() {
       try {
         console.log('Fetching project details for ID:', id);
         
-        // Fetch the project directly without attempting to join with user_id
         const { data, error } = await supabase
           .from('projects')
           .select('*')
@@ -54,6 +52,30 @@ export default function ProjectDetailPage() {
     navigate(-1);
   };
 
+  const handleEditProject = () => {
+    // Navigate to edit project page
+    navigate(`/projects/${id}/edit`);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!id) return;
+    
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast.success('Project deleted successfully');
+      navigate('/projects');
+    } catch (error: any) {
+      console.error('Error deleting project:', error);
+      toast.error(`Failed to delete project: ${error.message}`);
+    }
+  };
+
   const getStatusColorClass = (status: string) => {
     switch (status) {
       case 'Active': return 'tag-green';
@@ -79,8 +101,10 @@ export default function ProjectDetailPage() {
             status={project!.status}
             tags={project!.tags}
             statusColorClass={getStatusColorClass(project!.status)}
-            onEdit={() => {}}
-            onDelete={() => {}}
+            onEdit={handleEditProject}
+            onDelete={handleDeleteProject}
+            resourceId={project!.id}
+            resourceType="Project"
           />
           
           <ProjectResourceCards project={project!} />

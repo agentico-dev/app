@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { DetailPageLayout } from '@/components/detail/DetailPageLayout';
@@ -10,6 +9,7 @@ import { ServerResourceCards } from '@/components/servers/detail/ServerResourceC
 import { ServerTabs } from '@/components/servers/detail/ServerTabs';
 import { Server } from '@/types/server';
 import { useTags } from '@/contexts/TagsContext';
+import { Badge } from '@/components/ui/badge';
 
 export default function ServerDetailPage() {
   const { id } = useParams();
@@ -26,7 +26,6 @@ export default function ServerDetailPage() {
       try {
         console.log('Fetching server details for ID:', id);
         
-        // Fetch the server directly without attempting to join with user_id
         const { data, error } = await supabase
           .from('servers')
           .select('*')
@@ -54,6 +53,30 @@ export default function ServerDetailPage() {
 
   const handleGoBack = () => {
     navigate(-1);
+  };
+
+  const handleEditServer = () => {
+    // Navigate to edit server page
+    navigate(`/servers/${id}/edit`);
+  };
+
+  const handleDeleteServer = async () => {
+    if (!id) return;
+    
+    try {
+      const { error } = await supabase
+        .from('servers')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast.success('Server deleted successfully');
+      navigate('/servers');
+    } catch (error: any) {
+      console.error('Error deleting server:', error);
+      toast.error(`Failed to delete server: ${error.message}`);
+    }
   };
 
   const getStatusColorClass = (status: string) => {
@@ -95,8 +118,10 @@ export default function ServerDetailPage() {
               ...renderTagBadges()
             ]}
             statusColorClass={getStatusColorClass(server!.status)}
-            onEdit={() => {}}
-            onDelete={() => {}}
+            onEdit={handleEditServer}
+            onDelete={handleDeleteServer}
+            resourceId={server!.id}
+            resourceType="Server"
           />
           
           <ServerResourceCards server={server!} />
