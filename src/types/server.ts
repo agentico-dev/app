@@ -5,6 +5,7 @@ export interface Server {
   id: string;
   name: string;
   slug: string;
+  is_public: boolean;
   description: string;
   type: string;
   status: ApplicationStatus;

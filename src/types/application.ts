@@ -6,7 +6,7 @@ export interface Application {
   name: string;
   description?: string;
   category?: string;
-  slug?: string;
+  slug: string;
   status: 'active' | 'inactive' | 'archived';
   tags?: string[];
   favorite?: boolean;
