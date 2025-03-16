@@ -1,11 +1,6 @@
 import pako from 'pako';
 
 /**
- * Compresses a string using lz-string
- * @param content The string to compress
- * @returns The compressed string
- */
-/**
  * Convert a string to a compressed Uint8Array
  */
 export const compressContent = (content: string): Uint8Array => {

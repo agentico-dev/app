@@ -650,6 +650,7 @@ export type Database = {
           description: string | null
           favorite: boolean | null
           id: string
+          is_public: boolean
           name: string
           organization_id: string | null
           slug: string
@@ -664,6 +665,7 @@ export type Database = {
           description?: string | null
           favorite?: boolean | null
           id?: string
+          is_public?: boolean
           name: string
           organization_id?: string | null
           slug: string
@@ -678,6 +680,7 @@ export type Database = {
           description?: string | null
           favorite?: boolean | null
           id?: string
+          is_public?: boolean
           name?: string
           organization_id?: string | null
           slug?: string

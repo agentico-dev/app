@@ -12,6 +12,7 @@ export interface Application {
   favorite?: boolean;
   user_id?: string;
   organization_id?: string;
+  organization_slug?: string; // Added missing field
   project_id?: string;
   is_public?: boolean;
   endpoints_count?: number;

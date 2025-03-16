@@ -102,7 +102,11 @@ const AppRoutes = () => {
         {/* Organization routes */}
         <Route path="/orgs" element={<OrganizationsPage />} />
         <Route path="/orgs/:slug" element={<OrganizationDetailPage />} />
-        <Route path="/organizations/:slug" element={<Navigate to="/orgs/:slug" replace />} />
+        
+        {/* Fix: Use parent route with specific path and child route for redirection */}
+        <Route path="/organizations">
+          <Route path=":slug" element={<Navigate to={({ params }) => `/orgs/${params.slug}`} replace />} />
+        </Route>
 
         {/* Projects routes - both ID and slug-based */}
         <Route path="/projects" element={<ProjectsPage />} />
@@ -111,7 +115,7 @@ const AppRoutes = () => {
         <Route path="/projs/new" element={<Navigate to="/projects/new" replace />} />
         <Route path="/projects/:id" element={<ProjectsPage />} />
         <Route path="/projects/:orgSlug@:projSlug" element={<ProjectsPage />} />
-        <Route path="/projs/:orgSlug@:projSlug" element={<Navigate to="/projects/:orgSlug@:projSlug" replace />} />
+        <Route path="/projs/:orgSlug@:projSlug" element={<Navigate to={({ params }) => `/projects/${params.orgSlug}@${params.projSlug}`} replace />} />
 
         {/* Applications routes - both ID and slug-based */}
         <Route path="/applications" element={<ApplicationsPage />} />
@@ -153,7 +157,7 @@ const AppRoutes = () => {
         <Route path="/ai-tools/new" element={<AuthenticatedRoute><NewToolPage /></AuthenticatedRoute>} />
         <Route path="/tools/new" element={<Navigate to="/ai-tools/new" replace />} />
         <Route path="/ai-tools/:id" element={<AIToolsPage />} />
-        <Route path="/tools/:serverSlug@:toolSlug" element={<AIToolsPage />} />
+        <Route path="/tools/:serverSlug@:toolSlug" element={<Navigate to={({ params }) => `/ai-tools/${params.serverSlug}@${params.toolSlug}`} replace />} />
 
         {/* Legacy routes that will be updated */}
         <Route path="/models" element={<ProjectsPage />} />
