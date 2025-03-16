@@ -28,13 +28,10 @@ export default function ServerDetailPage() {
       try {
         console.log('Fetching server details for ID:', id);
         
-        // Fetch the server with creator's email (using a join)
+        // Fetch the server directly without attempting to join with user_id
         const { data, error } = await supabase
           .from('servers')
-          .select(`
-            *,
-            profiles:user_id (email)
-          `)
+          .select('*')
           .eq('id', id)
           .single();
         
