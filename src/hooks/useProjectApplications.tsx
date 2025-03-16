@@ -5,6 +5,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Application } from '@/types/application';
 import { toast } from 'sonner';
 
+export interface ProjectApplication {
+  id: string;
+  project_id: string;
+  application_id: string;
+  created_at: string;
+}
+
 export function useProjectApplications(projectId: string) {
   const queryClient = useQueryClient();
   const [availableApplications, setAvailableApplications] = useState<Application[]>([]);
@@ -23,22 +30,43 @@ export function useProjectApplications(projectId: string) {
     },
   });
 
-  // Fetch applications associated with the project
-  const { data: projectApplications, isLoading: isLoadingAssociated } = useQuery({
-    queryKey: ['project-applications', projectId],
+  // Fetch project_applications join records
+  const { data: projectApplicationsJoin, isLoading: isLoadingJoin } = useQuery({
+    queryKey: ['project-applications-join', projectId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('applications')
+        .from('project_applications')
         .select('*')
         .eq('project_id', projectId);
       
       if (error) throw error;
-      return data as Application[];
+      return data as ProjectApplication[];
     },
     enabled: !!projectId,
   });
 
-  // Associate/disassociate application with project
+  // Fetch applications associated with the project through the join table
+  const { data: projectApplications, isLoading: isLoadingAssociated } = useQuery({
+    queryKey: ['project-applications', projectId],
+    queryFn: async () => {
+      if (!projectApplicationsJoin || projectApplicationsJoin.length === 0) {
+        return [] as Application[];
+      }
+
+      const applicationIds = projectApplicationsJoin.map(join => join.application_id);
+      
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .in('id', applicationIds);
+      
+      if (error) throw error;
+      return data as Application[];
+    },
+    enabled: !!projectId && !!projectApplicationsJoin,
+  });
+
+  // Associate/disassociate application with project using the join table
   const { mutateAsync: updateProjectAssociation } = useMutation({
     mutationFn: async ({ 
       applicationId, 
@@ -48,24 +76,31 @@ export function useProjectApplications(projectId: string) {
       action: 'associate' | 'disassociate' 
     }) => {
       if (action === 'associate') {
+        // Add a record to the join table
         const { error } = await supabase
-          .from('applications')
-          .update({ project_id: projectId })
-          .eq('id', applicationId);
+          .from('project_applications')
+          .insert({ 
+            project_id: projectId, 
+            application_id: applicationId 
+          });
         
         if (error) throw error;
       } else {
+        // Remove the record from the join table
         const { error } = await supabase
-          .from('applications')
-          .update({ project_id: null })
-          .eq('id', applicationId);
+          .from('project_applications')
+          .delete()
+          .match({ 
+            project_id: projectId, 
+            application_id: applicationId 
+          });
         
         if (error) throw error;
       }
     },
     onSuccess: () => {
       // Invalidate queries to refetch data
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      queryClient.invalidateQueries({ queryKey: ['project-applications-join', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project-applications', projectId] });
     },
     onError: (error) => {
@@ -110,7 +145,7 @@ export function useProjectApplications(projectId: string) {
   return {
     availableApplications,
     associatedApplications,
-    isLoading: isLoadingAll || isLoadingAssociated,
+    isLoading: isLoadingAll || isLoadingAssociated || isLoadingJoin,
     handleMoveApplication,
   };
 }

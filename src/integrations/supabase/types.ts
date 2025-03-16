@@ -478,6 +478,42 @@ export type Database = {
         }
         Relationships: []
       }
+      project_applications: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_applications_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_applications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           applications_count: number | null

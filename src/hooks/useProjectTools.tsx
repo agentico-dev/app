@@ -5,6 +5,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { AITool } from '@/types/ai-tool';
 import { toast } from 'sonner';
 
+interface ProjectTool {
+  id: string;
+  project_id: string;
+  ai_tool_id: string;
+  created_at: string;
+}
+
 export function useProjectTools(projectId: string) {
   const queryClient = useQueryClient();
   const [availableTools, setAvailableTools] = useState<AITool[]>([]);
