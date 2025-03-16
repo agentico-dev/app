@@ -1,14 +1,41 @@
 
-import { AppWindow, CircuitBoard } from 'lucide-react';
+import { AppWindow, CircuitBoard, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ResourceTabs } from '../../detail/ResourceTabs';
 import { Project } from '@/types/project';
+import { DraggableResourceList } from './DraggableResourceList';
+import { useProjectApplications } from '@/hooks/useProjectApplications';
+import { useProjectTools } from '@/hooks/useProjectTools';
+import { useNavigate } from 'react-router';
 
 interface ProjectTabsProps {
   project: Project;
 }
 
 export function ProjectTabs({ project }: ProjectTabsProps) {
+  const navigate = useNavigate();
+  const { 
+    availableApplications, 
+    associatedApplications, 
+    isLoading: isLoadingApplications,
+    handleMoveApplication
+  } = useProjectApplications(project.id);
+
+  const { 
+    availableTools, 
+    associatedTools, 
+    isLoading: isLoadingTools,
+    handleMoveTool
+  } = useProjectTools(project.id);
+
+  const handleCreateApplication = () => {
+    navigate('/applications/new', { state: { projectId: project.id } });
+  };
+
+  const handleCreateTool = () => {
+    navigate('/tools/new', { state: { projectId: project.id } });
+  };
+
   return (
     <ResourceTabs
       defaultTab="overview"
@@ -26,18 +53,21 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
         {
           value: 'applications',
           label: 'Applications',
-          description: 'Applications associated with this project',
-          content: project.applications_count ? (
-            <p>Applications will be listed here.</p>
-          ) : (
-            <div className="text-center p-6">
-              <AppWindow className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No Applications</h3>
-              <p className="text-muted-foreground mb-4">
-                There are no applications associated with this project yet.
-              </p>
-              <Button>Create Application</Button>
+          description: 'Manage applications associated with this project',
+          content: isLoadingApplications ? (
+            <div className="flex justify-center p-6">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
+          ) : (
+            <DraggableResourceList
+              projectId={project.id}
+              availableResources={availableApplications}
+              associatedResources={associatedApplications}
+              resourceType="application"
+              onResourceMoved={handleMoveApplication}
+              createButtonLabel="Create Application"
+              onCreateClick={handleCreateApplication}
+            />
           ),
         },
         {
@@ -53,18 +83,21 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
         {
           value: 'tools',
           label: 'AI Tools',
-          description: 'AI tools associated with this project',
-          content: project.tools_count ? (
-            <p>AI Tools will be listed here.</p>
-          ) : (
-            <div className="text-center p-6">
-              <CircuitBoard className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No AI Tools</h3>
-              <p className="text-muted-foreground mb-4">
-                There are no AI tools associated with this project yet.
-              </p>
-              <Button>Create AI Tool</Button>
+          description: 'Manage AI tools associated with this project',
+          content: isLoadingTools ? (
+            <div className="flex justify-center p-6">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
+          ) : (
+            <DraggableResourceList
+              projectId={project.id}
+              availableResources={availableTools}
+              associatedResources={associatedTools}
+              resourceType="tool"
+              onResourceMoved={handleMoveTool}
+              createButtonLabel="Create AI Tool"
+              onCreateClick={handleCreateTool}
+            />
           ),
         },
       ]}
