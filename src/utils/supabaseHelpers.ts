@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Function to ensure table operations use the correct schema
@@ -109,6 +108,96 @@ export async function getGlobalOrganization() {
   }
   
   return data;
+}
+
+/**
+ * Helper function to check if a user has access to a project
+ * 
+ * @param projectId The ID of the project to check
+ * @returns Promise resolving to a boolean indicating whether the user has access
+ */
+export async function hasProjectAccess(projectId: string): Promise<boolean> {
+  if (!projectId) return false;
+  
+  try {
+    // First check if the project exists and is either public or belongs to the global organization
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('is_public, organization_id')
+      .eq('id', projectId)
+      .single();
+    
+    if (projectError || !project) return false;
+    
+    // If the project is public, allow access
+    if (project.is_public) return true;
+    
+    // Check if the global organization exists and if the project belongs to it
+    const globalOrg = await getGlobalOrganization();
+    if (globalOrg && project.organization_id === globalOrg.id) return true;
+    
+    // Check if the user is authenticated
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return false;
+    
+    // Check if the user is a member of the project's organization
+    const { data: membership, error: membershipError } = await supabase
+      .from('organization_members')
+      .select('id')
+      .eq('organization_id', project.organization_id)
+      .eq('user_id', session.user.id)
+      .single();
+    
+    return !membershipError && !!membership;
+  } catch (error) {
+    console.error('Error checking project access:', error);
+    return false;
+  }
+}
+
+/**
+ * Helper function to check if a user has access to a server
+ * 
+ * @param serverId The ID of the server to check
+ * @returns Promise resolving to a boolean indicating whether the user has access
+ */
+export async function hasServerAccess(serverId: string): Promise<boolean> {
+  if (!serverId) return false;
+  
+  try {
+    // First check if the server exists and is either public or belongs to the global organization
+    const { data: server, error: serverError } = await supabase
+      .from('servers')
+      .select('is_public, organization_id')
+      .eq('id', serverId)
+      .single();
+    
+    if (serverError || !server) return false;
+    
+    // If the server is public, allow access
+    if (server.is_public) return true;
+    
+    // Check if the global organization exists and if the server belongs to it
+    const globalOrg = await getGlobalOrganization();
+    if (globalOrg && server.organization_id === globalOrg.id) return true;
+    
+    // Check if the user is authenticated
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return false;
+    
+    // Check if the user is a member of the server's organization
+    const { data: membership, error: membershipError } = await supabase
+      .from('organization_members')
+      .select('id')
+      .eq('organization_id', server.organization_id)
+      .eq('user_id', session.user.id)
+      .single();
+    
+    return !membershipError && !!membership;
+  } catch (error) {
+    console.error('Error checking server access:', error);
+    return false;
+  }
 }
 
 /**

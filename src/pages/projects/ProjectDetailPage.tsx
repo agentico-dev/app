@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft, CircuitBoard, AppWindow, Server, Calendar, Tag, User, Star } from 'lucide-react';
@@ -41,13 +40,10 @@ export default function ProjectDetailPage() {
       try {
         console.log('Fetching project details for ID:', id);
         
-        // Fetch the project with creator's email (using a join)
+        // Fetch the project directly without attempting to join with user_id
         const { data, error } = await supabase
           .from('projects')
-          .select(`
-            *,
-            profiles:created_by (email)
-          `)
+          .select('*')
           .eq('id', id)
           .single();
         
@@ -57,14 +53,8 @@ export default function ProjectDetailPage() {
           throw error;
         }
         
-        // Transform the data to match our interface
-        const projectData: Project = {
-          ...data,
-          user_email: data.profiles?.email || null
-        };
-        
-        console.log('Fetched project details:', projectData);
-        setProject(projectData);
+        console.log('Fetched project details:', data);
+        setProject(data);
       } catch (error) {
         console.error('Error in project fetch:', error);
         toast.error('Failed to load project details');
@@ -209,7 +199,6 @@ export default function ProjectDetailPage() {
                   <p className="text-muted-foreground">
                     {project.description || 'No detailed description available for this project.'}
                   </p>
-                  {/* Additional overview content could be added here */}
                 </CardContent>
               </Card>
             </TabsContent>
