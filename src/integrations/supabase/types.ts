@@ -280,7 +280,6 @@ export type Database = {
           is_public: boolean | null
           name: string
           organization_id: string | null
-          project_id: string | null
           slug: string
           status: string | null
           tags: string[] | null
@@ -298,7 +297,6 @@ export type Database = {
           is_public?: boolean | null
           name: string
           organization_id?: string | null
-          project_id?: string | null
           slug: string
           status?: string | null
           tags?: string[] | null
@@ -316,7 +314,6 @@ export type Database = {
           is_public?: boolean | null
           name?: string
           organization_id?: string | null
-          project_id?: string | null
           slug?: string
           status?: string | null
           tags?: string[] | null
@@ -330,13 +327,6 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "applications_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -507,6 +497,42 @@ export type Database = {
           },
           {
             foreignKeyName: "project_applications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_tools: {
+        Row: {
+          ai_tool_id: string
+          created_at: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          ai_tool_id: string
+          created_at?: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          ai_tool_id?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tools_ai_tool_id_fkey"
+            columns: ["ai_tool_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_tools_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"

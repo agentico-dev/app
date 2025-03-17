@@ -3,14 +3,8 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AITool } from '@/types/ai-tool';
+import { ProjectTool } from '@/types/project-tool';
 import { toast } from 'sonner';
-
-interface ProjectTool {
-  id: string;
-  project_id: string;
-  ai_tool_id: string;
-  created_at: string;
-}
 
 export function useProjectTools(projectId: string) {
   const queryClient = useQueryClient();
@@ -30,22 +24,43 @@ export function useProjectTools(projectId: string) {
     },
   });
 
-  // Fetch AI tools associated with the project
-  const { data: projectTools, isLoading: isLoadingAssociated } = useQuery({
-    queryKey: ['project-tools', projectId],
+  // Fetch project_tools join records
+  const { data: projectToolsJoin, isLoading: isLoadingJoin } = useQuery({
+    queryKey: ['project-tools-join', projectId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('ai_tools')
+        .from('project_tools')
         .select('*')
         .eq('project_id', projectId);
       
       if (error) throw error;
-      return data as AITool[];
+      return data as ProjectTool[];
     },
     enabled: !!projectId,
   });
 
-  // Associate/disassociate AI tool with project
+  // Fetch AI tools associated with the project through the join table
+  const { data: projectTools, isLoading: isLoadingAssociated } = useQuery({
+    queryKey: ['project-tools', projectId],
+    queryFn: async () => {
+      if (!projectToolsJoin || projectToolsJoin.length === 0) {
+        return [] as AITool[];
+      }
+
+      const toolIds = projectToolsJoin.map(join => join.ai_tool_id);
+      
+      const { data, error } = await supabase
+        .from('ai_tools')
+        .select('*')
+        .in('id', toolIds);
+      
+      if (error) throw error;
+      return data as AITool[];
+    },
+    enabled: !!projectId && !!projectToolsJoin,
+  });
+
+  // Associate/disassociate AI tool with project using the join table
   const { mutateAsync: updateToolAssociation } = useMutation({
     mutationFn: async ({ 
       toolId, 
@@ -55,24 +70,31 @@ export function useProjectTools(projectId: string) {
       action: 'associate' | 'disassociate' 
     }) => {
       if (action === 'associate') {
+        // Add a record to the join table
         const { error } = await supabase
-          .from('ai_tools')
-          .update({ project_id: projectId })
-          .eq('id', toolId);
+          .from('project_tools')
+          .insert({ 
+            project_id: projectId, 
+            ai_tool_id: toolId 
+          });
         
         if (error) throw error;
       } else {
+        // Remove the record from the join table
         const { error } = await supabase
-          .from('ai_tools')
-          .update({ project_id: null })
-          .eq('id', toolId);
+          .from('project_tools')
+          .delete()
+          .match({ 
+            project_id: projectId, 
+            ai_tool_id: toolId 
+          });
         
         if (error) throw error;
       }
     },
     onSuccess: () => {
       // Invalidate queries to refetch data
-      queryClient.invalidateQueries({ queryKey: ['ai-tools'] });
+      queryClient.invalidateQueries({ queryKey: ['project-tools-join', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project-tools', projectId] });
     },
     onError: (error) => {
@@ -117,7 +139,7 @@ export function useProjectTools(projectId: string) {
   return {
     availableTools,
     associatedTools,
-    isLoading: isLoadingAll || isLoadingAssociated,
+    isLoading: isLoadingAll || isLoadingAssociated || isLoadingJoin,
     handleMoveTool,
   };
 }
