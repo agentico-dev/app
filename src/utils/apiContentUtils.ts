@@ -1,4 +1,4 @@
-import pako from 'pako';
+import * as pako from 'pako';
 
 /**
  * Convert a string to a compressed Uint8Array
