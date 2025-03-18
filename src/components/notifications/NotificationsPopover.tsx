@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,45 +9,27 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { useAuth } from '@/hooks/useAuth';
 import { format, formatDistanceToNow } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
-import { useApplicationMessages } from '@/hooks/useApplicationMessages';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router';
-import { ApplicationMessage } from '@/types/application';
+import { useNotifications } from '@/hooks/useNotifications';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function NotificationsPopover() {
   const [open, setOpen] = useState(false);
-  const { session } = useAuth();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
-
-  // Fetch all unread messages across all applications
+  
+  // Use the new notifications hook
   const { 
-    data: notifications = [], 
+    notifications = [], 
+    unreadNotifications,
     isLoading,
-    markAsRead
-  } = useApplicationMessages();
+    markAsRead,
+    markAllAsRead,
+    isAuthenticated
+  } = useNotifications();
 
-  const unreadNotifications = notifications.filter(notification => notification.status === 'unread');
-  const unreadCount = unreadNotifications.length;
-
-  const markAllAsRead = useMutation({
-    mutationFn: async () => {
-      if (!session?.user) throw new Error('Authentication required');
-      
-      // Update all unread notifications to read
-      const promises = unreadNotifications.map(notification => 
-        markAsRead.mutateAsync(notification.id)
-      );
-      
-      await Promise.all(promises);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['application-messages'] });
-    }
-  });
+  const unreadCount = unreadNotifications?.length || 0;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -63,21 +44,46 @@ export function NotificationsPopover() {
     }
   };
 
-  const navigateToMessage = (message: ApplicationMessage) => {
-    if (message.application_id) {
-      if (message.api_id) {
-        navigate(`/applications/${message.application_id}/apis/${message.api_id}?tab=messages`);
-      } else {
-        navigate(`/applications/${message.application_id}`);
-      }
-      
-      // Mark as read when navigating
-      if (message.status === 'unread') {
-        markAsRead.mutate(message.id);
-      }
-      
-      setOpen(false);
+  const navigateToResource = (notification: any) => {
+    if (!notification.resource_id) return;
+    
+    let url = '';
+    
+    switch (notification.resource_type) {
+      case 'project':
+        url = `/projects/${notification.resource_id}`;
+        break;
+      case 'application':
+        url = `/applications/${notification.resource_id}`;
+        break;
+      case 'server':
+        url = `/servers/${notification.resource_id}`;
+        break;
+      case 'tool':
+        url = `/ai-tools/${notification.resource_id}`;
+        break;
+      case 'api':
+        if (notification.related_resource_id) {
+          url = `/applications/${notification.related_resource_id}/apis/${notification.resource_id}`;
+        }
+        break;
+      case 'service':
+        if (notification.related_resource_id) {
+          url = `/applications/${notification.related_resource_id}/services/${notification.resource_id}`;
+        }
+        break;
+      default:
+        console.warn(`Unknown resource type: ${notification.resource_type}`);
+        return;
     }
+    
+    // Mark as read when navigating
+    if (notification.status === 'unread') {
+      markAsRead.mutate(notification.id);
+    }
+    
+    navigate(url);
+    setOpen(false);
   };
 
   useEffect(() => {
@@ -89,7 +95,11 @@ export function NotificationsPopover() {
       
       return () => clearTimeout(timer);
     }
-  }, [open, unreadCount]);
+  }, [open, unreadCount, markAllAsRead]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -144,10 +154,10 @@ export function NotificationsPopover() {
                 <div 
                   key={notification.id} 
                   className={`p-4 hover:bg-muted/50 cursor-pointer transition-colors ${notification.status === 'read' ? 'opacity-60' : ''}`}
-                  onClick={() => navigateToMessage(notification)}
+                  onClick={() => navigateToResource(notification)}
                 >
                   <div className="flex">
-                    {getNotificationIcon(notification.message_type || 'info')}
+                    {getNotificationIcon(notification.notification_type)}
                     <div className="flex-1">
                       <h4 className="text-sm font-medium">{notification.title}</h4>
                       <p className="text-sm text-muted-foreground">{notification.content}</p>

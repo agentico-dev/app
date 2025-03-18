@@ -1,3 +1,4 @@
+
 /**
  * Converts a base64 string to a Uint8Array
  * @param base64 The base64 string to convert
@@ -120,5 +121,59 @@ export const decompressContent = (compressed: string): string => {
   } catch (e) {
     console.error('Error decompressing content:', e);
     return '';
+  }
+};
+
+// Notification helpers
+export const createResourceNotification = async (
+  supabase: any,
+  params: {
+    title: string;
+    content: string;
+    resourceType: 'project' | 'application' | 'server' | 'tool' | 'api' | 'service';
+    resourceId: string;
+    relatedResourceId?: string;
+    notificationType?: 'info' | 'success' | 'warning' | 'error';
+    organizationId?: string;
+  }
+) => {
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.user) {
+      console.warn('Cannot create notification: No authenticated user');
+      return null;
+    }
+
+    const orgId = params.organizationId || localStorage.getItem('selectedOrganizationId');
+    if (!orgId) {
+      console.warn('Cannot create notification: No organization selected');
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: session.session.user.id,
+        organization_id: orgId,
+        title: params.title,
+        content: params.content,
+        resource_type: params.resourceType,
+        resource_id: params.resourceId,
+        related_resource_id: params.relatedResourceId,
+        notification_type: params.notificationType || 'info',
+        status: 'unread'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating notification:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in createResourceNotification:', error);
+    return null;
   }
 };

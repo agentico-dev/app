@@ -1,3 +1,4 @@
+
 // Define types for applications and related entities
 
 export interface Application {
@@ -65,6 +66,21 @@ export interface ApplicationMessage {
   api_id?: string;
   message_type: 'notification' | 'warning' | 'error' | 'success';
   status: 'read' | 'unread';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Notification {
+  id: string;
+  user_id?: string;
+  organization_id?: string;
+  title: string;
+  content: string;
+  resource_type: 'project' | 'application' | 'server' | 'tool' | 'api' | 'service';
+  resource_id: string;
+  related_resource_id?: string;
+  status: 'read' | 'unread';
+  notification_type: 'info' | 'success' | 'warning' | 'error';
   created_at: string;
   updated_at: string;
 }
