@@ -1,8 +1,6 @@
-
 import * as React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CodeEditor } from '@/components/editor/CodeEditor';
 import { UseFormReturn } from 'react-hook-form';
@@ -11,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Download, RefreshCw } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ApiSourceSectionProps {
   form: UseFormReturn<Partial<ApplicationAPI> & { fetchContent?: boolean }>;
@@ -41,43 +40,69 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
   apiVersion = '1.0.0',
   apiSlug
 }) => {
+  // Add state for URI validation
+  const [isUriValid, setIsUriValid] = React.useState(true);
+
   // Generate URN when source type changes to 'content'
   React.useEffect(() => {
     if (sourceType === 'content' && !form.getValues('source_content')) {
       // If switching to content mode but no content yet, don't generate URN
       return;
     }
-
-    if (sourceType === 'content') {
-      const name = form.getValues('name') || '';
-      // Use apiSlug if provided, otherwise generate from name
-      const slug = apiSlug || name.toLowerCase().replace(/[^a-z0-9]/g, '-');
-      // Generate the URN
-      const urn = `urn:agentico:apis:${organizationSlug}:${applicationSlug || 'app'}:${slug}:${apiVersion}`;
-      // Set the URN as source_uri
-      form.setValue('source_uri', urn);
-    }
   }, [sourceType, form, applicationSlug, organizationSlug, apiVersion, apiSlug]);
+
+  // Function to validate URI
+  function isValidUri(uri: string): boolean {
+    if (!uri) return true; // Empty URI is considered valid (not filled yet)
+    try {
+      new URL(uri);
+      return true;
+    } catch (e) {
+      // Allow URNs (they're valid internally)
+      return uri.startsWith('urn:');
+    }
+  }
+
+  // Validate URI when it changes
+  React.useEffect(() => {
+    if (sourceType === 'uri') {
+      const currentUri = form.getValues('source_uri');
+      setIsUriValid(isValidUri(currentUri));
+    }
+  }, [form.watch('source_uri'), sourceType]);
+
+  function generateURN(form: UseFormReturn<Partial<ApplicationAPI> & { fetchContent?: boolean; }>, apiSlug: string, organizationSlug: string, applicationSlug: string, apiVersion: string) {
+    const name = form.getValues('name') || '';
+    // Use apiSlug if provided, otherwise generate from name
+    const slug = apiSlug || name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    // Generate the URN
+    const urn = `urn:agentico:apis:${organizationSlug}:${applicationSlug || 'app'}:${slug}:${apiVersion}`;
+    console.log('Generated URN:', urn);
+    // Set the URN as source_uri
+    form.setValue('source_uri', urn);
+  }
+  
+  function handleSourceTypeChange(value: 'uri' | 'content') {
+    setSourceType(value);
+  }
+  function isUriMode() {
+    const uriValue = form.getValues('source_uri');
+    return form.getValues('source_uri') && uriValue && !uriValue.startsWith('urn:') ? true : false;
+  }
+  function isContentMode() {
+    const isContent = form.getValues('source_content') && form.getValues('source_content').length > 0 ? true : false;
+    const uriValue = form.getValues('source_uri');
+    if (isContent && !uriValue && !uriValue.startsWith('urn:')) {
+      generateURN(form, apiSlug, organizationSlug, applicationSlug, apiVersion);
+    }
+    return isContent;
+  }
 
   return (
     <div className="space-y-4 border p-4 rounded-md">
       <h3 className="text-lg font-medium">API Source</h3>
       
-      <RadioGroup 
-        value={sourceType} 
-        onValueChange={(value) => setSourceType(value as 'uri' | 'content')}
-        className="flex space-x-4"
-      >
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="uri" id="source-uri" />
-          <FormLabel htmlFor="source-uri" className="cursor-pointer">External Source URI</FormLabel>
-        </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="content" id="source-content" />
-          <FormLabel htmlFor="source-content" className="cursor-pointer">Inline Source Content</FormLabel>
-        </div>
-      </RadioGroup>
-      
+      {/* onValueChange={(value) => setSourceType(value as 'uri' | 'content')} */}
       {sourceType === 'uri' ? (
         <div className="space-y-4">
           <FormField
@@ -87,19 +112,30 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
               <FormItem>
                 <FormLabel>Source URI</FormLabel>
                 <div className="flex space-x-2">
-                  <FormControl>
-                    <Input 
-                      placeholder="https://example.com/api-spec.json" 
-                      {...field} 
-                      readOnly={sourceType === 'content'}
-                    />
-                  </FormControl>
+                  <TooltipProvider>
+                    <Tooltip open={sourceType === 'uri' && !isUriValid}>
+                      <TooltipTrigger asChild>
+                        <FormControl>
+                          <Input 
+                            placeholder="https://example.com/api-spec.json" 
+                            {...field} 
+                            readOnly={isContentMode()}
+                            className={!isUriValid ? "border-red-500 focus-visible:ring-red-500" : ""}
+                          />
+                        </FormControl>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-red-500 text-white">
+                        <p>Please enter a valid URL (https://example.com/spec.json)</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   {onFetchContent && (
                     <Button 
                       type="button" 
                       variant="outline" 
                       onClick={onFetchContent}
                       title="Fetch and load content from URI"
+                      disabled={!isUriValid}
                     >
                       <Download className="h-4 w-4 mr-2" /> Fetch
                     </Button>
@@ -135,7 +171,8 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Source Content</FormLabel>
-                {!field.value && (
+                {!field.value && isUriMode() && (
+                  // color yellow
                   <Alert className="mb-3">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
@@ -149,7 +186,7 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
                     onChange={field.onChange}
                     language={codeLanguage}
                     className="min-h-[300px]"
-                    readOnly={true}
+                    readOnly={isUriMode()}
                   />
                 </FormControl>
                 <FormDescription>
@@ -172,7 +209,7 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
                   <Input {...field} readOnly className="bg-muted" />
                 </FormControl>
                 <FormDescription>
-                  Automatically generated Agentico URN for this API specification
+                  Agentico URN for this API specification (manual editing)
                 </FormDescription>
                 <FormMessage />
               </FormItem>
