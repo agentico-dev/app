@@ -99,7 +99,7 @@ export default function ApiFormPage() {
     try {
       console.log('Submitting form with data:', {
         ...data,
-        shouldFetchContent,
+        fetchContent: shouldFetchContent,
         content_format: codeLanguage
       });
       
@@ -107,7 +107,7 @@ export default function ApiFormPage() {
         await createApi.mutateAsync({
           ...data,
           application_id: applicationId,
-          shouldFetchContent,
+          fetchContent: shouldFetchContent,
           content_format: codeLanguage
         });
         toast.success('API created successfully');
@@ -115,7 +115,7 @@ export default function ApiFormPage() {
         const result = await updateApi.mutateAsync({
           ...data,
           id: apiId,
-          shouldFetchContent,
+          fetchContent: shouldFetchContent,
           content_format: codeLanguage
         });
         console.log('Update result:', result);

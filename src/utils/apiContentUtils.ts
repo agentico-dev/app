@@ -1,4 +1,3 @@
-
 /**
  * Converts a base64 string to a Uint8Array
  * @param base64 The base64 string to convert
@@ -103,3 +102,23 @@ export async function fetchContentFromUri(uri: string): Promise<{ content: strin
     throw error;
   }
 }
+
+export const compressContent = (content: string): Uint8Array => {
+  // In a real app, this would use compression like gzip
+  // For now, we'll just convert to a Uint8Array
+  const encoder = new TextEncoder();
+  return encoder.encode(content);
+};
+
+export const decompressContent = (compressed: string): string => {
+  // In a real app, this would use decompression
+  // For now, we'll just decode the base64 string to text
+  try {
+    const binary = base64ToUint8Array(compressed);
+    const decoder = new TextDecoder();
+    return decoder.decode(binary);
+  } catch (e) {
+    console.error('Error decompressing content:', e);
+    return '';
+  }
+};

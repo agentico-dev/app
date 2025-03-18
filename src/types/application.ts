@@ -1,4 +1,3 @@
-
 // Define types for applications and related entities
 
 export interface Application {
@@ -63,10 +62,11 @@ export interface ApplicationMessage {
   title: string;
   content: string;
   application_id: string;
-  message_type?: string;
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
+  api_id?: string;
+  message_type: 'notification' | 'warning' | 'error' | 'success';
+  status: 'read' | 'unread';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Tag {
