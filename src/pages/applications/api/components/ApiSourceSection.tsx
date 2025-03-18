@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -85,14 +86,16 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
   function handleSourceTypeChange(value: 'uri' | 'content') {
     setSourceType(value);
   }
+  
   function isUriMode() {
     const uriValue = form.getValues('source_uri');
-    return form.getValues('source_uri') && uriValue && !uriValue.startsWith('urn:') ? true : false;
+    return uriValue && !uriValue.startsWith('urn:') ? true : false;
   }
+  
   function isContentMode() {
     const isContent = form.getValues('source_content') && form.getValues('source_content').length > 0 ? true : false;
     const uriValue = form.getValues('source_uri');
-    if (isContent && !uriValue && !uriValue.startsWith('urn:')) {
+    if (isContent && (!uriValue || !uriValue.startsWith('urn:'))) {
       generateURN(form, apiSlug, organizationSlug, applicationSlug, apiVersion);
     }
     return isContent;
@@ -102,7 +105,6 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
     <div className="space-y-4 border p-4 rounded-md">
       <h3 className="text-lg font-medium">API Source</h3>
       
-      {/* onValueChange={(value) => setSourceType(value as 'uri' | 'content')} */}
       {sourceType === 'uri' ? (
         <div className="space-y-4">
           <FormField
@@ -172,10 +174,9 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
               <FormItem>
                 <FormLabel>Source Content</FormLabel>
                 {!field.value && isUriMode() && (
-                  // color yellow
-                  <Alert className="mb-3">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
+                  <Alert className="mb-3 bg-yellow-50 border-yellow-200">
+                    <AlertCircle className="h-4 w-4 text-yellow-600" />
+                    <AlertDescription className="text-yellow-700">
                       The content is empty. Click the "Fetch" button above to load content from the URI, or check "Fetch content from URI when saving".
                     </AlertDescription>
                   </Alert>
@@ -209,7 +210,7 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
                   <Input {...field} readOnly className="bg-muted" />
                 </FormControl>
                 <FormDescription>
-                  Agentico URN for this API specification (manual editing)
+                  Agentico URN for this API specification (auto-generated)
                 </FormDescription>
                 <FormMessage />
               </FormItem>

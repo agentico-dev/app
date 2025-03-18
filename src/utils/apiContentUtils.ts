@@ -1,3 +1,4 @@
+
 import * as pako from 'pako';
 
 /**
@@ -18,8 +19,33 @@ export const compressContent = (content: string): Uint8Array => {
  */
 export const decompressContent = (compressedData: Uint8Array): string => {
   try {
-    const decompressed = pako.inflate(compressedData);
-    return new TextDecoder().decode(decompressed);
+    // First try with pako.inflate (for deflate compression)
+    try {
+      const decompressed = pako.inflate(compressedData);
+      return new TextDecoder().decode(decompressed);
+    } catch (inflateError) {
+      console.error('Error inflating content:', inflateError);
+      
+      // Fall back to try uncompressed data
+      try {
+        return new TextDecoder().decode(compressedData);
+      } catch (decodeError) {
+        console.error('Error decoding as uncompressed:', decodeError);
+        
+        // As a last resort, try UTF-8 decoding directly
+        let result = '';
+        for (let i = 0; i < compressedData.length; i++) {
+          result += String.fromCharCode(compressedData[i]);
+        }
+        
+        // Check if the result looks like valid text
+        if (/^[\x20-\x7E\s]*$/.test(result)) {
+          return result;
+        }
+        
+        throw new Error('Could not decompress content with any method');
+      }
+    }
   } catch (error) {
     console.error('Error decompressing content:', error);
     throw new Error('Failed to decompress content');
@@ -32,13 +58,18 @@ export const decompressContent = (compressedData: Uint8Array): string => {
  * @returns The Uint8Array
  */
 export function base64ToUint8Array(base64: string): Uint8Array {
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
+  try {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+  } catch (error) {
+    console.error('Error converting base64 to Uint8Array:', error);
+    throw new Error('Failed to convert base64 to binary data');
   }
-  return bytes;
 }
 
 /**
@@ -47,12 +78,17 @@ export function base64ToUint8Array(base64: string): Uint8Array {
  * @returns The base64 string
  */
 export function uint8ArrayToBase64(uint8Array: Uint8Array): string {
-  let binary = '';
-  const len = uint8Array.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(uint8Array[i]);
+  try {
+    let binary = '';
+    const len = uint8Array.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(uint8Array[i]);
+    }
+    return btoa(binary);
+  } catch (error) {
+    console.error('Error converting Uint8Array to base64:', error);
+    throw new Error('Failed to convert binary data to base64');
   }
-  return btoa(binary);
 }
 
 /**

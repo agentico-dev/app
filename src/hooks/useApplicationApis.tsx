@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -31,11 +30,21 @@ export function useApplicationApis(applicationId?: string) {
         // The source_content comes as base64 from Supabase when it's bytea
         if (api.source_content) {
           try {
+            console.log('Processing API content for:', api.name);
             const compressedData = base64ToUint8Array(api.source_content);
             api.source_content = decompressContent(compressedData);
+            console.log('Successfully decompressed content:', api.source_content.substring(0, 100) + '...');
           } catch (err) {
-            console.error('Error decompressing API content:', err);
-            api.source_content = ''; // Reset if decompression fails
+            console.error('Error processing API content for:', api.name, err);
+            // Try to handle raw content if decompression fails
+            try {
+              // Attempt to just decode the base64 string directly
+              api.source_content = atob(api.source_content);
+              console.log('Fallback to direct base64 decode successful');
+            } catch (decodeErr) {
+              console.error('Fallback decode also failed:', decodeErr);
+              api.source_content = ''; // Reset if all decompression fails
+            }
           }
         }
         return api as ApplicationAPI;
@@ -270,11 +279,21 @@ export function useApplicationApi(id?: string) {
       // Process the binary data
       if (data.source_content) {
         try {
+          console.log('Processing single API content for:', data.name);
           const compressedData = base64ToUint8Array(data.source_content);
           data.source_content = decompressContent(compressedData);
+          console.log('Successfully decompressed content:', data.source_content.substring(0, 100) + '...');
         } catch (err) {
           console.error('Error decompressing API content:', err);
-          data.source_content = ''; // Reset if decompression fails
+          // Try to handle raw content if decompression fails
+          try {
+            // Attempt to just decode the base64 string directly
+            data.source_content = atob(data.source_content);
+            console.log('Fallback to direct base64 decode successful');
+          } catch (decodeErr) {
+            console.error('Fallback decode also failed:', decodeErr);
+            data.source_content = ''; // Reset if all decompression fails
+          }
         }
       }
 
