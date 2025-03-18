@@ -23,6 +23,10 @@ interface ApiFormProps {
   onFetchContent?: () => void;
   shouldFetchContent?: boolean;
   setShouldFetchContent?: (value: boolean) => void;
+  applicationSlug?: string;
+  organizationSlug?: string;
+  apiVersion?: string;
+  apiSlug?: string;
 }
 
 export function ApiForm({
@@ -37,7 +41,11 @@ export function ApiForm({
   setCodeLanguage,
   onFetchContent,
   shouldFetchContent,
-  setShouldFetchContent
+  setShouldFetchContent,
+  applicationSlug,
+  organizationSlug,
+  apiVersion,
+  apiSlug
 }: ApiFormProps) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -148,6 +156,10 @@ export function ApiForm({
           onFetchContent={onFetchContent}
           shouldFetchContent={shouldFetchContent}
           setShouldFetchContent={setShouldFetchContent}
+          applicationSlug={applicationSlug}
+          organizationSlug={organizationSlug}
+          apiVersion={apiVersion}
+          apiSlug={apiSlug}
         />
       </div>
 

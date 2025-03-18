@@ -91,6 +91,7 @@ export type Database = {
           is_public: boolean | null
           name: string
           protocol: string | null
+          slug: string | null
           source_content: string | null
           source_uri: string | null
           status: string | null
@@ -107,6 +108,7 @@ export type Database = {
           is_public?: boolean | null
           name: string
           protocol?: string | null
+          slug?: string | null
           source_content?: string | null
           source_uri?: string | null
           status?: string | null
@@ -123,6 +125,7 @@ export type Database = {
           is_public?: boolean | null
           name?: string
           protocol?: string | null
+          slug?: string | null
           source_content?: string | null
           source_uri?: string | null
           status?: string | null
@@ -406,7 +409,6 @@ export type Database = {
           description: string | null
           features: Json
           id: string
-          interval: "monthly" | "quarterly" | "yearly"
           name: string
           price: number
           updated_at: string
@@ -417,7 +419,6 @@ export type Database = {
           description?: string | null
           features?: Json
           id?: string
-          interval: "monthly" | "quarterly" | "yearly"
           name: string
           price: number
           updated_at?: string
@@ -428,7 +429,6 @@ export type Database = {
           description?: string | null
           features?: Json
           id?: string
-          interval?: "monthly" | "quarterly" | "yearly"
           name?: string
           price?: number
           updated_at?: string

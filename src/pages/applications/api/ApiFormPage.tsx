@@ -140,6 +140,11 @@ export default function ApiFormPage() {
     return <div>Application ID is required</div>;
   }
 
+  // Generate a slug for the API if we have a name
+  const apiSlug = api?.name?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 
+                 form.watch('name')?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 
+                 'api';
+
   // Prepare breadcrumb items
   const breadcrumbItems = [
     { label: 'Applications', path: '/applications' },
@@ -186,6 +191,10 @@ export default function ApiFormPage() {
               onFetchContent={handleFetchContent}
               setShouldFetchContent={setShouldFetchContent}
               shouldFetchContent={shouldFetchContent}
+              applicationSlug={application?.slug}
+              organizationSlug={application?.organization_slug}
+              apiVersion={form.watch('version') || '1.0.0'}
+              apiSlug={apiSlug}
             />
           </Form>
         </CardContent>
