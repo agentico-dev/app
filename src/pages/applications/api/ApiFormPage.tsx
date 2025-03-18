@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
-import { useApplications, useApplicationAPIs } from '@/hooks';
+import { useApplications, useApplicationApis } from '@/hooks';
 import { ApplicationAPI } from '@/types/application';
 import { fetchContentFromUri } from '@/utils/apiContentUtils';
 import { useOrganizations } from '@/hooks/useOrganizations';
@@ -40,19 +40,23 @@ const ApiFormPage = () => {
   const [initialValues, setInitialValues] = useState<ApplicationAPI | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isContentLoading, setIsContentLoading] = useState(false);
-  const { application } = useApplications(applicationId || '');
-  const { organization } = useOrganizations();
+  const { applications } = useApplications();
+  const application = applications.find(app => app.id === applicationId);
+  const { organizations } = useOrganizations();
   const { 
-    api, 
+    apis: api, 
     isLoading: isApiLoading, 
     error: apiError, 
-    createAPI, 
-    updateAPI 
-  } = useApplicationAPIs(applicationId || '', apiId || '');
+    createApi, 
+    updateApi 
+  } = useApplicationApis(applicationId || '');
 
   useEffect(() => {
     if (api && isEditMode) {
-      setInitialValues(api);
+      const selectedApi = api.find((a: ApplicationAPI) => a.id === apiId);
+      if (selectedApi) {
+        setInitialValues(selectedApi);
+      }
     }
   }, [api, isEditMode]);
 
@@ -120,14 +124,14 @@ const ApiFormPage = () => {
 
       if (isEditMode) {
         if (!apiId) throw new Error('API ID is missing for update operation.');
-        await updateAPI.mutateAsync({ id: apiId, ...apiDataToUpdate });
+        await updateApi.mutateAsync({ id: apiId, ...apiDataToUpdate });
         toast({
           title: 'API updated successfully',
           description: 'The API has been updated successfully.',
         });
       } else {
         if (!applicationId) throw new Error('Application ID is missing for create operation.');
-        await createAPI.mutateAsync({ application_id: applicationId, ...apiDataToUpdate });
+        await createApi.mutateAsync({ application_id: applicationId, ...apiDataToUpdate });
         toast({
           title: 'API created successfully',
           description: 'The API has been created successfully.',

@@ -24,6 +24,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+        # Git configuration
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "gh-actions@rebelion.la"
+
       - name: Deploy to GitHub Pages
         run: npm run deploy
         env:

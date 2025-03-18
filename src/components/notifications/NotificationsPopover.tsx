@@ -90,7 +90,7 @@ export function NotificationsPopover() {
     if (open && unreadCount > 0) {
       // Auto-mark as read after a delay when opening
       const timer = setTimeout(() => {
-        markAllAsRead.mutate();
+        markAllAsRead.mutate({});
       }, 5000); // 5 seconds delay
       
       return () => clearTimeout(timer);
@@ -124,7 +124,7 @@ export function NotificationsPopover() {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => markAllAsRead.mutate()}
+              onClick={() => markAllAsRead.mutate({})}
               disabled={markAllAsRead.isPending}
             >
               <Check className="h-3 w-3 mr-1" />
