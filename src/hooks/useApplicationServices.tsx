@@ -41,6 +41,7 @@ export function useApplicationServices(applicationId?: string) {
           name: serviceData.name,
           description: serviceData.description,
           application_id: serviceData.application_id,
+          api_id: serviceData.api_id,
           status: serviceData.status || 'active',
           service_type: serviceData.service_type,
           tags: serviceData.tags || [],
@@ -79,6 +80,7 @@ export function useApplicationServices(applicationId?: string) {
           description: data.description,
           status: data.status,
           service_type: data.service_type,
+          api_id: data.api_id,
           tags: data.tags,
           updated_at: new Date().toISOString(),
         })

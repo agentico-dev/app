@@ -41,6 +41,7 @@ export function useApplicationMessages(applicationId?: string) {
           title: messageData.title,
           content: messageData.content,
           application_id: messageData.application_id,
+          api_id: messageData.api_id,
           message_type: messageData.message_type || 'notification',
           status: messageData.status || 'unread',
         })
@@ -77,6 +78,7 @@ export function useApplicationMessages(applicationId?: string) {
           title: data.title,
           content: data.content,
           message_type: data.message_type,
+          api_id: data.api_id,
           status: data.status,
           updated_at: new Date().toISOString(),
         })

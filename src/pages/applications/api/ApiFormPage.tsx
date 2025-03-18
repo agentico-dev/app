@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, useLocation } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -16,6 +16,9 @@ import { BreadcrumbNav } from '@/components/layout/BreadcrumbNav';
 export default function ApiFormPage() {
   const { applicationId, apiId } = useParams<{ applicationId: string; apiId?: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const tabFromQuery = searchParams.get('tab');
   const isNew = !apiId;
   
   const { data: api, isLoading: isLoadingApi } = useApplicationApi(apiId);
@@ -26,6 +29,7 @@ export default function ApiFormPage() {
   const [sourceType, setSourceType] = useState<'uri' | 'content'>('uri');
   const [codeLanguage, setCodeLanguage] = useState<'json' | 'yaml'>('json');
   const [shouldFetchContent, setShouldFetchContent] = useState(false);
+  const [activeTab, setActiveTab] = useState(tabFromQuery || 'details');
   
   const form = useForm<Partial<ApplicationAPI> & { fetchContent?: boolean }>({
     defaultValues: {
@@ -68,6 +72,24 @@ export default function ApiFormPage() {
       }
     }
   }, [api, form, isNew]);
+
+  // Update URL when tab changes without full page reload
+  useEffect(() => {
+    const newSearchParams = new URLSearchParams(location.search);
+    if (activeTab !== 'details') {
+      newSearchParams.set('tab', activeTab);
+    } else {
+      newSearchParams.delete('tab');
+    }
+    
+    const newSearch = newSearchParams.toString();
+    const newPath = `${location.pathname}${newSearch ? `?${newSearch}` : ''}`;
+    
+    // Only update if the path would change
+    if (newPath !== location.pathname + location.search) {
+      navigate(newPath, { replace: true });
+    }
+  }, [activeTab, location.pathname, location.search, navigate]);
 
   const onSubmit = async (data: Partial<ApplicationAPI> & { fetchContent?: boolean }) => {
     if (!applicationId) {
@@ -195,6 +217,9 @@ export default function ApiFormPage() {
               organizationSlug={application?.organization_slug}
               apiVersion={form.watch('version') || '1.0.0'}
               apiSlug={apiSlug}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              apiId={apiId}
             />
           </Form>
         </CardContent>

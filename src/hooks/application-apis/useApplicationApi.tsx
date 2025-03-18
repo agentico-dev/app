@@ -26,6 +26,16 @@ export function useApplicationApi(id?: string) {
         throw error;
       }
 
+      try {
+        // Check if we have source_content that needs to be processed
+        if (data && data.source_content) {
+          console.log('API has source content, length:', data.source_content.length);
+        }
+      } catch (err) {
+        console.error('Error processing source content:', err);
+        // We don't throw here to avoid breaking the entire API fetch
+      }
+
       return data as ApplicationAPI;
     },
     enabled: !!id,

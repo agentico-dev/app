@@ -92,7 +92,7 @@ export type Database = {
           name: string
           protocol: string | null
           slug: string | null
-          source_content: string | null
+          source_content: Json | null
           source_uri: string | null
           status: string | null
           tags: string[] | null
@@ -109,7 +109,7 @@ export type Database = {
           name: string
           protocol?: string | null
           slug?: string | null
-          source_content?: string | null
+          source_content?: Json | null
           source_uri?: string | null
           status?: string | null
           tags?: string[] | null
@@ -126,7 +126,7 @@ export type Database = {
           name?: string
           protocol?: string | null
           slug?: string | null
-          source_content?: string | null
+          source_content?: Json | null
           source_uri?: string | null
           status?: string | null
           tags?: string[] | null

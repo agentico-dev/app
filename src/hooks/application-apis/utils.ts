@@ -23,6 +23,13 @@ export async function fetchContent(
       const { content, format } = await fetchContentFromUri(data.source_uri);
       contentToSave = content;
       contentFormat = format;
+      
+      // Log success for debugging
+      console.log('Successfully fetched content from URI:', {
+        uri: data.source_uri,
+        format: format,
+        contentLength: content.length
+      });
     } catch (error: any) {
       console.error('Failed to fetch content from URI:', error);
       throw new Error(`Failed to fetch content from URI: ${error.message}`);
@@ -30,4 +37,14 @@ export async function fetchContent(
   }
 
   return { contentToSave, contentFormat };
+}
+
+/**
+ * Validates if the source content is present and valid
+ */
+export function hasValidSourceContent(api?: Partial<ApplicationAPI>): boolean {
+  if (!api) return false;
+  
+  // Check if source_content exists and is not empty
+  return !!(api.source_content && api.source_content.trim().length > 0);
 }
