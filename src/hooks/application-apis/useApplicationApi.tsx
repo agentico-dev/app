@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '../useAuth';
 import type { ApplicationAPI } from '@/types/application';
-import { processApiData } from './utils';
 
 /**
  * Hook for fetching a single API by ID
@@ -27,7 +26,7 @@ export function useApplicationApi(id?: string) {
         throw error;
       }
 
-      return processApiData(data) as ApplicationAPI;
+      return data as ApplicationAPI;
     },
     enabled: !!id,
   });

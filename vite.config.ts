@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    allowedHosts: [".agentico.dev", ".lovable.app"],
+    allowedHosts: [".agentico.dev", ".lovable.app", ".lovableproject.com"],
   },
   plugins: [
     react(),
