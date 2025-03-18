@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, MessageSquare, CheckCircle, PlusCircle } from 'lucide-react';
+import { Edit, Trash2, MessageSquare, CheckCircle, PlusCircle, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { ApplicationMessage } from '@/types/application';
+import { Progress } from '@/components/ui/progress';
 
 interface ApiMessagesListProps {
   apiId?: string;
@@ -30,6 +31,8 @@ export default function ApiMessagesList({ apiId, applicationId }: ApiMessagesLis
   const { messages, isLoading, error, deleteMessage, markAsRead } = useApplicationMessages(applicationId);
   const [searchTerm, setSearchTerm] = useState('');
   const [messageToDelete, setMessageToDelete] = useState<ApplicationMessage | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isMarkingAsRead, setIsMarkingAsRead] = useState<string | null>(null);
 
   // Filter messages related to this API
   const apiMessages = messages?.filter(message => 
@@ -39,10 +42,24 @@ export default function ApiMessagesList({ apiId, applicationId }: ApiMessagesLis
       message.content.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (messageToDelete) {
-      deleteMessage.mutate(messageToDelete.id);
-      setMessageToDelete(null);
+      setIsDeleting(true);
+      try {
+        await deleteMessage.mutateAsync(messageToDelete.id);
+      } finally {
+        setIsDeleting(false);
+        setMessageToDelete(null);
+      }
+    }
+  };
+
+  const handleMarkAsRead = async (id: string) => {
+    setIsMarkingAsRead(id);
+    try {
+      await markAsRead.mutateAsync(id);
+    } finally {
+      setIsMarkingAsRead(null);
     }
   };
 
@@ -73,31 +90,49 @@ export default function ApiMessagesList({ apiId, applicationId }: ApiMessagesLis
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-5 w-1/3" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-2/3 mt-2" />
-            </CardContent>
-            <CardFooter>
-              <Skeleton className="h-10 w-20" />
-            </CardFooter>
-          </Card>
-        ))}
+        <div className="flex justify-between items-center mb-4">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardHeader>
+                <div className="flex justify-between">
+                  <Skeleton className="h-6 w-1/3" />
+                  <Skeleton className="h-6 w-20" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-2/3 mb-2" />
+                <Skeleton className="h-4 w-1/2 mb-4" />
+                <Skeleton className="h-4 w-32 mt-4" />
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <div className="flex space-x-2">
+                  <Skeleton className="h-9 w-20" />
+                  <Skeleton className="h-9 w-28" />
+                </div>
+                <Skeleton className="h-9 w-20" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-8">
+      <div className="text-center py-8 border rounded-lg bg-muted/10">
         <h3 className="text-lg font-medium">Error loading messages</h3>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mb-4">
           There was a problem loading the message list. Please try again.
         </p>
+        <Button onClick={() => window.location.reload()}>
+          Retry
+        </Button>
       </div>
     );
   }
@@ -152,9 +187,15 @@ export default function ApiMessagesList({ apiId, applicationId }: ApiMessagesLis
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => markAsRead.mutate(message.id)}
+                      onClick={() => handleMarkAsRead(message.id)}
+                      disabled={isMarkingAsRead === message.id}
                     >
-                      <CheckCircle className="h-4 w-4 mr-1" /> Mark as Read
+                      {isMarkingAsRead === message.id ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                      )}
+                      Mark as Read
                     </Button>
                   )}
                 </div>
@@ -191,8 +232,21 @@ export default function ApiMessagesList({ apiId, applicationId }: ApiMessagesLis
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm} 
+              disabled={isDeleting}
+              className="relative"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

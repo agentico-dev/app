@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router';
 import { useForm } from 'react-hook-form';
@@ -31,7 +30,7 @@ export default function ApiFormPage() {
   const [shouldFetchContent, setShouldFetchContent] = useState(false);
   const [activeTab, setActiveTab] = useState(tabFromQuery || 'details');
   
-  const form = useForm<Partial<ApplicationAPI> & { fetchContent?: boolean }>({
+  const form = useForm<Partial<ApplicationAPI> & { shouldFetchContent?: boolean }>({
     defaultValues: {
       name: '',
       description: '',
@@ -41,7 +40,7 @@ export default function ApiFormPage() {
       source_content: '',
       content_format: 'json',
       tags: [],
-      fetchContent: false
+      shouldFetchContent: false
     },
   });
 
@@ -73,7 +72,6 @@ export default function ApiFormPage() {
     }
   }, [api, form, isNew]);
 
-  // Update URL when tab changes without full page reload
   useEffect(() => {
     const newSearchParams = new URLSearchParams(location.search);
     if (activeTab !== 'details') {
@@ -91,7 +89,7 @@ export default function ApiFormPage() {
     }
   }, [activeTab, location.pathname, location.search, navigate]);
 
-  const onSubmit = async (data: Partial<ApplicationAPI> & { fetchContent?: boolean }) => {
+  const onSubmit = async (data: Partial<ApplicationAPI> & { shouldFetchContent?: boolean }) => {
     if (!applicationId) {
       toast.error('Application ID is required');
       return;
@@ -101,7 +99,7 @@ export default function ApiFormPage() {
     try {
       console.log('Submitting form with data:', {
         ...data,
-        fetchContent: shouldFetchContent,
+        shouldFetchContent,
         content_format: codeLanguage
       });
       
@@ -109,7 +107,7 @@ export default function ApiFormPage() {
         await createApi.mutateAsync({
           ...data,
           application_id: applicationId,
-          fetchContent: shouldFetchContent,
+          shouldFetchContent,
           content_format: codeLanguage
         });
         toast.success('API created successfully');
@@ -117,7 +115,7 @@ export default function ApiFormPage() {
         const result = await updateApi.mutateAsync({
           ...data,
           id: apiId,
-          fetchContent: shouldFetchContent,
+          shouldFetchContent,
           content_format: codeLanguage
         });
         console.log('Update result:', result);
@@ -162,12 +160,10 @@ export default function ApiFormPage() {
     return <div>Application ID is required</div>;
   }
 
-  // Generate a slug for the API if we have a name
   const apiSlug = api?.name?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 
                  form.watch('name')?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 
                  'api';
 
-  // Prepare breadcrumb items
   const breadcrumbItems = [
     { label: 'Applications', path: '/applications' },
     { label: application?.name || 'Application', path: `/applications/${applicationId}` },

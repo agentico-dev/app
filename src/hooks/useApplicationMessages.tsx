@@ -32,7 +32,7 @@ export function useApplicationMessages(applicationId?: string) {
 
   // Create a new message
   const createMessage = useMutation({
-    mutationFn: async (messageData: Partial<ApplicationMessage>) => {
+    mutationFn: async (messageData: Partial<ApplicationMessage & { api_id?: string }>) => {
       if (!session.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
@@ -69,7 +69,7 @@ export function useApplicationMessages(applicationId?: string) {
 
   // Update a message
   const updateMessage = useMutation({
-    mutationFn: async ({ id, ...data }: Partial<ApplicationMessage> & { id: string }) => {
+    mutationFn: async ({ id, ...data }: Partial<ApplicationMessage & { api_id?: string }> & { id: string }) => {
       if (!session.user) throw new Error('Authentication required');
       
       const { data: updatedMessage, error } = await supabase

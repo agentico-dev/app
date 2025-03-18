@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, PlusCircle } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { ApplicationService } from '@/types/application';
+import { Progress } from '@/components/ui/progress';
 
 interface ApiServicesListProps {
   apiId?: string;
@@ -30,6 +31,7 @@ export default function ApiServicesList({ apiId, applicationId }: ApiServicesLis
   const { services, isLoading, error, deleteService } = useApplicationServices(applicationId);
   const [searchTerm, setSearchTerm] = useState('');
   const [serviceToDelete, setServiceToDelete] = useState<ApplicationService | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Filter services related to this API
   const apiServices = services?.filter(service => 
@@ -39,10 +41,15 @@ export default function ApiServicesList({ apiId, applicationId }: ApiServicesLis
       (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase())))
   );
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (serviceToDelete) {
-      deleteService.mutate(serviceToDelete.id);
-      setServiceToDelete(null);
+      setIsDeleting(true);
+      try {
+        await deleteService.mutateAsync(serviceToDelete.id);
+      } finally {
+        setIsDeleting(false);
+        setServiceToDelete(null);
+      }
     }
   };
 
@@ -71,31 +78,50 @@ export default function ApiServicesList({ apiId, applicationId }: ApiServicesLis
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-5 w-1/3" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-2/3 mt-2" />
-            </CardContent>
-            <CardFooter>
-              <Skeleton className="h-10 w-20" />
-            </CardFooter>
-          </Card>
-        ))}
+        <div className="flex justify-between items-center mb-4">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <Skeleton className="h-6 w-1/2" />
+                  <Skeleton className="h-4 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-5 w-24 mt-2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-2/3 mb-4" />
+                <div className="flex flex-wrap gap-1 mt-3">
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-36 mt-4" />
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Skeleton className="h-9 w-20" />
+                <Skeleton className="h-9 w-20" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-8">
+      <div className="text-center py-8 border rounded-lg bg-muted/10">
         <h3 className="text-lg font-medium">Error loading services</h3>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mb-4">
           There was a problem loading the service list. Please try again.
         </p>
+        <Button onClick={() => window.location.reload()}>
+          Retry
+        </Button>
       </div>
     );
   }
@@ -186,8 +212,21 @@ export default function ApiServicesList({ apiId, applicationId }: ApiServicesLis
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm} 
+              disabled={isDeleting}
+              className="relative"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
