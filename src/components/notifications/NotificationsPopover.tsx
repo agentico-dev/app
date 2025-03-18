@@ -12,7 +12,7 @@ import {
 import { format, formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotifications } from '@/hooks/notifications';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function NotificationsPopover() {
