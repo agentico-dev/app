@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
-import { useApplicationApi, useApplicationApis } from '@/hooks/useApplicationApis';
+import { useApplicationApi, useApplicationApis } from '@/hooks/application-apis';
 import { useApplication } from '@/hooks/useApplications';
 import { ApplicationAPI } from '@/types/application';
 import { toast } from 'sonner';

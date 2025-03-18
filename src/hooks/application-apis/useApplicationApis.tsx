@@ -1,10 +1,14 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
+import { useAuth } from '../useAuth';
 import { toast } from 'sonner';
 import type { ApplicationAPI } from '@/types/application';
-import { compressContent, decompressContent, base64ToUint8Array, uint8ArrayToBase64, fetchContentFromUri } from '@/utils/apiContentUtils';
+import { processApiData, compressApiContent, fetchAndCompressContent } from './utils';
 
+/**
+ * Hook for managing APIs for a specific application
+ */
 export function useApplicationApis(applicationId?: string) {
   const { session } = useAuth();
   const queryClient = useQueryClient();
@@ -24,31 +28,9 @@ export function useApplicationApis(applicationId?: string) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
+      
       // Process the APIs to handle binary data
-      return data.map((api: any) => {
-        // The source_content comes as base64 from Supabase when it's bytea
-        if (api.source_content) {
-          try {
-            console.log('Processing API content for:', api.name);
-            const compressedData = base64ToUint8Array(api.source_content);
-            api.source_content = decompressContent(compressedData);
-            console.log('Successfully decompressed content:', api.source_content.substring(0, 100) + '...');
-          } catch (err) {
-            console.error('Error processing API content for:', api.name, err);
-            // Try to handle raw content if decompression fails
-            try {
-              // Attempt to just decode the base64 string directly
-              api.source_content = atob(api.source_content);
-              console.log('Fallback to direct base64 decode successful');
-            } catch (decodeErr) {
-              console.error('Fallback decode also failed:', decodeErr);
-              api.source_content = ''; // Reset if all decompression fails
-            }
-          }
-        }
-        return api as ApplicationAPI;
-      });
+      return data.map((api: any) => processApiData(api));
     },
     enabled: !!applicationId,
   });
@@ -58,34 +40,11 @@ export function useApplicationApis(applicationId?: string) {
     mutationFn: async (apiData: Partial<ApplicationAPI> & { fetchContent?: boolean }) => {
       if (!session?.user) throw new Error('Authentication required');
 
-      // Extract the fetchContent flag and remove it from the data
       const { fetchContent, ...restData } = apiData;
-      let contentToSave = restData.source_content || '';
-      let contentFormat = restData.content_format || 'json';
-
-      // If fetchContent is true and we have a source_uri, fetch the content
-      if (fetchContent && restData.source_uri) {
-        try {
-          const { content, format } = await fetchContentFromUri(restData.source_uri);
-          contentToSave = content;
-          contentFormat = format;
-        } catch (error) {
-          console.error('Failed to fetch content from URI:', error);
-          toast.error(`Failed to fetch content from URI: ${error.message}`);
-        }
-      }
-
-      // Compress the content if it exists
-      let compressedContent = null;
-      if (contentToSave) {
-        try {
-          compressedContent = uint8ArrayToBase64(compressContent(contentToSave));
-        } catch (error) {
-          console.error('Error compressing content:', error);
-          toast.error(`Error compressing content: ${error.message}`);
-          throw error;
-        }
-      }
+      
+      // Handle content fetching and compression
+      const { compressedContent, contentToSave, contentFormat } = 
+        await fetchAndCompressContent(fetchContent, restData);
 
       const { data, error } = await supabase
         .from('application_apis')
@@ -131,7 +90,7 @@ export function useApplicationApis(applicationId?: string) {
     },
   });
 
-  // Update an API - fixed to properly update in Supabase
+  // Update an API
   const updateApi = useMutation({
     mutationFn: async ({
       id,
@@ -142,21 +101,9 @@ export function useApplicationApis(applicationId?: string) {
 
       console.log('Updating API with data:', { id, fetchContent, ...data });
 
-      // Handle source content and fetching from URI
-      let contentToSave = data.source_content;
-      let contentFormat = data.content_format || 'json';
-
-      // If fetchContent is true and we have a source_uri, fetch the content
-      if (fetchContent && data.source_uri) {
-        try {
-          const { content, format } = await fetchContentFromUri(data.source_uri);
-          contentToSave = content;
-          contentFormat = format;
-        } catch (error) {
-          console.error('Failed to fetch content from URI:', error);
-          toast.error(`Failed to fetch content from URI: ${error.message}`);
-        }
-      }
+      // Handle content fetching and compression
+      const { compressedContent, contentToSave, contentFormat } = 
+        await fetchAndCompressContent(fetchContent, data);
 
       // Create update object with only fields we want to update
       const updateData: Record<string, any> = {};
@@ -173,20 +120,10 @@ export function useApplicationApis(applicationId?: string) {
       if (data.protocol !== undefined) updateData.protocol = data.protocol;
       if (data.is_public !== undefined) updateData.is_public = data.is_public;
       
-      // Compress the content if it exists and add to update data
+      // Add compressed content to update data if it exists
       if (contentToSave !== undefined) {
-        try {
-          if (contentToSave) {
-            updateData.source_content = uint8ArrayToBase64(compressContent(contentToSave));
-            updateData.content_format = contentFormat;
-          } else {
-            updateData.source_content = null;
-          }
-        } catch (error) {
-          console.error('Error compressing content:', error);
-          toast.error(`Error compressing content: ${error.message}`);
-          throw error;
-        }
+        updateData.source_content = compressedContent;
+        updateData.content_format = contentFormat;
       }
 
       // Add updated_at field
@@ -194,7 +131,7 @@ export function useApplicationApis(applicationId?: string) {
       
       console.log('Final update data to be sent to Supabase:', updateData);
 
-      // Use upsert instead of update to ensure the operation succeeds
+      // Update the API
       const { error } = await supabase
         .from('application_apis')
         .update(updateData)
@@ -236,7 +173,7 @@ export function useApplicationApis(applicationId?: string) {
       if (error) throw error;
       return id;
     },
-    onSuccess: (id) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['application-apis', applicationId] });
       toast.success('API deleted successfully');
     },
@@ -254,52 +191,4 @@ export function useApplicationApis(applicationId?: string) {
     updateApi,
     deleteApi,
   };
-}
-
-// Get a single API by ID
-export function useApplicationApi(id?: string) {
-  const { session } = useAuth();
-
-  return useQuery({
-    queryKey: ['application-api', id],
-    queryFn: async () => {
-      if (!id) return null;
-
-      const { data, error } = await supabase
-        .from('application_apis')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching API:', error);
-        throw error;
-      }
-
-      // Process the binary data
-      if (data.source_content) {
-        try {
-          console.log('Processing single API content for:', data.name);
-          const compressedData = base64ToUint8Array(data.source_content);
-          data.source_content = decompressContent(compressedData);
-          console.log('Successfully decompressed content:', data.source_content.substring(0, 100) + '...');
-        } catch (err) {
-          console.error('Error decompressing API content:', err);
-          // Try to handle raw content if decompression fails
-          try {
-            // Attempt to just decode the base64 string directly
-            data.source_content = atob(data.source_content);
-            console.log('Fallback to direct base64 decode successful');
-          } catch (decodeErr) {
-            console.error('Fallback decode also failed:', decodeErr);
-            data.source_content = ''; // Reset if all decompression fails
-          }
-        }
-      }
-
-      console.log('Fetched API data:', data);
-      return data as ApplicationAPI;
-    },
-    enabled: !!id,
-  });
 }
