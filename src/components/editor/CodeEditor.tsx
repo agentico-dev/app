@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { ChangeEvent, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Check, Copy, FileJson, FileText } from 'lucide-react';
@@ -29,9 +29,7 @@ export function CodeEditor({ value, onChange, language = 'json', className, read
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (readOnly) return;
-    
+  const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setLocalValue(newValue);
     onChange(newValue);
