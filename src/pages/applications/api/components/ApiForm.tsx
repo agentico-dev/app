@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ApplicationAPI } from '@/types/application';
-import { ApiSourceSection } from './ApiSourceSection';
+import { ApiSourceSection } from './api-source';
 import TagsSelector from '@/components/applications/TagSelector';
 
 interface ApiFormProps {
