@@ -18,23 +18,30 @@ export const ContentSourceSection: React.FC<ContentSourceSectionProps> = ({
   codeLanguage,
   setCodeLanguage
 }) => {
+  const [isGeneratedURI, setIsGeneratedURI] = React.useState(false);
+  // Validate URI when it changes
+  React.useEffect(() => {
+    form.getValues('source_uri')?.startsWith('urn:') ? setIsGeneratedURI(true) : setIsGeneratedURI(false);    
+  }, [form.watch('source_uri')]);
   return (
     <div className="space-y-3">
       <FormField
         control={form.control}
         name="source_uri"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Generated URI</FormLabel>
-            <FormControl>
-              <Input {...field} readOnly className="bg-muted" />
-            </FormControl>
-            <FormDescription>
-              Agentico URN for this API specification (auto-generated)
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          return (
+            <FormItem>
+              <FormLabel>{isGeneratedURI ? 'Generated URI' : 'External URI'}</FormLabel>
+              <FormControl>
+                <Input {...field} readOnly={isGeneratedURI} className={isGeneratedURI ? 'bg-muted' : ''} />
+              </FormControl>
+              <FormDescription>
+                {isGeneratedURI ? 'Agentico URN for this API specification (auto-generated)' : 'External URI for this API specification'}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
       
       <div className="flex items-center space-x-2">
@@ -56,23 +63,26 @@ export const ContentSourceSection: React.FC<ContentSourceSectionProps> = ({
       <FormField
         control={form.control}
         name="source_content"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Source Content</FormLabel>
-            <FormControl>
-              <CodeEditor 
-                value={field.value || ''} 
-                onChange={field.onChange}
-                language={codeLanguage}
-                className="min-h-[300px]"
-              />
-            </FormControl>
-            <FormDescription>
-              Paste or write your API specification (OpenAPI, Swagger, etc.)
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          return (
+            <FormItem>
+              <FormLabel>Source Content</FormLabel>
+              <FormControl>
+                <CodeEditor 
+                  value={field.value || ''} 
+                  onChange={field.onChange}
+                  language={codeLanguage}
+                  className="min-h-[300px]"
+                  readOnly={!isGeneratedURI}
+                />
+              </FormControl>
+              <FormDescription>
+                { isGeneratedURI ? 'Paste or write your API specification (OpenAPI, Swagger, gRPC, etc.)' : 'Fetched API specification'}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
     </div>
   );
