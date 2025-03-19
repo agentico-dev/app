@@ -13,10 +13,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Code, Server, MessageSquare } from 'lucide-react';
 import ApiServicesList from './ApiServicesList';
 import ApiMessagesList from './ApiMessagesList';
+import * as z from 'zod';
+
+// Match the schema from ApiFormPage
+const apiFormSchema = z.object({
+  name: z.string().min(2, {
+    message: 'API Name must be at least 2 characters.',
+  }),
+  description: z.string().optional(),
+  version: z.string().optional(),
+  status: z.enum(['active', 'inactive', 'deprecated', 'archived']).default('active'),
+  tags: z.array(z.string()).optional(),
+  source_uri: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
+  source_content: z.string().optional(),
+  content_format: z.enum(['json', 'yaml']).optional(),
+  protocol: z.enum(['REST', 'gRPC', 'WebSockets', 'GraphQL']).optional(),
+  endpoint_url: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
+  documentation_url: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
+  fetchContent: z.boolean().optional(),
+});
+
+type ApiFormValues = z.infer<typeof apiFormSchema>;
 
 interface ApiFormProps {
-  form: UseFormReturn<Partial<ApplicationAPI> & { fetchContent?: boolean }>;
-  onSubmit: (data: Partial<ApplicationAPI>) => Promise<void>;
+  form: UseFormReturn<ApiFormValues>;
+  onSubmit: (data: ApiFormValues) => Promise<void>;
   isSubmitting: boolean;
   isNew: boolean;
   applicationId: string;
@@ -87,7 +108,7 @@ export function ApiForm({
         </TabsList>
         
         <TabsContent value="details">
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -161,6 +182,10 @@ export function ApiForm({
                         <RadioGroupItem value="deprecated" id="deprecated" />
                         <Label htmlFor="deprecated">Deprecated</Label>
                       </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="archived" id="archived" />
+                        <Label htmlFor="archived">Archived</Label>
+                      </div>
                     </RadioGroup>
                   </FormControl>
                   <FormMessage />
@@ -214,11 +239,15 @@ export function ApiForm({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button 
+                type="button" 
+                onClick={form.handleSubmit(onSubmit)} 
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? 'Saving...' : isNew ? 'Create API' : 'Update API'}
               </Button>
             </div>
-          </form>
+          </div>
         </TabsContent>
         
         {!isNew && hasSourceContent && (

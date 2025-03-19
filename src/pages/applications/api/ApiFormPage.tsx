@@ -16,7 +16,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ApiForm } from './components/ApiForm';
+import { Form } from '@/components/ui/form';
 
+// Define the schema with the correct status values
 const apiFormSchema = z.object({
   name: z.string().min(2, {
     message: 'API Name must be at least 2 characters.',
@@ -33,6 +35,9 @@ const apiFormSchema = z.object({
   documentation_url: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
   fetchContent: z.boolean().optional(),
 });
+
+// Create a type from the schema
+type ApiFormValues = z.infer<typeof apiFormSchema>;
 
 const ApiFormPage = () => {
   const navigate = useNavigate();
@@ -88,7 +93,7 @@ const ApiFormPage = () => {
   }, [apis, isEditMode, apiId]);
 
   // Initialize form with schema validation
-  const form = useForm<z.infer<typeof apiFormSchema>>({
+  const form = useForm<ApiFormValues>({
     resolver: zodResolver(apiFormSchema),
     defaultValues: {
       name: '',
@@ -152,7 +157,7 @@ const ApiFormPage = () => {
   }, [form]);
 
   // Handle form submission
-  const onSubmit = async (values: z.infer<typeof apiFormSchema>) => {
+  const onSubmit = async (values: ApiFormValues) => {
     try {
       setIsSubmitting(true);
       
@@ -165,7 +170,7 @@ const ApiFormPage = () => {
         tags: values.tags,
         source_uri: values.source_uri,
         content_format: values.content_format,
-        protocol: values.protocol as any,
+        protocol: values.protocol,
         endpoint_url: values.endpoint_url,
         documentation_url: values.documentation_url,
       };
@@ -246,27 +251,29 @@ const ApiFormPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ApiForm
-            form={form}
-            onSubmit={onSubmit}
-            isSubmitting={isSubmitting}
-            isNew={!isEditMode}
-            applicationId={applicationId || ''}
-            sourceType={sourceType}
-            setSourceType={setSourceType}
-            codeLanguage={codeLanguage}
-            setCodeLanguage={setCodeLanguage}
-            onFetchContent={handleFetchContent}
-            shouldFetchContent={shouldFetchContent}
-            setShouldFetchContent={setShouldFetchContent}
-            applicationSlug={application?.slug}
-            organizationSlug={organization?.slug}
-            apiVersion={form.watch('version')}
-            apiSlug={initialValues?.slug}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            apiId={apiId}
-          />
+          <Form {...form}>
+            <ApiForm
+              form={form}
+              onSubmit={onSubmit}
+              isSubmitting={isSubmitting}
+              isNew={!isEditMode}
+              applicationId={applicationId || ''}
+              sourceType={sourceType}
+              setSourceType={setSourceType}
+              codeLanguage={codeLanguage}
+              setCodeLanguage={setCodeLanguage}
+              onFetchContent={handleFetchContent}
+              shouldFetchContent={shouldFetchContent}
+              setShouldFetchContent={setShouldFetchContent}
+              applicationSlug={application?.slug}
+              organizationSlug={organization?.slug}
+              apiVersion={form.watch('version')}
+              apiSlug={initialValues?.slug}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              apiId={apiId}
+            />
+          </Form>
         </CardContent>
       </Card>
     </ErrorBoundary>
