@@ -1,37 +1,37 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
-import { useApplications, useApplicationApis } from '@/hooks';
+import { useApplicationApis } from '@/hooks/useApplicationApis';
+import { useApplications } from '@/hooks';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { ApplicationAPI } from '@/types/application';
 import { fetchContentFromUri } from '@/utils/apiContentUtils';
-import { useOrganizations } from '@/hooks/useOrganizations';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { ApiForm } from './components/ApiForm';
 
 const apiFormSchema = z.object({
   name: z.string().min(2, {
     message: 'API Name must be at least 2 characters.',
   }),
   description: z.string().optional(),
-  protocol: z.enum(['REST', 'gRPC', 'WebSockets', 'GraphQL']),
+  version: z.string().optional(),
+  status: z.enum(['active', 'inactive', 'deprecated']).default('active'),
+  tags: z.array(z.string()).optional(),
+  source_uri: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
+  source_content: z.string().optional(),
+  content_format: z.enum(['json', 'yaml']).optional(),
+  protocol: z.enum(['REST', 'gRPC', 'WebSockets', 'GraphQL']).optional(),
   endpoint_url: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
   documentation_url: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
-  source_uri: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
-  content_format: z.enum(['json', 'yaml']).optional(),
-  source_content: z.string().optional(),
-  shouldFetchContent: z.boolean().default(false),
+  fetchContent: z.boolean().optional(),
 });
 
 const ApiFormPage = () => {
@@ -39,59 +39,106 @@ const ApiFormPage = () => {
   const { applicationId, apiId } = useParams<{ applicationId: string; apiId: string }>();
   const [isEditMode, setIsEditMode] = useState(!!apiId);
   const [initialValues, setInitialValues] = useState<ApplicationAPI | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isContentLoading, setIsContentLoading] = useState(false);
-  const { applications } = useApplications();
+  const [sourceType, setSourceType] = useState<'uri' | 'content'>('uri');
+  const [codeLanguage, setCodeLanguage] = useState<'json' | 'yaml'>('json');
+  const [shouldFetchContent, setShouldFetchContent] = useState(false);
+  const [activeTab, setActiveTab] = useState('details');
+  
+  // Get application data
+  const { applications, isLoading: isAppLoading } = useApplications();
   const application = applications.find(app => app.id === applicationId);
+  
+  // Get organization data
   const { organizations } = useOrganizations();
+  const organization = organizations.find(org => 
+    application?.organization_id ? org.id === application.organization_id : false
+  );
+  
+  // Get API data
   const { 
-    apis: api, 
+    apis, 
     isLoading: isApiLoading, 
     error: apiError, 
     createApi, 
     updateApi 
   } = useApplicationApis(applicationId || '');
 
+  // Set initial values when API data is loaded
   useEffect(() => {
-    if (api && isEditMode) {
-      const selectedApi = api.find((a: ApplicationAPI) => a.id === apiId);
+    if (apis && isEditMode) {
+      const selectedApi = apis.find((a) => a.id === apiId);
       if (selectedApi) {
         setInitialValues(selectedApi);
+        
+        // Set source type based on API data
+        if (selectedApi.source_content) {
+          setSourceType('content');
+        } else if (selectedApi.source_uri) {
+          setSourceType('uri');
+        }
+        
+        // Set code language
+        if (selectedApi.content_format) {
+          setCodeLanguage(selectedApi.content_format as 'json' | 'yaml');
+        }
       }
     }
-  }, [api, isEditMode]);
+  }, [apis, isEditMode, apiId]);
 
+  // Initialize form with schema validation
   const form = useForm<z.infer<typeof apiFormSchema>>({
     resolver: zodResolver(apiFormSchema),
     defaultValues: {
-      name: initialValues?.name || '',
-      description: initialValues?.description || '',
-      protocol: initialValues?.protocol || 'REST',
-      endpoint_url: initialValues?.endpoint_url || '',
-      documentation_url: initialValues?.documentation_url || '',
-      source_uri: initialValues?.source_uri || '',
-      content_format: initialValues?.content_format || 'json',
-      source_content: initialValues?.source_content || '',
-      shouldFetchContent: false,
+      name: '',
+      description: '',
+      version: '',
+      status: 'active',
+      tags: [],
+      source_uri: '',
+      source_content: '',
+      content_format: 'json',
+      protocol: 'REST',
+      endpoint_url: '',
+      documentation_url: '',
     },
     mode: 'onChange',
   });
 
+  // Update form values when initial values change
   useEffect(() => {
     if (initialValues) {
-      form.reset(initialValues);
+      form.reset({
+        name: initialValues.name || '',
+        description: initialValues.description || '',
+        version: initialValues.version || '',
+        status: initialValues.status || 'active',
+        tags: initialValues.tags || [],
+        source_uri: initialValues.source_uri || '',
+        source_content: initialValues.source_content || '',
+        content_format: initialValues.content_format as 'json' | 'yaml' || 'json',
+        protocol: initialValues.protocol as any || 'REST',
+        endpoint_url: initialValues.endpoint_url || '',
+        documentation_url: initialValues.documentation_url || '',
+      });
     }
   }, [initialValues, form]);
 
-  const handleContentFetch = useCallback(async (uri: string) => {
+  // Handle fetching content from URI
+  const handleFetchContent = useCallback(async () => {
+    const uri = form.getValues('source_uri');
+    if (!uri) return;
+    
     setIsContentLoading(true);
     try {
       const { content, format } = await fetchContentFromUri(uri);
       form.setValue('source_content', content);
-      form.setValue('content_format', format);
+      form.setValue('content_format', format as 'json' | 'yaml');
+      setCodeLanguage(format as 'json' | 'yaml');
       toast({
         title: 'Content fetched successfully',
-        description: 'The content from the URI has been fetched and populated in the Source Content field.',
+        description: 'The content from the URI has been fetched and populated.',
       });
     } catch (error: any) {
       toast({
@@ -104,41 +151,56 @@ const ApiFormPage = () => {
     }
   }, [form]);
 
-  const handleContentSubmit = async (values: any) => {
+  // Handle form submission
+  const onSubmit = async (values: z.infer<typeof apiFormSchema>) => {
     try {
-      const apiDataToUpdate: Partial<ApplicationAPI> & { shouldFetchContent?: boolean } = {
+      setIsSubmitting(true);
+      
+      // Prepare API data
+      const apiData: Partial<ApplicationAPI> = {
         name: values.name,
         description: values.description,
+        version: values.version,
+        status: values.status,
+        tags: values.tags,
+        source_uri: values.source_uri,
+        content_format: values.content_format,
         protocol: values.protocol as any,
         endpoint_url: values.endpoint_url,
         documentation_url: values.documentation_url,
-        source_uri: values.source_uri,
-        content_format: values.content_format,
-        shouldFetchContent: values.shouldFetchContent,
       };
-
+      
+      // Include source content if available
       if (values.source_content) {
-        apiDataToUpdate.source_content = values.source_content;
+        apiData.source_content = values.source_content;
       }
-
-      setIsLoading(true);
-
+      
       if (isEditMode) {
-        if (!apiId) throw new Error('API ID is missing for update operation.');
-        await updateApi.mutateAsync({ id: apiId, ...apiDataToUpdate });
+        // Update existing API
+        await updateApi.mutateAsync({ 
+          id: apiId as string, 
+          ...apiData, 
+          fetchContent: shouldFetchContent 
+        });
         toast({
           title: 'API updated successfully',
           description: 'The API has been updated successfully.',
         });
       } else {
+        // Create new API
         if (!applicationId) throw new Error('Application ID is missing for create operation.');
-        await createApi.mutateAsync({ application_id: applicationId, ...apiDataToUpdate });
+        await createApi.mutateAsync({ 
+          application_id: applicationId, 
+          ...apiData,
+          fetchContent: shouldFetchContent
+        });
         toast({
           title: 'API created successfully',
           description: 'The API has been created successfully.',
         });
       }
-
+      
+      // Navigate back to applications page
       navigate(`/applications/${applicationId}/apis`);
     } catch (error: any) {
       toast({
@@ -147,11 +209,12 @@ const ApiFormPage = () => {
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (isApiLoading) {
+  // Show loading state while fetching data
+  if (isApiLoading || isAppLoading) {
     return (
       <Alert>
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -162,19 +225,12 @@ const ApiFormPage = () => {
     );
   }
 
-  if (!applications) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>No applications available.</AlertDescription>
-      </Alert>
-    );
-  }
-
+  // Show error if application is not found
   if (!application) {
     return (
       <Alert variant="destructive">
         <AlertDescription>
-          No application found.
+          Application not found.
         </AlertDescription>
       </Alert>
     );
@@ -190,198 +246,27 @@ const ApiFormPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleContentSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>API Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="API Name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="API Description" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="protocol"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Protocol</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a protocol" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="REST">REST</SelectItem>
-                        <SelectItem value="gRPC">gRPC</SelectItem>
-                        <SelectItem value="WebSockets">WebSockets</SelectItem>
-                        <SelectItem value="GraphQL">GraphQL</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="endpoint_url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Endpoint URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://api.example.com/endpoint" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="documentation_url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Documentation URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://api.example.com/docs" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="source_uri"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Source URI</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center space-x-2">
-                        <Input placeholder="https://raw.githubusercontent.com/example/api/openapi.yaml" {...field} />
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleContentFetch(field.value)}
-                          disabled={isContentLoading || !field.value}
-                        >
-                          {isContentLoading ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Fetching...
-                            </>
-                          ) : (
-                            'Fetch Content'
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      Enter the URI to fetch the API definition from a remote source.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="content_format"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Content Format</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a format" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="json">JSON</SelectItem>
-                        <SelectItem value="yaml">YAML</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="source_content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Source Content</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="API Definition Content" className="min-h-[200px]" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex items-center space-x-2">
-                <FormField
-                  control={form.control}
-                  name="shouldFetchContent"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Auto-Fetch Content</FormLabel>
-                        <FormDescription>
-                          Automatically fetch content from the Source URI on save.
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  // Navigate back to application page without saving
-                  window.history.back();
-                }}
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save API'
-                )}
-              </Button>
-            </div>
-            </form>
-          </Form>
+          <ApiForm
+            form={form}
+            onSubmit={onSubmit}
+            isSubmitting={isSubmitting}
+            isNew={!isEditMode}
+            applicationId={applicationId || ''}
+            sourceType={sourceType}
+            setSourceType={setSourceType}
+            codeLanguage={codeLanguage}
+            setCodeLanguage={setCodeLanguage}
+            onFetchContent={handleFetchContent}
+            shouldFetchContent={shouldFetchContent}
+            setShouldFetchContent={setShouldFetchContent}
+            applicationSlug={application?.slug}
+            organizationSlug={organization?.slug}
+            apiVersion={form.watch('version')}
+            apiSlug={initialValues?.slug}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            apiId={apiId}
+          />
         </CardContent>
       </Card>
     </ErrorBoundary>

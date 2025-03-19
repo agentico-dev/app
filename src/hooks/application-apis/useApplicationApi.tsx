@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '../useAuth';
 import type { ApplicationAPI } from '@/types/application';
+import { decompressContent } from '@/utils/apiContentUtils';
 
 /**
  * Hook for fetching a single API by ID
@@ -27,17 +28,18 @@ export function useApplicationApi(id?: string) {
       }
 
       try {
-        // Check if we have source_content that needs to be processed
-        if (data && data.source_content) {
-          console.log('API has source content, length:', data.source_content.length);
+        // Process the API to handle binary data
+        if (data.source_content) {
+          data.source_content = decompressContent(data.source_content);
         }
       } catch (err) {
         console.error('Error processing source content:', err);
-        // We don't throw here to avoid breaking the entire API fetch
+        // Reset if decompression fails
+        data.source_content = '';
       }
 
       return data as ApplicationAPI;
     },
-    enabled: !!id,
+    enabled: !!id && !!session?.user,
   });
 }
