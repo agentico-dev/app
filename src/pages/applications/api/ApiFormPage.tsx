@@ -18,6 +18,7 @@ import { fetchContentFromUri } from '@/utils/apiContentUtils';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const apiFormSchema = z.object({
   name: z.string().min(2, {
@@ -161,6 +162,14 @@ const ApiFormPage = () => {
     );
   }
 
+  if (!applications) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>No applications available.</AlertDescription>
+      </Alert>
+    );
+  }
+
   if (!application) {
     return (
       <Alert variant="destructive">
@@ -172,195 +181,210 @@ const ApiFormPage = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{isEditMode ? 'Edit API' : 'Create API'}</CardTitle>
-        <CardDescription>
-          {isEditMode ? 'Edit the API details below.' : 'Create a new API for your application.'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleContentSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>API Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="API Name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="API Description" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="protocol"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Protocol</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a protocol" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="REST">REST</SelectItem>
-                      <SelectItem value="gRPC">gRPC</SelectItem>
-                      <SelectItem value="WebSockets">WebSockets</SelectItem>
-                      <SelectItem value="GraphQL">GraphQL</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="endpoint_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Endpoint URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://api.example.com/endpoint" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="documentation_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Documentation URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://api.example.com/docs" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="source_uri"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Source URI</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center space-x-2">
-                      <Input placeholder="https://raw.githubusercontent.com/example/api/openapi.yaml" {...field} />
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => handleContentFetch(field.value)}
-                        disabled={isContentLoading || !field.value}
-                      >
-                        {isContentLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Fetching...
-                          </>
-                        ) : (
-                          'Fetch Content'
-                        )}
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Enter the URI to fetch the API definition from a remote source.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="content_format"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Content Format</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a format" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="json">JSON</SelectItem>
-                      <SelectItem value="yaml">YAML</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="source_content"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Source Content</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="API Definition Content" className="min-h-[200px]" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="flex items-center space-x-2">
+    <ErrorBoundary>
+      <Card>
+        <CardHeader>
+          <CardTitle>{isEditMode ? 'Edit API' : 'Create API'}</CardTitle>
+          <CardDescription>
+            {isEditMode ? 'Edit the API details below.' : 'Create a new API for your application.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleContentSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="shouldFetchContent"
+                name="name"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Auto-Fetch Content</FormLabel>
-                      <FormDescription>
-                        Automatically fetch content from the Source URI on save.
-                      </FormDescription>
-                    </div>
+                  <FormItem>
+                    <FormLabel>API Name</FormLabel>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Input placeholder="API Name" {...field} />
                     </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="API Description" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="protocol"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Protocol</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a protocol" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="REST">REST</SelectItem>
+                        <SelectItem value="gRPC">gRPC</SelectItem>
+                        <SelectItem value="WebSockets">WebSockets</SelectItem>
+                        <SelectItem value="GraphQL">GraphQL</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="endpoint_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endpoint URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://api.example.com/endpoint" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="documentation_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Documentation URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://api.example.com/docs" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="source_uri"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Source URI</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center space-x-2">
+                        <Input placeholder="https://raw.githubusercontent.com/example/api/openapi.yaml" {...field} />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleContentFetch(field.value)}
+                          disabled={isContentLoading || !field.value}
+                        >
+                          {isContentLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Fetching...
+                            </>
+                          ) : (
+                            'Fetch Content'
+                          )}
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      Enter the URI to fetch the API definition from a remote source.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="content_format"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Content Format</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a format" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="json">JSON</SelectItem>
+                        <SelectItem value="yaml">YAML</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="source_content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Source Content</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="API Definition Content" className="min-h-[200px]" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex items-center space-x-2">
+                <FormField
+                  control={form.control}
+                  name="shouldFetchContent"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Auto-Fetch Content</FormLabel>
+                        <FormDescription>
+                          Automatically fetch content from the Source URI on save.
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  // Navigate back to application page without saving
+                  window.history.back();
+                }}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save API'
+                )}
+              </Button>
             </div>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                'Save API'
-              )}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </ErrorBoundary>
   );
 };
 

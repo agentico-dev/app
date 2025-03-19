@@ -38,7 +38,7 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
 
   return (
     <ResourceTabs
-      defaultTab="overview"
+      defaultTab="applications"
       tabs={[
         {
           value: 'overview',
