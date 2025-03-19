@@ -1,44 +1,5 @@
 
 /**
- * Converts a base64 string to a Uint8Array
- * @param base64 The base64 string to convert
- * @returns The Uint8Array
- */
-export function base64ToUint8Array(base64: string): Uint8Array {
-  try {
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes;
-  } catch (error) {
-    console.error('Error converting base64 to Uint8Array:', error);
-    throw new Error('Failed to convert base64 to binary data');
-  }
-}
-
-/**
- * Converts a Uint8Array to a base64 string
- * @param uint8Array The Uint8Array to convert
- * @returns The base64 string
- */
-export function uint8ArrayToBase64(uint8Array: Uint8Array): string {
-  try {
-    let binary = '';
-    const len = uint8Array.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(uint8Array[i]);
-    }
-    return btoa(binary);
-  } catch (error) {
-    console.error('Error converting Uint8Array to base64:', error);
-    throw new Error('Failed to convert binary data to base64');
-  }
-}
-
-/**
  * Fetches API content from a URI and attempts to determine the format
  * @param uri The URI to fetch the content from
  * @returns The content and format (json or yaml)
@@ -103,26 +64,6 @@ export async function fetchContentFromUri(uri: string): Promise<{ content: strin
     throw error;
   }
 }
-
-export const compressContent = (content: string): Uint8Array => {
-  // In a real app, this would use compression like gzip
-  // For now, we'll just convert to a Uint8Array
-  const encoder = new TextEncoder();
-  return encoder.encode(content);
-};
-
-export const decompressContent = (compressed: string): string => {
-  // In a real app, this would use decompression
-  // For now, we'll just decode the base64 string to text
-  try {
-    const binary = base64ToUint8Array(compressed);
-    const decoder = new TextDecoder();
-    return decoder.decode(binary);
-  } catch (e) {
-    console.error('Error decompressing content:', e);
-    return '';
-  }
-};
 
 // Notification helpers
 export const createResourceNotification = async (

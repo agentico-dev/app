@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 import type { ApplicationAPI } from '@/types/application';
-import { compressContent, decompressContent, base64ToUint8Array, uint8ArrayToBase64, fetchContentFromUri } from '@/utils/apiContentUtils';
+import { fetchContentFromUri } from '@/utils/apiContentUtils';
 
 export function useApplicationApis(applicationId?: string) {
   const { session } = useAuth();
@@ -24,19 +24,7 @@ export function useApplicationApis(applicationId?: string) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      // Process the APIs to handle binary data
-      return data.map((api: any) => {
-        if (api.source_content) {
-          try {
-            api.source_content = decompressContent(api.source_content);
-          } catch (err) {
-            console.error('Error decompressing API content:', err);
-            api.source_content = ''; // Reset if decompression fails
-          }
-        }
-        return api as ApplicationAPI;
-      });
+      return data as ApplicationAPI[];
     },
     enabled: !!applicationId,
   });
@@ -63,18 +51,6 @@ export function useApplicationApis(applicationId?: string) {
         }
       }
 
-      // Compress the content if it exists
-      let compressedContent = null;
-      if (contentToSave) {
-        try {
-          compressedContent = uint8ArrayToBase64(compressContent(contentToSave));
-        } catch (error) {
-          console.error('Error compressing content:', error);
-          toast.error(`Error compressing content: ${error.message}`);
-          throw error;
-        }
-      }
-
       const { data, error } = await supabase
         .from('application_apis')
         .insert({
@@ -84,7 +60,7 @@ export function useApplicationApis(applicationId?: string) {
           status: restData.status || 'active',
           version: restData.version,
           source_uri: restData.source_uri,
-          source_content: compressedContent,
+          source_content: contentToSave,
           content_format: contentFormat,
           tags: restData.tags || [],
         })
@@ -148,7 +124,7 @@ export function useApplicationApis(applicationId?: string) {
 
       // Create update object with only fields we want to update
       const updateData: Record<string, any> = {};
-      
+
       // Only include fields that are defined
       if (data.name !== undefined) updateData.name = data.name;
       if (data.description !== undefined) updateData.description = data.description;
@@ -160,26 +136,16 @@ export function useApplicationApis(applicationId?: string) {
       if (data.documentation_url !== undefined) updateData.documentation_url = data.documentation_url;
       if (data.protocol !== undefined) updateData.protocol = data.protocol;
       if (data.is_public !== undefined) updateData.is_public = data.is_public;
-      
-      // Compress the content if it exists and add to update data
-      if (contentToSave !== undefined) {
-        try {
-          if (contentToSave) {
-            updateData.source_content = uint8ArrayToBase64(compressContent(contentToSave));
-            updateData.content_format = contentFormat;
-          } else {
-            updateData.source_content = null;
-          }
-        } catch (error) {
-          console.error('Error compressing content:', error);
-          toast.error(`Error compressing content: ${error.message}`);
-          throw error;
-        }
+      if (contentToSave) {
+        updateData.source_content = contentToSave;
+        updateData.content_format = contentFormat;
+      } else {
+        updateData.source_content = null;
       }
 
       // Add updated_at field
       updateData.updated_at = new Date().toISOString();
-      
+
       console.log('Final update data to be sent to Supabase:', updateData);
 
       // Use upsert instead of update to ensure the operation succeeds
@@ -262,16 +228,6 @@ export function useApplicationApi(id?: string) {
       if (error) {
         console.error('Error fetching API:', error);
         throw error;
-      }
-
-      // Process the binary data
-      if (data.source_content) {
-        try {
-          data.source_content = decompressContent(data.source_content);
-        } catch (err) {
-          console.error('Error decompressing API content:', err);
-          data.source_content = ''; // Reset if decompression fails
-        }
       }
 
       console.log('Fetched API data:', data);

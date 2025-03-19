@@ -28,7 +28,8 @@ export interface ApplicationAPI {
   name: string;
   description?: string;
   application_id: string;
-  status?: 'active' | 'inactive' | 'archived';
+  slug: string;
+  status?: 'active' | 'inactive' | 'deprecated' | 'archived';
   version?: string;
   source_uri?: string;
   source_content?: string;

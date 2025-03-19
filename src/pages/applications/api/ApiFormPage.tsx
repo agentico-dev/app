@@ -23,7 +23,7 @@ const apiFormSchema = z.object({
   }),
   description: z.string().optional(),
   version: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'deprecated']).default('active'),
+  status: z.enum(['active', 'inactive', 'deprecated', 'archived']).default('active'),
   tags: z.array(z.string()).optional(),
   source_uri: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
   source_content: z.string().optional(),
@@ -48,7 +48,7 @@ const ApiFormPage = () => {
   
   // Get application data
   const { applications, isLoading: isAppLoading } = useApplications();
-  const application = applications.find(app => app.id === applicationId);
+  const application = applications?.find(app => app.id === applicationId);
   
   // Get organization data
   const { organizations } = useOrganizations();
