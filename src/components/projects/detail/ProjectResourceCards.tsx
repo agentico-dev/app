@@ -30,26 +30,25 @@ export function ProjectResourceCards({ project }: ProjectResourceCardsProps) {
         
         if (toolError) throw toolError;
         
-        // Get applications count
-        const { count: appCount, error: appError } = await supabase
-          .from('project_applications')
-          .select('*', { count: 'exact', head: true })
-          .eq('project_id', project.id);
+        // Get application IDs for the project
+        const { data, error: appError } = await supabase
+        .from('project_applications')
+        .select('application_id')
+        .eq('project_id', project.id);
+
+        const appCount = data?.length || 0;
         
         if (appError) throw appError;
         
-        // Get servers count (assuming there's a project_servers join table)
-        let serverCount = 0;
-        const { data: servers, error: serverError } = await supabase
-          .from('servers')
-          .select('id')
-          .eq('project_id', project.id);
+        // select count(true) from server_applications sa join project_applications pa
+        // on pa.application_id = sa.application_id  
+        // WHERE pa.project_id =$1
+        const { count: serverCount, error: serverError } = await supabase
+          .from('server_applications')
+          .select('id', { count: 'exact', head: true })
+          .in('application_id', data?.map((item) => item.application_id) || []);
           
         if (serverError) throw serverError;
-        
-        if (servers) {
-          serverCount = servers.length;
-        }
         
         // Get creator information if not already available
         if (!project.user_email && project.created_by) {
