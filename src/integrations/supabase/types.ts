@@ -191,7 +191,7 @@ export type Database = {
           id: string
           message_type: string | null
           name: string
-          schema: string | null
+          schema: Json | null
           service_id: string | null
           updated_at: string | null
         }
@@ -201,7 +201,7 @@ export type Database = {
           id?: string
           message_type?: string | null
           name: string
-          schema?: string | null
+          schema?: Json | null
           service_id?: string | null
           updated_at?: string | null
         }
@@ -211,7 +211,7 @@ export type Database = {
           id?: string
           message_type?: string | null
           name?: string
-          schema?: string | null
+          schema?: Json | null
           service_id?: string | null
           updated_at?: string | null
         }
