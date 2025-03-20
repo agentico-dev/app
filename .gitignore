@@ -1,5 +1,6 @@
 # custom
 *.ignoreme.*
+.ignoreme.*/**
 
 # Logs
 logs
@@ -25,3 +26,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
