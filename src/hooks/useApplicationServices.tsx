@@ -1,33 +1,42 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import type { ApplicationService } from '@/types/application';
 
-export function useApplicationServices(applicationId?: string) {
+export function useApplicationServices(applicationId?: string, apiId?: string) {
   const { session } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const isAuthenticated = !!session.user;
+  const isAuthenticated = !!session?.user;
 
-  // Fetch all services for an application
+  // Fetch all services for an application or a specific API
   const { data: services, isLoading, error } = useQuery({
-    queryKey: ['application-services', applicationId],
+    queryKey: ['application-services', applicationId, apiId],
     queryFn: async () => {
-      if (!applicationId) return [];
+      // If neither applicationId nor apiId is provided, return empty array
+      if (!applicationId && !apiId) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('application_services')
-        .select('*')
-        .eq('application_id', applicationId)
-        .order('created_at', { ascending: false });
+        .select('*');
+      
+      // If apiId is provided, filter by api_id
+      if (apiId) {
+        query = query.eq('api_id', apiId);
+      } 
+      // Otherwise, if only applicationId is provided, filter by application_id
+      else if (applicationId) {
+        query = query.eq('application_id', applicationId);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
       
       if (error) throw error;
       return data as ApplicationService[];
     },
-    enabled: !!applicationId,
+    enabled: !!(applicationId || apiId),
   });
 
   // Create a new service
@@ -53,7 +62,7 @@ export function useApplicationServices(applicationId?: string) {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['application-services', applicationId] });
+      queryClient.invalidateQueries({ queryKey: ['application-services', applicationId, apiId] });
       toast({
         title: 'Service created',
         description: 'The service has been created successfully.',
@@ -92,7 +101,7 @@ export function useApplicationServices(applicationId?: string) {
       return updatedService;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['application-services', applicationId] });
+      queryClient.invalidateQueries({ queryKey: ['application-services', applicationId, apiId] });
       toast({
         title: 'Service updated',
         description: 'The service has been updated successfully.',
@@ -121,7 +130,7 @@ export function useApplicationServices(applicationId?: string) {
       return id;
     },
     onSuccess: (id) => {
-      queryClient.invalidateQueries({ queryKey: ['application-services', applicationId] });
+      queryClient.invalidateQueries({ queryKey: ['application-services', applicationId, apiId] });
       toast({
         title: 'Service deleted',
         description: 'The service has been deleted successfully.',

@@ -19,10 +19,13 @@ export const ContentSourceSection: React.FC<ContentSourceSectionProps> = ({
   setCodeLanguage
 }) => {
   const [isGeneratedURI, setIsGeneratedURI] = React.useState(false);
+  
   // Validate URI when it changes
   React.useEffect(() => {
-    form.getValues('source_uri')?.startsWith('urn:') ? setIsGeneratedURI(true) : setIsGeneratedURI(false);    
+    const sourceUri = form.watch('source_uri');
+    sourceUri?.startsWith('urn:') ? setIsGeneratedURI(true) : setIsGeneratedURI(false);    
   }, [form.watch('source_uri')]);
+  
   return (
     <div className="space-y-3">
       <FormField

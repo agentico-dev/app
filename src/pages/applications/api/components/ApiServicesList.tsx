@@ -28,17 +28,17 @@ interface ApiServicesListProps {
 
 export default function ApiServicesList({ apiId, applicationId }: ApiServicesListProps) {
   const navigate = useNavigate();
-  const { services, isLoading, error, deleteService } = useApplicationServices(applicationId);
+  // Pass both applicationId and apiId to the hook
+  const { services, isLoading, error, deleteService } = useApplicationServices(applicationId, apiId);
   const [searchTerm, setSearchTerm] = useState('');
   const [serviceToDelete, setServiceToDelete] = useState<ApplicationService | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Filter services related to this API
-  const apiServices = services?.filter(service => 
-    service.api_id === apiId && 
-    (searchTerm === '' || 
-      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase())))
+  // Filter services based on search term
+  const filteredServices = services?.filter(service => 
+    searchTerm === '' || 
+    service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleDeleteConfirm = async () => {
@@ -140,9 +140,9 @@ export default function ApiServicesList({ apiId, applicationId }: ApiServicesLis
         </Button>
       </div>
 
-      {apiServices && apiServices.length > 0 ? (
+      {filteredServices && filteredServices.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {apiServices.map((service) => (
+          {filteredServices.map((service) => (
             <Card key={service.id} className="overflow-hidden">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
