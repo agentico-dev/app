@@ -53,32 +53,26 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
 
   // Check URI and source modes when values change
   React.useEffect(() => {
-    const checkUriAndSourceModes = () => {
-      if (sourceType === 'uri') {
-        const currentUri = form.getValues('source_uri');
-        setIsUriValid(isValidUri(currentUri));
-      }
-      
-      // Check if we're in URI mode
-      const uriValue = form.getValues('source_uri');
-      const newIsUriMode = uriValue && !uriValue.startsWith('urn:') ? true : false;
-      setIsUriMode(newIsUriMode);
-      
-      // Check if we're in content mode
-      const contentValue = form.getValues('source_content');
-      const newIsContentMode = contentValue && contentValue.length > 0 ? true : false;
-      setIsContentMode(newIsContentMode);
-      
-      // Generate URN if needed
-      if (newIsContentMode && (!uriValue || !uriValue.startsWith('urn:'))) {
-        generateURN(form, apiSlug, organizationSlug, applicationSlug, apiVersion);
-      }
-    };
+    const currentUri = form.getValues('source_uri');
+    setIsUriValid(isValidUri(currentUri));
     
-    checkUriAndSourceModes();
+    // Check if we're in URI mode
+    const uriValue = form.getValues('source_uri');
+    const newIsUriMode = uriValue && !uriValue.startsWith('urn:') ? true : false;
+    setIsUriMode(newIsUriMode);
+    
+    // Check if we're in content mode
+    const contentValue = form.getValues('source_content');
+    const newIsContentMode = contentValue && contentValue.length > 0 ? true : false;
+    setIsContentMode(newIsContentMode);
+    
+    // Generate URN if needed
+    if (sourceType === 'content' && newIsContentMode && (!uriValue || !uriValue.startsWith('urn:'))) {
+      generateURN(form, apiSlug, organizationSlug, applicationSlug, apiVersion);
+    }
   }, [
     form.watch('source_uri'), 
-    form.watch('source_content'), 
+    form.watch('source_content'),
     sourceType, 
     apiSlug, 
     organizationSlug, 

@@ -9,10 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { ApiSourceSection } from './api-source';
 import TagsSelector from '@/components/applications/TagSelector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Code, Server, MessageSquare } from 'lucide-react';
+import { Code, Server, MessageSquare, Save, ArrowLeft } from 'lucide-react';
 import ApiServicesList from './ApiServicesList';
 import ApiMessagesList from './ApiMessagesList';
 import { ApiFormValues } from '../ApiFormController';
+import { useNavigate } from 'react-router';
 
 interface ApiFormProps {
   form: UseFormReturn<ApiFormValues>;
@@ -55,6 +56,8 @@ export function ApiForm({
   setActiveTab,
   apiId
 }: ApiFormProps) {
+  const navigate = useNavigate();
+  
   // Function to handle tab change
   const handleTabChange = (value: string) => {
     if (setActiveTab) {
@@ -64,6 +67,10 @@ export function ApiForm({
   
   // Determine if we should show the services and messages tabs
   const hasSourceContent = form.watch('source_content') ? true : false;
+
+  const handleCancel = () => {
+    navigate(`/applications/${applicationId}/apis`);
+  };
 
   return (
     <div>
@@ -202,6 +209,17 @@ export function ApiForm({
                 apiVersion={apiVersion}
                 apiSlug={apiSlug}
               />
+            </div>
+            
+            <div className="flex justify-between pt-6">
+              <Button type="button" variant="outline" onClick={handleCancel}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                <Save className="mr-2 h-4 w-4" />
+                {isSubmitting ? 'Saving...' : isNew ? 'Create API' : 'Update API'}
+              </Button>
             </div>
           </div>
         </TabsContent>
