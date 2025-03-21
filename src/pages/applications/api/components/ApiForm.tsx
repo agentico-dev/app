@@ -1,4 +1,3 @@
-
 import { UseFormReturn } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -12,8 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Code, Server, MessageSquare, Save, ArrowLeft } from 'lucide-react';
 import ApiServicesList from './ApiServicesList';
 import ApiMessagesList from './ApiMessagesList';
-import { ApiFormValues } from '../ApiFormController';
 import { useNavigate } from 'react-router';
+import { ApiFormValues } from '@/hooks/application-apis/useApiForm';
 
 interface ApiFormProps {
   form: UseFormReturn<ApiFormValues>;
