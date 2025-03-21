@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { Form } from '@/components/ui/form';
 import { useApplicationApis } from '@/hooks/useApplicationApis';
 import { useApplications } from '@/hooks';
@@ -26,12 +26,12 @@ const apiFormSchema = z.object({
   version: z.string().optional(),
   status: z.enum(['active', 'inactive', 'deprecated', 'archived']).default('active'),
   tags: z.array(z.string()).optional(),
-  source_uri: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
+  source_uri: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.string().length(0)),
   source_content: z.string().optional(),
   content_format: z.enum(['json', 'yaml']).optional(),
   protocol: z.enum(['REST', 'gRPC', 'WebSockets', 'GraphQL']).optional(),
-  endpoint_url: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
-  documentation_url: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
+  endpoint_url: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.string().length(0)),
+  documentation_url: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.string().length(0)),
   fetchContent: z.boolean().optional(),
 });
 
@@ -140,16 +140,9 @@ export function ApiFormController() {
       form.setValue('source_content', content);
       form.setValue('content_format', format as 'json' | 'yaml');
       setCodeLanguage(format as 'json' | 'yaml');
-      toast({
-        title: 'Content fetched successfully',
-        description: 'The content from the URI has been fetched and populated.',
-      });
+      toast.success('Content fetched successfully');
     } catch (error: any) {
-      toast({
-        title: 'Error fetching content',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error('Error fetching content: ' + error.message);
     } finally {
       setIsContentLoading(false);
     }
@@ -186,10 +179,7 @@ export function ApiFormController() {
           ...apiData, 
           fetchContent: shouldFetchContent 
         });
-        toast({
-          title: 'API updated successfully',
-          description: 'The API has been updated successfully.',
-        });
+        toast.success('API updated successfully');
       } else {
         // Create new API
         if (!applicationId) throw new Error('Application ID is missing for create operation.');
@@ -198,20 +188,14 @@ export function ApiFormController() {
           ...apiData,
           fetchContent: shouldFetchContent
         });
-        toast({
-          title: 'API created successfully',
-          description: 'The API has been created successfully.',
-        });
+        toast.success('API created successfully');
       }
       
       // Navigate back to applications page
       navigate(`/applications/${applicationId}/apis`);
     } catch (error: any) {
-      toast({
-        title: 'Error saving API',
-        description: error.message,
-        variant: 'destructive',
-      });
+      console.error('Error saving API:', error);
+      toast.error('Error saving API: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -251,7 +235,7 @@ export function ApiFormController() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <ApiForm
                 form={form}
                 isSubmitting={isSubmitting}

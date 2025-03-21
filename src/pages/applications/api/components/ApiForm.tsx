@@ -203,26 +203,6 @@ export function ApiForm({
                 apiSlug={apiSlug}
               />
             </div>
-
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  // Navigate back to application page without saving
-                  window.history.back();
-                }}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Saving...' : isNew ? 'Create API' : 'Update API'}
-              </Button>
-            </div>
           </div>
         </TabsContent>
         

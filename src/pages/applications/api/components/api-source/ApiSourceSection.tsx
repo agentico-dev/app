@@ -53,23 +53,29 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
 
   // Check URI and source modes when values change
   React.useEffect(() => {
-    if (sourceType === 'uri') {
-      const currentUri = form.getValues('source_uri');
-      setIsUriValid(isValidUri(currentUri));
-    }
+    const checkUriAndSourceModes = () => {
+      if (sourceType === 'uri') {
+        const currentUri = form.getValues('source_uri');
+        setIsUriValid(isValidUri(currentUri));
+      }
+      
+      // Check if we're in URI mode
+      const uriValue = form.getValues('source_uri');
+      const newIsUriMode = uriValue && !uriValue.startsWith('urn:') ? true : false;
+      setIsUriMode(newIsUriMode);
+      
+      // Check if we're in content mode
+      const contentValue = form.getValues('source_content');
+      const newIsContentMode = contentValue && contentValue.length > 0 ? true : false;
+      setIsContentMode(newIsContentMode);
+      
+      // Generate URN if needed
+      if (newIsContentMode && (!uriValue || !uriValue.startsWith('urn:'))) {
+        generateURN(form, apiSlug, organizationSlug, applicationSlug, apiVersion);
+      }
+    };
     
-    // Check if we're in URI mode
-    const uriValue = form.getValues('source_uri');
-    setIsUriMode(uriValue && !uriValue.startsWith('urn:') ? true : false);
-    
-    // Check if we're in content mode
-    const isContent = form.getValues('source_content') && form.getValues('source_content').length > 0 ? true : false;
-    setIsContentMode(isContent);
-    
-    // Generate URN if needed
-    if (isContent && (!uriValue || !uriValue.startsWith('urn:'))) {
-      generateURN(form, apiSlug, organizationSlug, applicationSlug, apiVersion);
-    }
+    checkUriAndSourceModes();
   }, [
     form.watch('source_uri'), 
     form.watch('source_content'), 
@@ -77,7 +83,8 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
     apiSlug, 
     organizationSlug, 
     applicationSlug, 
-    apiVersion
+    apiVersion,
+    form
   ]);
 
   return (
