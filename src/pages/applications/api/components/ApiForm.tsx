@@ -6,38 +6,16 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ApplicationAPI } from '@/types/application';
 import { ApiSourceSection } from './api-source';
 import TagsSelector from '@/components/applications/TagSelector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Code, Server, MessageSquare } from 'lucide-react';
 import ApiServicesList from './ApiServicesList';
 import ApiMessagesList from './ApiMessagesList';
-import * as z from 'zod';
-
-// Match the schema from ApiFormPage
-const apiFormSchema = z.object({
-  name: z.string().min(2, {
-    message: 'API Name must be at least 2 characters.',
-  }),
-  description: z.string().optional(),
-  version: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'deprecated', 'archived']).default('active'),
-  tags: z.array(z.string()).optional(),
-  source_uri: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
-  source_content: z.string().optional(),
-  content_format: z.enum(['json', 'yaml']).optional(),
-  protocol: z.enum(['REST', 'gRPC', 'WebSockets', 'GraphQL']).optional(),
-  endpoint_url: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
-  documentation_url: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
-  fetchContent: z.boolean().optional(),
-});
-
-type ApiFormValues = z.infer<typeof apiFormSchema>;
+import { ApiFormValues } from '../ApiFormController';
 
 interface ApiFormProps {
   form: UseFormReturn<ApiFormValues>;
-  onSubmit: (data: ApiFormValues) => Promise<void>;
   isSubmitting: boolean;
   isNew: boolean;
   applicationId: string;
@@ -59,7 +37,6 @@ interface ApiFormProps {
 
 export function ApiForm({
   form,
-  onSubmit,
   isSubmitting,
   isNew,
   applicationId,
@@ -240,8 +217,7 @@ export function ApiForm({
                 Cancel
               </Button>
               <Button 
-                type="button" 
-                onClick={form.handleSubmit(onSubmit)} 
+                type="submit" 
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Saving...' : isNew ? 'Create API' : 'Update API'}

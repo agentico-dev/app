@@ -36,6 +36,8 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
   apiSlug
 }) => {
   const [isUriValid, setIsUriValid] = React.useState(true);
+  const [isUriMode, setIsUriMode] = React.useState(false);
+  const [isContentMode, setIsContentMode] = React.useState(false);
 
   // Function to validate URI
   function isValidUri(uri: string): boolean {
@@ -49,32 +51,34 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
     }
   }
 
-  // Validate URI when it changes
+  // Check URI and source modes when values change
   React.useEffect(() => {
     if (sourceType === 'uri') {
       const currentUri = form.getValues('source_uri');
       setIsUriValid(isValidUri(currentUri));
     }
-  }, [form.watch('source_uri'), sourceType]);
-
-  // Handle source type changes
-  function handleSourceTypeChange(value: 'uri' | 'content') {
-    setSourceType(value);
-  }
-  
-  function isUriMode() {
+    
+    // Check if we're in URI mode
     const uriValue = form.getValues('source_uri');
-    return uriValue && !uriValue.startsWith('urn:') ? true : false;
-  }
-  
-  function isContentMode() {
+    setIsUriMode(uriValue && !uriValue.startsWith('urn:') ? true : false);
+    
+    // Check if we're in content mode
     const isContent = form.getValues('source_content') && form.getValues('source_content').length > 0 ? true : false;
-    const uriValue = form.getValues('source_uri');
+    setIsContentMode(isContent);
+    
+    // Generate URN if needed
     if (isContent && (!uriValue || !uriValue.startsWith('urn:'))) {
       generateURN(form, apiSlug, organizationSlug, applicationSlug, apiVersion);
     }
-    return isContent;
-  }
+  }, [
+    form.watch('source_uri'), 
+    form.watch('source_content'), 
+    sourceType, 
+    apiSlug, 
+    organizationSlug, 
+    applicationSlug, 
+    apiVersion
+  ]);
 
   return (
     <div className="space-y-4 border p-4 rounded-md">
@@ -87,8 +91,8 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
           onFetchContent={onFetchContent}
           shouldFetchContent={shouldFetchContent}
           setShouldFetchContent={setShouldFetchContent}
-          isUriMode={isUriMode()}
-          isContentMode={isContentMode()}
+          isUriMode={isUriMode}
+          isContentMode={isContentMode}
           codeLanguage={codeLanguage}
         />
       ) : (
