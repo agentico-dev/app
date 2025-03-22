@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { ApplicationService } from '@/types/application';
-import { Progress } from '@/components/ui/progress';
 
 interface ApiServicesListProps {
   apiId?: string;
@@ -148,8 +147,8 @@ export default function ApiServicesList({ apiId, applicationId }: ApiServicesLis
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-lg font-medium">{service.name}</CardTitle>
                   <div className="flex items-center space-x-1">
-                    <span className={`rounded-full h-2 w-2 ${getStatusColor(service.status)}`} />
-                    <span className="text-xs capitalize">{service.status}</span>
+                    <span className={`rounded-full h-2 w-2 ${getStatusColor(service.status || 'active')}`} />
+                    <span className="text-xs capitalize">{service.status || 'active'}</span>
                   </div>
                 </div>
                 {service.service_type && (
@@ -160,6 +159,16 @@ export default function ApiServicesList({ apiId, applicationId }: ApiServicesLis
                 <p className="text-sm text-muted-foreground line-clamp-2">
                   {service.description || "No description provided"}
                 </p>
+                
+                {service.method && service.path && (
+                  <div className="mt-3 flex items-center space-x-2">
+                    <Badge variant="outline" className="uppercase font-mono">
+                      {service.method}
+                    </Badge>
+                    <span className="text-xs font-mono truncate">{service.path}</span>
+                  </div>
+                )}
+                
                 <div className="mt-4 flex flex-wrap gap-1">
                   {service.tags && service.tags.map((tag, i) => (
                     <Badge key={i} variant="secondary" className="text-xs">

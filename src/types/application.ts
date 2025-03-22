@@ -1,92 +1,74 @@
-
-// Define types for applications and related entities
-
 export interface Application {
   id: string;
   name: string;
   description?: string;
-  category?: string;
   slug: string;
-  status: 'active' | 'inactive' | 'archived';
+  organization_id: string;
+  created_at: string;
+  updated_at: string;
   tags?: string[];
-  favorite?: boolean;
-  user_id?: string;
-  organization_id?: string;
-  organization_slug?: string; // Added missing field
-  project_id?: string;
-  is_public?: boolean;
-  endpoints_count?: number;
-  tools_count?: number;
-  created_at?: string;
-  updated_at?: string;
+  status?: 'active' | 'inactive' | 'maintenance';
+  // Add any other fields that are part of the application object
 }
 
-export type ApplicationStatus = 'active' | 'inactive' | 'archived';
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  created_at: string;
+  updated_at: string;
+  // Add any other fields that are part of the organization object
+}
 
 export interface ApplicationAPI {
   id: string;
+  application_id: string;
   name: string;
   description?: string;
-  application_id: string;
   slug: string;
-  status?: 'active' | 'inactive' | 'deprecated' | 'archived';
   version?: string;
   source_uri?: string;
   source_content?: string;
-  endpoint_url?: string;
-  documentation_url?: string;
-  protocol?: 'REST' | 'gRPC' | 'WebSockets' | 'GraphQL';
-  tags?: string[];
   content_format?: 'json' | 'yaml';
-  is_public?: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface ApplicationService {
-  id: string;
-  name: string;
-  description?: string;
-  summary?: string;
-  api_id: string;
-  application_id?: string;
-  status?: 'active' | 'inactive' | 'archived';
-  service_type?: string;
-  path?: string;
-  method?: string;
+  protocol?: string;
+  status?: 'active' | 'inactive' | 'deprecated';
+  created_at: string;
+  updated_at: string;
   tags?: string[];
-  created_at?: string;
-  updated_at?: string;
 }
 
+// Update the ApplicationMessage interface to include api_id
 export interface ApplicationMessage {
   id: string;
-  title: string;
-  content: string;
   application_id: string;
-  api_id?: string;
-  message_type: 'notification' | 'warning' | 'error' | 'success';
-  status: 'read' | 'unread';
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Notification {
-  id: string;
-  user_id?: string;
-  organization_id?: string;
+  api_id?: string; // Added API relationship
   title: string;
   content: string;
-  resource_type: 'project' | 'application' | 'server' | 'tool' | 'api' | 'service';
-  resource_id: string;
-  related_resource_id?: string;
+  message_type: 'notification' | 'alert' | 'info';
   status: 'read' | 'unread';
-  notification_type: 'info' | 'success' | 'warning' | 'error';
   created_at: string;
   updated_at: string;
 }
 
-export interface Tag {
+// Update the ApplicationService interface
+export interface ApplicationService {
   id: string;
+  application_id: string;
+  api_id?: string; // Added API relationship
   name: string;
+  description?: string;
+  status?: 'active' | 'inactive' | 'maintenance';
+  service_type?: string;
+  tags?: string[];
+  created_at: string;
+  updated_at: string;
+  // Additional fields
+  method?: string;
+  path?: string;
+  summary?: string;
+}
+
+export interface ApiResponse<T> {
+  data: T[] | null;
+  error: any | null;
 }

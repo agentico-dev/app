@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { useParams } from 'react-router';
+import React, { useState } from 'react';
+import { useParams, useSearchParams } from 'react-router';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { useApplications } from '@/hooks';
@@ -12,6 +12,9 @@ import { useApiForm } from '@/hooks/application-apis/useApiForm';
 
 export function ApiFormController() {
   const { applicationId, apiId } = useParams<{ applicationId: string; apiId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabParam || 'details');
   
   // Get application data
   const { applications, isLoading: isAppLoading } = useApplications();
@@ -19,8 +22,6 @@ export function ApiFormController() {
   
   // Get organization data
   const { organizations, isLoading: isOrgLoading } = useOrganizations();
-  
-  // Add a null check before using find on organizations array
   const organization = organizations?.find(org => 
     application?.organization_id ? org.id === application.organization_id : false
   );
@@ -43,8 +44,14 @@ export function ApiFormController() {
     onSubmit
   } = useApiForm({ applicationId, apiId });
 
+  // Handle tab change and update URL
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSearchParams({ tab: value });
+  };
+
   // The combined loading state includes both applications and organizations
-  const isLoading = isAppLoading || isOrgLoading;
+  const isLoading = isAppLoading || isOrgLoading || isApiLoading;
 
   return (
     <ErrorBoundary>
@@ -57,7 +64,7 @@ export function ApiFormController() {
         </CardHeader>
         <CardContent>
           <ApiFormStatus 
-            isLoading={isLoading || isApiLoading}
+            isLoading={isLoading}
             error={apiError}
             applicationMissing={!application}
           />
@@ -81,6 +88,8 @@ export function ApiFormController() {
                   organizationSlug={organization?.slug}
                   apiVersion={form.watch('version')}
                   apiSlug={initialValues?.slug}
+                  activeTab={activeTab}
+                  setActiveTab={handleTabChange}
                   apiId={apiId}
                 />
               </form>

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useApplicationMessages } from '@/hooks/useApplicationMessages';
@@ -19,7 +18,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { ApplicationMessage } from '@/types/application';
-import { Progress } from '@/components/ui/progress';
 
 interface ApiMessagesListProps {
   apiId?: string;
@@ -28,18 +26,16 @@ interface ApiMessagesListProps {
 
 export default function ApiMessagesList({ apiId, applicationId }: ApiMessagesListProps) {
   const navigate = useNavigate();
-  const { messages, isLoading, error, deleteMessage, markAsRead } = useApplicationMessages(applicationId);
+  const { messages, isLoading, error, deleteMessage, markAsRead } = useApplicationMessages(applicationId, apiId);
   const [searchTerm, setSearchTerm] = useState('');
   const [messageToDelete, setMessageToDelete] = useState<ApplicationMessage | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isMarkingAsRead, setIsMarkingAsRead] = useState<string | null>(null);
 
-  // Filter messages related to this API
-  const apiMessages = messages?.filter(message => 
-    message.api_id === apiId && 
-    (searchTerm === '' || 
-      message.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      message.content.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredMessages = messages?.filter(message => 
+    searchTerm === '' || 
+    message.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    message.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleDeleteConfirm = async () => {
@@ -151,9 +147,9 @@ export default function ApiMessagesList({ apiId, applicationId }: ApiMessagesLis
         </Button>
       </div>
 
-      {apiMessages && apiMessages.length > 0 ? (
+      {filteredMessages && filteredMessages.length > 0 ? (
         <div className="space-y-4">
-          {apiMessages.map((message) => (
+          {filteredMessages.map((message) => (
             <Card key={message.id} className={`overflow-hidden ${message.status === 'unread' ? 'border-blue-300' : ''}`}>
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
