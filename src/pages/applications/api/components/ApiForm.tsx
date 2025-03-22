@@ -54,7 +54,7 @@ export function ApiForm({
   const hasSourceContent = form.watch('source_content') ? true : false;
 
   const handleCancel = () => {
-    navigate(`/applications/${applicationId}/apis`);
+    navigate(`/applications/${applicationId}`);
   };
 
   // For existing APIs with content, we'll show services and messages in the future

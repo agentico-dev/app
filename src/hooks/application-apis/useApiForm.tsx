@@ -41,7 +41,7 @@ export function useApiForm({ applicationId, apiId }: UseApiFormProps) {
   const [initialValues, setInitialValues] = useState<ApplicationAPI | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isContentLoading, setIsContentLoading] = useState(false);
-  const [sourceType, setSourceType] = useState<'uri' | 'content'>('uri');
+  const [sourceType, setSourceType] = useState<'uri' | 'content'>();
   const [codeLanguage, setCodeLanguage] = useState<'json' | 'yaml'>('json');
   const [shouldFetchContent, setShouldFetchContent] = useState(false);
   
@@ -75,6 +75,7 @@ export function useApiForm({ applicationId, apiId }: UseApiFormProps) {
 
   // Set initial values when API data is loaded
   useEffect(() => {
+    console.log('APIs:', apis);
     if (apis && isEditMode) {
       const selectedApi = apis.find((a) => a.id === apiId);
       if (selectedApi) {
@@ -92,6 +93,11 @@ export function useApiForm({ applicationId, apiId }: UseApiFormProps) {
           setCodeLanguage(selectedApi.content_format as 'json' | 'yaml');
         }
       }
+    }
+    // new API creation
+    else {
+      setInitialValues(null);
+      setSourceType(undefined);
     }
   }, [apis, isEditMode, apiId]);
 
@@ -177,7 +183,7 @@ export function useApiForm({ applicationId, apiId }: UseApiFormProps) {
       }
       
       // Navigate back to applications page
-      navigate(`/applications/${applicationId}/apis`);
+      navigate(`/applications/${applicationId}`);
     } catch (error: any) {
       console.error('Error saving API:', error);
       toast.error('Error saving API: ' + error.message);

@@ -29,7 +29,7 @@ export default function LandingPage() {
     },
     {
       title: 'Simplified Complexity',
-      description: 'Eliminate scafolding and unnecessary complexity to focus on building the AI applications logic.',
+      description: 'Eliminate scaffolding and unnecessary complexity to focus on building the AI applications logic.',
       icon: <Layers className="h-10 w-10 text-primary" />
     },
     {

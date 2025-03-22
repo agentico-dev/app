@@ -13,7 +13,9 @@ interface ContentSourceSectionProps {
   setCodeLanguage: (language: 'json' | 'yaml') => void;
 }
 
-export const ContentSourceSection: React.FC<ContentSourceSectionProps> = ({
+// @note @deprecated - this component is deprecated and will be removed in the future
+// Use UriSourceSection instead
+export const ContentSourceSectionDEPRECATED: React.FC<ContentSourceSectionProps> = ({
   form,
   codeLanguage,
   setCodeLanguage
@@ -23,7 +25,7 @@ export const ContentSourceSection: React.FC<ContentSourceSectionProps> = ({
   // Validate URI when it changes
   React.useEffect(() => {
     const sourceUri = form.watch('source_uri');
-    sourceUri?.startsWith('urn:') ? setIsGeneratedURI(true) : setIsGeneratedURI(false);    
+    sourceUri?.startsWith('urn:') ? setIsGeneratedURI(true) : setIsGeneratedURI(false);
   }, [form.watch('source_uri')]);
   
   return (

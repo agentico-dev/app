@@ -16,7 +16,7 @@ interface ApiFormDetailsProps {
   form: UseFormReturn<ApiFormValues>;
   isSubmitting: boolean;
   isNew: boolean;
-  sourceType: 'uri' | 'content';
+  sourceType: 'uri' | 'content' | undefined;
   setSourceType: (type: 'uri' | 'content') => void;
   codeLanguage: 'json' | 'yaml';
   setCodeLanguage: (lang: 'json' | 'yaml') => void;
