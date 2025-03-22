@@ -114,8 +114,6 @@ export function useApiForm({ applicationId, apiId }: UseApiFormProps) {
         source_content: initialValues.source_content || '',
         content_format: initialValues.content_format as 'json' | 'yaml' || 'json',
         protocol: initialValues.protocol as any || 'REST',
-        endpoint_url: initialValues.endpoint_url || '',
-        documentation_url: initialValues.documentation_url || '',
       });
     }
   }, [initialValues, form]);
@@ -154,8 +152,6 @@ export function useApiForm({ applicationId, apiId }: UseApiFormProps) {
         source_uri: values.source_uri,
         content_format: values.content_format,
         protocol: values.protocol,
-        endpoint_url: values.endpoint_url,
-        documentation_url: values.documentation_url,
       };
       
       // Include source content if available

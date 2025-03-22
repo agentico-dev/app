@@ -4,7 +4,7 @@ import { Server as ServerType } from "@/types/server";
 import { Server, Star, StarIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 import { TagBadge } from "@/components/applications/TagBadge";
-import { Tag } from "@/types/application";
+import { Tag } from "@/types/tag";
 
 interface ServerCardProps {
   server: ServerType;

@@ -114,8 +114,6 @@ export function useApplicationApis(applicationId?: string) {
       if (data.version !== undefined) updateData.version = data.version;
       if (data.source_uri !== undefined) updateData.source_uri = data.source_uri;
       if (data.tags !== undefined) updateData.tags = data.tags;
-      if (data.endpoint_url !== undefined) updateData.endpoint_url = data.endpoint_url;
-      if (data.documentation_url !== undefined) updateData.documentation_url = data.documentation_url;
       if (data.protocol !== undefined) updateData.protocol = data.protocol;
       if (data.is_public !== undefined) updateData.is_public = data.is_public;
       

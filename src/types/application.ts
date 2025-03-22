@@ -8,6 +8,12 @@ export interface Application {
   updated_at: string;
   tags?: string[];
   status?: 'active' | 'inactive' | 'maintenance';
+  category?: string;
+  favorite?: boolean;
+  // helpers for the UI
+  organization_slug?: string;
+  endpoints_count?: number;
+  tools_count?: number;
   // Add any other fields that are part of the application object
 }
 
@@ -31,7 +37,8 @@ export interface ApplicationAPI {
   source_content?: string;
   content_format?: 'json' | 'yaml';
   protocol?: string;
-  status?: 'active' | 'inactive' | 'deprecated';
+  is_public?: boolean;
+  status?: 'active' | 'inactive' | 'deprecated' | 'archived';
   created_at: string;
   updated_at: string;
   tags?: string[];
