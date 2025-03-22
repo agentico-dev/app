@@ -38,8 +38,6 @@ export function ApiFormController() {
     shouldFetchContent,
     setShouldFetchContent,
     initialValues,
-    activeTab,
-    setActiveTab,
     onSubmit
   } = useApiForm({ applicationId, apiId });
 
@@ -78,8 +76,6 @@ export function ApiFormController() {
                   organizationSlug={organization?.slug}
                   apiVersion={form.watch('version')}
                   apiSlug={initialValues?.slug}
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
                   apiId={apiId}
                 />
               </form>

@@ -1,2 +1,0 @@
-
-export { FormTabs } from './FormTabs';

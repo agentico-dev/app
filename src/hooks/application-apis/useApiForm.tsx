@@ -44,7 +44,6 @@ export function useApiForm({ applicationId, apiId }: UseApiFormProps) {
   const [sourceType, setSourceType] = useState<'uri' | 'content'>('uri');
   const [codeLanguage, setCodeLanguage] = useState<'json' | 'yaml'>('json');
   const [shouldFetchContent, setShouldFetchContent] = useState(false);
-  const [activeTab, setActiveTab] = useState('details');
   
   // Get API data from the useApplicationApis hook
   const { 
@@ -201,8 +200,6 @@ export function useApiForm({ applicationId, apiId }: UseApiFormProps) {
     shouldFetchContent,
     setShouldFetchContent,
     initialValues,
-    activeTab,
-    setActiveTab,
     onSubmit,
     isContentLoading
   };

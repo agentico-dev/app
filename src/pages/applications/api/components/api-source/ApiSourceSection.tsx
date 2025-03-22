@@ -51,10 +51,11 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
     }
   }
 
-  // Watch for relevant changes to determine when to generate URN
+  // Watch form values
   const sourceUri = form.watch('source_uri');
   const sourceContent = form.watch('source_content');
   const apiName = form.watch('name');
+  const apiVersionFromForm = form.watch('version');
 
   // Check URI and source modes when values change
   React.useEffect(() => {
@@ -79,7 +80,7 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
         (!sourceUri || !sourceUri.startsWith('urn:'))) {
       
       // Get the current version from form or use default
-      const currentVersion = form.watch('version') || apiVersion;
+      const currentVersion = apiVersionFromForm || apiVersion;
       
       // Generate the URN
       generateURN(form, apiSlug, organizationSlug, applicationSlug, currentVersion);
@@ -90,12 +91,13 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
     sourceType, 
     sourceContent, 
     apiName, // Also regenerate if name changes (since it impacts the URN)
-    form.watch('version'), // Also regenerate if version changes
+    apiVersionFromForm, // Also regenerate if version changes
     sourceUri,
     apiSlug, 
     organizationSlug, 
     applicationSlug, 
-    apiVersion
+    apiVersion,
+    form // Include form in dependencies for consistency
   ]);
 
   return (
