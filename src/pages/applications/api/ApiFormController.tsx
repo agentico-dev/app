@@ -18,8 +18,10 @@ export function ApiFormController() {
   const application = applications?.find(app => app.id === applicationId);
   
   // Get organization data
-  const { organizations } = useOrganizations();
-  const organization = organizations.find(org => 
+  const { organizations, isLoading: isOrgLoading } = useOrganizations();
+  
+  // Add a null check before using find on organizations array
+  const organization = organizations?.find(org => 
     application?.organization_id ? org.id === application.organization_id : false
   );
   
@@ -41,6 +43,9 @@ export function ApiFormController() {
     onSubmit
   } = useApiForm({ applicationId, apiId });
 
+  // The combined loading state includes both applications and organizations
+  const isLoading = isAppLoading || isOrgLoading;
+
   return (
     <ErrorBoundary>
       <Card>
@@ -52,7 +57,7 @@ export function ApiFormController() {
         </CardHeader>
         <CardContent>
           <ApiFormStatus 
-            isLoading={isApiLoading || isAppLoading}
+            isLoading={isLoading || isApiLoading}
             error={apiError}
             applicationMissing={!application}
           />
