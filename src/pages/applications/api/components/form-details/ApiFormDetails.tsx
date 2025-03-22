@@ -47,6 +47,10 @@ export function ApiFormDetails({
   apiSlug,
   onCancel
 }: ApiFormDetailsProps) {
+  // Watch form values for changes to pass to ApiSourceSection
+  const formVersion = form.watch('version');
+  const currentApiVersion = formVersion || apiVersion || '1.0.0';
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -162,7 +166,7 @@ export function ApiFormDetails({
           setShouldFetchContent={setShouldFetchContent}
           applicationSlug={applicationSlug}
           organizationSlug={organizationSlug}
-          apiVersion={apiVersion}
+          apiVersion={currentApiVersion}
           apiSlug={apiSlug}
         />
       </div>

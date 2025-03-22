@@ -51,34 +51,51 @@ export const ApiSourceSection: React.FC<ApiSourceSectionProps> = ({
     }
   }
 
+  // Watch for relevant changes to determine when to generate URN
+  const sourceUri = form.watch('source_uri');
+  const sourceContent = form.watch('source_content');
+  const apiName = form.watch('name');
+
   // Check URI and source modes when values change
   React.useEffect(() => {
-    const currentUri = form.getValues('source_uri');
-    setIsUriValid(isValidUri(currentUri));
+    // Check URI validity
+    setIsUriValid(isValidUri(sourceUri));
     
     // Check if we're in URI mode
-    const uriValue = form.getValues('source_uri');
-    const newIsUriMode = uriValue && !uriValue.startsWith('urn:') ? true : false;
+    const newIsUriMode = sourceUri && !sourceUri.startsWith('urn:') ? true : false;
     setIsUriMode(newIsUriMode);
     
     // Check if we're in content mode
-    const contentValue = form.getValues('source_content');
-    const newIsContentMode = contentValue && contentValue.length > 0 ? true : false;
+    const newIsContentMode = sourceContent && sourceContent.length > 0 ? true : false;
     setIsContentMode(newIsContentMode);
-    
-    // Generate URN if needed
-    if (sourceType === 'content' && newIsContentMode && (!uriValue || !uriValue.startsWith('urn:'))) {
-      generateURN(form, apiSlug, organizationSlug, applicationSlug, apiVersion);
+  }, [sourceUri, sourceContent]);
+
+  // Generate URN when in content mode and content exists
+  React.useEffect(() => {
+    // Only generate URN when in content mode, content exists, and either no URI exists or it's not already a URN
+    if (sourceType === 'content' && 
+        sourceContent && 
+        sourceContent.length > 0 && 
+        (!sourceUri || !sourceUri.startsWith('urn:'))) {
+      
+      // Get the current version from form or use default
+      const currentVersion = form.watch('version') || apiVersion;
+      
+      // Generate the URN
+      generateURN(form, apiSlug, organizationSlug, applicationSlug, currentVersion);
+      
+      console.log('Generated URN based on content change');
     }
   }, [
-    form.watch('source_uri'), 
-    form.watch('source_content'),
     sourceType, 
+    sourceContent, 
+    apiName, // Also regenerate if name changes (since it impacts the URN)
+    form.watch('version'), // Also regenerate if version changes
+    sourceUri,
     apiSlug, 
     organizationSlug, 
     applicationSlug, 
-    apiVersion,
-    form
+    apiVersion
   ]);
 
   return (
