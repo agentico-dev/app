@@ -29,6 +29,7 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "adrian@rebelion.la"
+          git remote set-url origin https://x-access-token:${{ secrets.ACTIONS_TOKEN }}@github.com/agentico-dev/app
 
       - name: Deploy to GitHub Pages
         run: npm run deploy
