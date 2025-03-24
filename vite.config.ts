@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -30,7 +29,8 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('node_modules/react') || 
               id.includes('node_modules/react-dom') || 
               id.includes('node_modules/scheduler') ||
-              id.includes('node_modules/use-sync-external-store')) {
+              id.includes('node_modules/use-sync-external-store') ||
+              id.includes('node_modules/@tanstack/react-query')) {
             return 'react-vendor';
           }
           
