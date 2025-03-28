@@ -4,6 +4,7 @@
 
 # dotenv environment variable files
 .env*
+**/.env*
 
 # Logs
 logs
