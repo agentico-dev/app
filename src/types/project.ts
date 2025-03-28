@@ -1,6 +1,9 @@
 
 export interface Project {
   id: string;
+  slug: string;
+  organization_id: string;
+  is_public: boolean;
   name: string;
   description: string | null;
   tools_count?: number;

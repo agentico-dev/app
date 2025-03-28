@@ -102,6 +102,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
       <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
+      <Route path="/index" element={<LandingPage />} />
 
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<Dashboard />} />
@@ -124,12 +125,12 @@ const AppRoutes = () => {
         <Route path="/projs/:orgSlug@:projSlug" element={<Navigate to={`/projects/${useParams().orgSlug}@${useParams().projSlug}`} replace />} />
 
         <Route path="/applications" element={<ApplicationsPage />} />
-        <Route path="/apps" element={<Navigate to="/applications" replace />} />
         <Route path="/applications/new" element={<AuthenticatedRoute><NewApplicationPage /></AuthenticatedRoute>} />
-        <Route path="/apps/new" element={<Navigate to="/applications/new" replace />} />
 
-        <Route path="/applications/:id" element={<AuthenticatedRoute><ApplicationDetailPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug" element={<AuthenticatedRoute><ApplicationDetailPage /></AuthenticatedRoute>} />
+        <Route path="/apps" element={<Navigate to="/applications" replace />} />
+        <Route path="/apps/new" element={<Navigate to="/applications/new" replace />} />
+        <Route path="/applications/:id" element={<AuthenticatedRoute><ApplicationDetailPage /></AuthenticatedRoute>} />
 
         <Route path="/applications/:applicationId/apis/new" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/apis/new" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />

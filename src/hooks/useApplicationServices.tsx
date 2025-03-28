@@ -1,39 +1,48 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import type { ApplicationService } from '@/types/application';
 
-export function useApplicationServices(applicationId?: string) {
+export function useApplicationServices(applicationId?: string, apiId?: string) {
   const { session } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const isAuthenticated = !!session.user;
+  const isAuthenticated = !!session?.user;
 
-  // Fetch all services for an application
+  // Fetch all services for an application or a specific API
   const { data: services, isLoading, error } = useQuery({
-    queryKey: ['application-services', applicationId],
+    queryKey: ['application-services', applicationId, apiId],
     queryFn: async () => {
-      if (!applicationId) return [];
+      // If neither applicationId nor apiId is provided, return empty array
+      if (!applicationId && !apiId) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('application_services')
-        .select('*')
-        .eq('application_id', applicationId)
-        .order('created_at', { ascending: false });
+        .select('*');
+      
+      // If apiId is provided, filter by api_id
+      if (apiId) {
+        query = query.eq('api_id', apiId);
+      } 
+      // Otherwise, if only applicationId is provided, filter by application_id
+      else if (applicationId) {
+        query = query.eq('application_id', applicationId);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
       
       if (error) throw error;
       return data as ApplicationService[];
     },
-    enabled: !!applicationId,
+    enabled: !!(applicationId || apiId),
   });
 
   // Create a new service
   const createService = useMutation({
     mutationFn: async (serviceData: Partial<ApplicationService>) => {
-      if (!session.user) throw new Error('Authentication required');
+      if (!session?.user) throw new Error('Authentication required');
       
       const { data, error } = await supabase
         .from('application_services')
@@ -41,9 +50,13 @@ export function useApplicationServices(applicationId?: string) {
           name: serviceData.name,
           description: serviceData.description,
           application_id: serviceData.application_id,
+          api_id: serviceData.api_id,
           status: serviceData.status || 'active',
           service_type: serviceData.service_type,
           tags: serviceData.tags || [],
+          method: serviceData.method,
+          path: serviceData.path,
+          summary: serviceData.summary,
         })
         .select()
         .single();
@@ -51,8 +64,15 @@ export function useApplicationServices(applicationId?: string) {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['application-services', applicationId] });
+    onSuccess: (_, variables) => {
+      // Invalidate both application and API queries
+      if (variables.application_id) {
+        queryClient.invalidateQueries({ queryKey: ['application-services', variables.application_id] });
+      }
+      if (variables.api_id) {
+        queryClient.invalidateQueries({ queryKey: ['application-services', applicationId, variables.api_id] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['application-services'] });
       toast({
         title: 'Service created',
         description: 'The service has been created successfully.',
@@ -70,7 +90,7 @@ export function useApplicationServices(applicationId?: string) {
   // Update a service
   const updateService = useMutation({
     mutationFn: async ({ id, ...data }: Partial<ApplicationService> & { id: string }) => {
-      if (!session.user) throw new Error('Authentication required');
+      if (!session?.user) throw new Error('Authentication required');
       
       const { data: updatedService, error } = await supabase
         .from('application_services')
@@ -79,7 +99,11 @@ export function useApplicationServices(applicationId?: string) {
           description: data.description,
           status: data.status,
           service_type: data.service_type,
+          api_id: data.api_id,
           tags: data.tags,
+          method: data.method,
+          path: data.path,
+          summary: data.summary,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -89,8 +113,15 @@ export function useApplicationServices(applicationId?: string) {
       if (error) throw error;
       return updatedService;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['application-services', applicationId] });
+    onSuccess: (data) => {
+      // Invalidate both application and API queries
+      if (data.application_id) {
+        queryClient.invalidateQueries({ queryKey: ['application-services', data.application_id] });
+      }
+      if (data.api_id) {
+        queryClient.invalidateQueries({ queryKey: ['application-services', applicationId, data.api_id] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['application-services'] });
       toast({
         title: 'Service updated',
         description: 'The service has been updated successfully.',
@@ -108,7 +139,7 @@ export function useApplicationServices(applicationId?: string) {
   // Delete a service
   const deleteService = useMutation({
     mutationFn: async (id: string) => {
-      if (!session.user) throw new Error('Authentication required');
+      if (!session?.user) throw new Error('Authentication required');
       
       const { error } = await supabase
         .from('application_services')
@@ -118,8 +149,15 @@ export function useApplicationServices(applicationId?: string) {
       if (error) throw error;
       return id;
     },
-    onSuccess: (id) => {
-      queryClient.invalidateQueries({ queryKey: ['application-services', applicationId] });
+    onSuccess: (_, id) => {
+      // Invalidate both application and API queries
+      if (applicationId) {
+        queryClient.invalidateQueries({ queryKey: ['application-services', applicationId] });
+      }
+      if (apiId) {
+        queryClient.invalidateQueries({ queryKey: ['application-services', applicationId, apiId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['application-services'] });
       toast({
         title: 'Service deleted',
         description: 'The service has been deleted successfully.',

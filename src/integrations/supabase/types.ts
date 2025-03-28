@@ -91,7 +91,8 @@ export type Database = {
           is_public: boolean | null
           name: string
           protocol: string | null
-          source_content: string | null
+          slug: string | null
+          source_content: Json | null
           source_uri: string | null
           status: string | null
           tags: string[] | null
@@ -107,7 +108,8 @@ export type Database = {
           is_public?: boolean | null
           name: string
           protocol?: string | null
-          source_content?: string | null
+          slug?: string | null
+          source_content?: Json | null
           source_uri?: string | null
           status?: string | null
           tags?: string[] | null
@@ -123,7 +125,8 @@ export type Database = {
           is_public?: boolean | null
           name?: string
           protocol?: string | null
-          source_content?: string | null
+          slug?: string | null
+          source_content?: Json | null
           source_uri?: string | null
           status?: string | null
           tags?: string[] | null
@@ -188,7 +191,7 @@ export type Database = {
           id: string
           message_type: string | null
           name: string
-          schema: string | null
+          schema: Json | null
           service_id: string | null
           updated_at: string | null
         }
@@ -198,7 +201,7 @@ export type Database = {
           id?: string
           message_type?: string | null
           name: string
-          schema?: string | null
+          schema?: Json | null
           service_id?: string | null
           updated_at?: string | null
         }
@@ -208,7 +211,7 @@ export type Database = {
           id?: string
           message_type?: string | null
           name?: string
-          schema?: string | null
+          schema?: Json | null
           service_id?: string | null
           updated_at?: string | null
         }
@@ -280,7 +283,6 @@ export type Database = {
           is_public: boolean | null
           name: string
           organization_id: string | null
-          project_id: string | null
           slug: string
           status: string | null
           tags: string[] | null
@@ -298,7 +300,6 @@ export type Database = {
           is_public?: boolean | null
           name: string
           organization_id?: string | null
-          project_id?: string | null
           slug: string
           status?: string | null
           tags?: string[] | null
@@ -316,7 +317,6 @@ export type Database = {
           is_public?: boolean | null
           name?: string
           organization_id?: string | null
-          project_id?: string | null
           slug?: string
           status?: string | null
           tags?: string[] | null
@@ -332,11 +332,57 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      notifications: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          notification_type: string
+          organization_id: string | null
+          related_resource_id: string | null
+          resource_id: string
+          resource_type: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          notification_type?: string
+          organization_id?: string | null
+          related_resource_id?: string | null
+          resource_id: string
+          resource_type: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          notification_type?: string
+          organization_id?: string | null
+          related_resource_id?: string | null
+          resource_id?: string
+          resource_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "applications_project_id_fkey"
-            columns: ["project_id"]
+            foreignKeyName: "notifications_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: "projects"
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -416,7 +462,6 @@ export type Database = {
           description: string | null
           features: Json
           id: string
-          interval: "monthly" | "quarterly" | "yearly"
           name: string
           price: number
           updated_at: string
@@ -427,7 +472,6 @@ export type Database = {
           description?: string | null
           features?: Json
           id?: string
-          interval: "monthly" | "quarterly" | "yearly"
           name: string
           price: number
           updated_at?: string
@@ -438,7 +482,6 @@ export type Database = {
           description?: string | null
           features?: Json
           id?: string
-          interval?: "monthly" | "quarterly" | "yearly"
           name?: string
           price?: number
           updated_at?: string
@@ -477,6 +520,78 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      project_applications: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_applications_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_applications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_tools: {
+        Row: {
+          ai_tool_id: string
+          created_at: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          ai_tool_id: string
+          created_at?: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          ai_tool_id?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tools_ai_tool_id_fkey"
+            columns: ["ai_tool_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_tools_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projects: {
         Row: {

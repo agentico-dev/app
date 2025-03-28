@@ -22,11 +22,13 @@ import { ApplicationService } from '@/types/application';
 
 interface ServicesListProps {
   applicationId: string;
+  apiId?: string;
 }
 
-export default function ServicesList({ applicationId }: ServicesListProps) {
+export default function ServicesList({ applicationId, apiId }: ServicesListProps) {
   const navigate = useNavigate();
-  const { services, isLoading, error, deleteService } = useApplicationServices(applicationId);
+  // Pass both params to get the right services
+  const { services, isLoading, error, deleteService } = useApplicationServices(applicationId, apiId);
   const [searchTerm, setSearchTerm] = useState('');
   const [serviceToDelete, setServiceToDelete] = useState<ApplicationService | null>(null);
 
@@ -142,7 +144,7 @@ export default function ServicesList({ applicationId }: ServicesListProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate(`/applications/${applicationId}/services/${service.id}`)}
+                  onClick={() => navigate(`/applications/${applicationId}/services/${service.id}${apiId ? `?api_id=${apiId}` : ''}`)}
                 >
                   <Edit className="h-4 w-4 mr-1" /> Edit
                 </Button>
@@ -163,7 +165,7 @@ export default function ServicesList({ applicationId }: ServicesListProps) {
           <p className="text-muted-foreground mb-4">
             {searchTerm ? "No services match your search criteria." : "This application doesn't have any services yet."}
           </p>
-          <Button onClick={() => navigate(`/applications/${applicationId}/services/new`)}>
+          <Button onClick={() => navigate(`/applications/${applicationId}/services/new${apiId ? `?api_id=${apiId}` : ''}`)}>
             Create your first service
           </Button>
         </div>

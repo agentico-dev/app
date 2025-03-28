@@ -1,18 +1,14 @@
 
 import { UseFormReturn } from 'react-hook-form';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { ApplicationAPI } from '@/types/application';
-import { ApiSourceSection } from './ApiSourceSection';
-import TagsSelector from '@/components/applications/TagSelector';
+import { useNavigate } from 'react-router';
+import { ApiFormDetails } from './form-details';
+import ApiServicesList from './ApiServicesList';
+import ApiMessagesList from './ApiMessagesList';
+import { ApiFormValues } from '@/hooks/application-apis/useApiForm';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface ApiFormProps {
-  form: UseFormReturn<Partial<ApplicationAPI> & { fetchContent?: boolean }>;
-  onSubmit: (data: Partial<ApplicationAPI>) => Promise<void>;
+  form: UseFormReturn<ApiFormValues>;
   isSubmitting: boolean;
   isNew: boolean;
   applicationId: string;
@@ -23,11 +19,17 @@ interface ApiFormProps {
   onFetchContent?: () => void;
   shouldFetchContent?: boolean;
   setShouldFetchContent?: (value: boolean) => void;
+  applicationSlug?: string;
+  organizationSlug?: string;
+  apiVersion?: string;
+  apiSlug?: string;
+  activeTab?: string;
+  setActiveTab?: (tab: string) => void;
+  apiId?: string;
 }
 
 export function ApiForm({
   form,
-  onSubmit,
   isSubmitting,
   isNew,
   applicationId,
@@ -37,110 +39,32 @@ export function ApiForm({
   setCodeLanguage,
   onFetchContent,
   shouldFetchContent,
-  setShouldFetchContent
+  setShouldFetchContent,
+  applicationSlug,
+  organizationSlug,
+  apiVersion,
+  apiSlug,
+  activeTab = 'details',
+  setActiveTab,
+  apiId
 }: ApiFormProps) {
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>API Name *</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter API name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="version"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>API Version</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. 1.0, v2, etc." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+  const navigate = useNavigate();
+  
+  // Determine if we should show the services and messages tabs
+  const hasSourceContent = form.watch('source_content') ? true : false;
 
-      <FormField
-        control={form.control}
-        name="description"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Description</FormLabel>
-            <FormControl>
-              <Textarea 
-                placeholder="Describe the purpose and functionality of this API"
-                className="min-h-[100px]"
-                {...field} 
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+  const handleCancel = () => {
+    navigate(`/applications/${applicationId}`);
+  };
 
-      <FormField
-        control={form.control}
-        name="status"
-        render={({ field }) => (
-          <FormItem className="space-y-3">
-            <FormLabel>Status</FormLabel>
-            <FormControl>
-              <RadioGroup
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                value={field.value}
-                className="flex flex-col space-y-1"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="active" id="active" />
-                  <Label htmlFor="active">Active</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="inactive" id="inactive" />
-                  <Label htmlFor="inactive">Inactive</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="deprecated" id="deprecated" />
-                  <Label htmlFor="deprecated">Deprecated</Label>
-                </div>
-              </RadioGroup>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="tags"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Tags</FormLabel>
-            <FormControl>
-              <TagsSelector
-                selectedTags={field.value || []}
-                onChange={field.onChange}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <div className="space-y-4">
-        <ApiSourceSection
+  // For new APIs, just show the form details
+  if (isNew) {
+    return (
+      <div>
+        <ApiFormDetails
           form={form}
+          isSubmitting={isSubmitting}
+          isNew={isNew}
           sourceType={sourceType}
           setSourceType={setSourceType}
           codeLanguage={codeLanguage}
@@ -148,25 +72,58 @@ export function ApiForm({
           onFetchContent={onFetchContent}
           shouldFetchContent={shouldFetchContent}
           setShouldFetchContent={setShouldFetchContent}
+          applicationSlug={applicationSlug}
+          organizationSlug={organizationSlug}
+          apiVersion={apiVersion}
+          apiSlug={apiSlug}
+          onCancel={handleCancel}
         />
       </div>
+    );
+  }
 
-      <div className="flex justify-end space-x-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            // Navigate back to application page without saving
-            window.history.back();
-          }}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : isNew ? 'Create API' : 'Update API'}
-        </Button>
-      </div>
-    </form>
+  // For existing APIs, show the tabs
+  return (
+    <div className="space-y-6">
+      <Tabs 
+        defaultValue={activeTab} 
+        onValueChange={setActiveTab ? setActiveTab : () => {}}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="details">API Details</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
+          <TabsTrigger value="messages">Messages</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="details" className="pt-4">
+          <ApiFormDetails
+            form={form}
+            isSubmitting={isSubmitting}
+            isNew={isNew}
+            sourceType={sourceType}
+            setSourceType={setSourceType}
+            codeLanguage={codeLanguage}
+            setCodeLanguage={setCodeLanguage}
+            onFetchContent={onFetchContent}
+            shouldFetchContent={shouldFetchContent}
+            setShouldFetchContent={setShouldFetchContent}
+            applicationSlug={applicationSlug}
+            organizationSlug={organizationSlug}
+            apiVersion={apiVersion}
+            apiSlug={apiSlug}
+            onCancel={handleCancel}
+          />
+        </TabsContent>
+        
+        <TabsContent value="services" className="pt-4">
+          <ApiServicesList apiId={apiId} applicationId={applicationId} />
+        </TabsContent>
+        
+        <TabsContent value="messages" className="pt-4">
+          <ApiMessagesList apiId={apiId} applicationId={applicationId} />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

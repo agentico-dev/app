@@ -4,11 +4,9 @@ import { useParams, useNavigate } from 'react-router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, PlusCircle, Settings, Code, MessageSquare } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Settings, Code } from 'lucide-react';
 import { useApplication } from '@/hooks/useApplications';
 import APIsList from '@/components/applications/APIsList';
-import ServicesList from '@/components/applications/ServicesList';
-import MessagesList from '@/components/applications/MessagesList';
 import ApplicationSettings from '@/components/applications/ApplicationSettings';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
@@ -115,15 +113,9 @@ export default function ApplicationDetailPage() {
           </div>
           
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-4 w-full max-w-md">
+            <TabsList className="grid grid-cols-2 w-full max-w-md">
               <TabsTrigger value="apis">
                 <Code className="h-4 w-4 mr-2" /> APIs
-              </TabsTrigger>
-              <TabsTrigger value="services">
-                <Settings className="h-4 w-4 mr-2" /> Services
-              </TabsTrigger>
-              <TabsTrigger value="messages">
-                <MessageSquare className="h-4 w-4 mr-2" /> Messages
               </TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
@@ -142,38 +134,6 @@ export default function ApplicationDetailPage() {
                 </Button>
               </div>
               <APIsList applicationId={application.id} />
-            </TabsContent>
-            
-            <TabsContent value="services" className="space-y-4 mt-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Application Services</h2>
-                <Button onClick={() => {
-                  if (orgSlug && appSlug) {
-                    navigate(`/apps/${orgSlug}@${appSlug}/services/new`);
-                  } else if (id) {
-                    navigate(`/applications/${id}/services/new`);
-                  }
-                }}>
-                  <PlusCircle className="h-4 w-4 mr-2" /> New Service
-                </Button>
-              </div>
-              <ServicesList applicationId={application.id} />
-            </TabsContent>
-            
-            <TabsContent value="messages" className="space-y-4 mt-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Application Messages</h2>
-                <Button onClick={() => {
-                  if (orgSlug && appSlug) {
-                    navigate(`/apps/${orgSlug}@${appSlug}/messages/new`);
-                  } else if (id) {
-                    navigate(`/applications/${id}/messages/new`);
-                  }
-                }}>
-                  <PlusCircle className="h-4 w-4 mr-2" /> New Message
-                </Button>
-              </div>
-              <MessagesList applicationId={application.id} />
             </TabsContent>
             
             <TabsContent value="settings" className="space-y-4 mt-4">

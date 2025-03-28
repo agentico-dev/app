@@ -24,6 +24,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+        # Git configuration
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git remote set-url origin git:${{ secrets.GITHUB_TOKEN }}@github.com/agentico-dev/app.git
+
       - name: Deploy to GitHub Pages
         run: npm run deploy
         env:

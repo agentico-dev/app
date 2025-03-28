@@ -93,7 +93,9 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
             )}
           </div>
           <CardDescription className="mt-1">
-            {application.description}
+            {application.description?.length > 150
+              ? `${application.description.slice(0, 150)}...`
+              : application.description}
           </CardDescription>
         </div>
       </CardHeader>

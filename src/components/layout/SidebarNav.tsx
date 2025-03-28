@@ -87,7 +87,7 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-14 items-center border-b border-sidebar-border px-4">
-        <Link to="/" className="flex items-center space-x-2">
+        <Link to="/index" className="flex items-center space-x-2">
           <img src="/favicon-32x32.png" alt="Agentico" className="h-6 w-6" />
           <span>Agentico <small style={{ fontSize: '8px' }}>{import.meta.env.VITE_REACT_APP_VERSION}</small></span>
         </Link>

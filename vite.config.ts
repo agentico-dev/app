@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -9,7 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    allowedHosts: [".agentico.dev", ".lovable.app"],
+    allowedHosts: [".agentico.dev", ".lovable.app", ".lovableproject.com"],
   },
   plugins: [
     react(),
@@ -26,11 +25,19 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Core React packages
+          // React and core dependencies - ensure React always stays together
           if (id.includes('node_modules/react') || 
               id.includes('node_modules/react-dom') || 
-              id.includes('node_modules/react-router-dom')) {
+              id.includes('node_modules/scheduler') ||
+              id.includes('node_modules/use-sync-external-store') ||
+              id.includes('node_modules/@tanstack/react-query')) {
             return 'react-vendor';
+          }
+          
+          // Router-related
+          if (id.includes('node_modules/react-router') ||
+              id.includes('node_modules/@remix-run')) {
+            return 'router';
           }
           
           // UI components from Radix
@@ -46,9 +53,13 @@ export default defineConfig(({ mode }) => ({
           }
           
           // Data management libraries
-          if (id.includes('node_modules/@tanstack/react-query') || 
-              id.includes('node_modules/@supabase/supabase-js')) {
-            return 'data-management';
+          if (id.includes('node_modules/@tanstack/react-query')) {
+            return 'react-query';
+          }
+
+          // Supabase
+          if (id.includes('node_modules/@supabase/supabase-js')) {
+            return 'supabase';
           }
           
           // Charting libraries

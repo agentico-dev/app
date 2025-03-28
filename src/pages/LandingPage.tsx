@@ -19,22 +19,22 @@ export default function LandingPage() {
   const features = [
     {
       title: 'Quick MCP Server Setup',
-      description: 'Spin up an MCP-compliant server in minutes, not days.',
+      description: 'Spin up an MCP-compliant server based on Intent and Context.',
       icon: <ServerCrash className="h-10 w-10 text-primary" />
     },
     {
       title: 'Standardized Implementation',
-      description: 'Ensure compatibility between servers and tools with our framework.',
+      description: 'Ensure compatibility across different Server and Tool implementations, no matter the vendor/ISV.',
       icon: <Code className="h-10 w-10 text-primary" />
     },
     {
       title: 'Simplified Complexity',
-      description: 'Eliminate unnecessary backend complexity to focus on building AI applications.',
+      description: 'Eliminate scaffolding and unnecessary complexity to focus on building the AI applications logic.',
       icon: <Layers className="h-10 w-10 text-primary" />
     },
     {
       title: 'Developer-First Approach',
-      description: 'Built by developers, for developers, keeping humans in control.',
+      description: 'Built by developers, for developers, keeping humans in control with standardized tools.',
       icon: <Users className="h-10 w-10 text-primary" />
     },
     {
@@ -64,10 +64,10 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/register">
                 <Button size="lg" className="w-full sm:w-auto">
-                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
+                  Try Agentico for Free 𝑔𝑒𝑡 𝑠𝑡𝑎𝑟𝑡𝑒𝑑 𝑛𝑜𝑤 <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Link to="/login">
+              <Link to="/">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto bg-white/10 hover:bg-white/20">
                   Sign In
                 </Button>
@@ -106,7 +106,7 @@ server.listen(3000);
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-6">The Problem with MCP Today</h2>
             <p className="text-lg mb-6">
-              The Model Context Protocol (MCP) is reshaping AI integrations, but its server-side implementation lacks standardization, making adoption difficult and time-consuming.
+              The Model Context Protocol (MCP) is reshaping AI integrations, but the MCP-servers implementation lacks standardization, making adoption cumbersome and time-consuming.
             </p>
             <p className="text-lg">
               Developers need a clear, structured approach to simplify implementation and ensure scalability and maintainability. Without standards, we're creating chaos instead of innovation.
@@ -167,7 +167,7 @@ server.listen(3000);
               <span className="font-semibold text-lg">Agentico</span>
             </div>
             <div className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} Agentico. Building the future of standardized MCP.
+              &copy; {new Date().getFullYear()} Agentico by <a href='https://rebelion.la' >La Rebelion Labs</a>. Building the future of standardized AI.
             </div>
           </div>
         </div>

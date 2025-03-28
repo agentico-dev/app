@@ -11,7 +11,7 @@ interface ServerTabsProps {
 export function ServerTabs({ server }: ServerTabsProps) {
   return (
     <ResourceTabs
-      defaultTab="overview"
+      defaultTab="ai-tools"
       tabs={[
         {
           value: 'overview',
@@ -26,13 +26,13 @@ export function ServerTabs({ server }: ServerTabsProps) {
         {
           value: 'applications',
           label: 'Applications',
-          description: 'Applications deployed on this server',
+          description: 'Applications associated with this server',
           content: (
             <div className="text-center p-6">
               <AppWindow className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No Applications</h3>
               <p className="text-muted-foreground mb-4">
-                There are no applications deployed on this server yet.
+                There are no applications associated with this server yet.
               </p>
               <Button>Deploy Application</Button>
             </div>

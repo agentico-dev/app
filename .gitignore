@@ -1,5 +1,9 @@
 # custom
 *.ignoreme.*
+.ignoreme.*/**
+
+# dotenv environment variable files
+.env*
 
 # Logs
 logs
@@ -25,3 +29,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+

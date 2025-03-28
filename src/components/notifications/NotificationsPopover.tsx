@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bell } from 'lucide-react';
+import { Bell, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,90 +9,27 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { useAuth } from '@/hooks/useAuth';
 import { format, formatDistanceToNow } from 'date-fns';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  read: boolean;
-  created_at: string;
-}
-
-// Mock data for notifications
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    title: 'New Project Created',
-    message: 'Your project "Customer Support Bot" was created successfully',
-    type: 'success',
-    read: false,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-  },
-  {
-    id: '2',
-    title: 'Server Restart',
-    message: 'Server "NLP-Processor-01" was restarted',
-    type: 'info',
-    read: false,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
-  },
-  {
-    id: '3',
-    title: 'Update Available',
-    message: 'A new version of the application is available',
-    type: 'warning',
-    read: true,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), // 8 hours ago
-  },
-  {
-    id: '4',
-    title: 'Deployment Failed',
-    message: 'Deployment of "Content Generation System" failed',
-    type: 'error',
-    read: true,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-  },
-];
+import { Skeleton } from '@/components/ui/skeleton';
+import { useNavigate } from 'react-router';
+import { useNotifications } from '@/hooks/notifications';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function NotificationsPopover() {
   const [open, setOpen] = useState(false);
-  const { session } = useAuth();
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  
+  // Use the new notifications hook
+  const { 
+    notifications = [], 
+    unreadNotifications,
+    isLoading,
+    markAsRead,
+    markAllAsRead,
+    isAuthenticated
+  } = useNotifications();
 
-  const { data: notifications = [], isLoading } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: async () => {
-      // Using mock data instead of fetching from Supabase
-      return mockNotifications;
-    },
-  });
-
-  const unreadCount = notifications.filter(notification => !notification.read).length;
-
-  const markAsRead = useMutation({
-    mutationFn: async (notificationId: string) => {
-      // Mock implementation instead of Supabase update
-      console.log(`Marking notification ${notificationId} as read`);
-      // In a real implementation, this would update the database
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    }
-  });
-
-  const markAllAsRead = useMutation({
-    mutationFn: async () => {
-      // Mock implementation instead of Supabase update
-      console.log('Marking all notifications as read');
-      // In a real implementation, this would update the database
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    }
-  });
+  const unreadCount = unreadNotifications?.length || 0;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -108,14 +44,62 @@ export function NotificationsPopover() {
     }
   };
 
+  const navigateToResource = (notification: any) => {
+    if (!notification.resource_id) return;
+    
+    let url = '';
+    
+    switch (notification.resource_type) {
+      case 'project':
+        url = `/projects/${notification.resource_id}`;
+        break;
+      case 'application':
+        url = `/applications/${notification.resource_id}`;
+        break;
+      case 'server':
+        url = `/servers/${notification.resource_id}`;
+        break;
+      case 'tool':
+        url = `/ai-tools/${notification.resource_id}`;
+        break;
+      case 'api':
+        if (notification.related_resource_id) {
+          url = `/applications/${notification.related_resource_id}/apis/${notification.resource_id}`;
+        }
+        break;
+      case 'service':
+        if (notification.related_resource_id) {
+          url = `/applications/${notification.related_resource_id}/services/${notification.resource_id}`;
+        }
+        break;
+      default:
+        console.warn(`Unknown resource type: ${notification.resource_type}`);
+        return;
+    }
+    
+    // Mark as read when navigating
+    if (notification.status === 'unread') {
+      markAsRead.mutate(notification.id);
+    }
+    
+    navigate(url);
+    setOpen(false);
+  };
+
   useEffect(() => {
     if (open && unreadCount > 0) {
-      // Auto-mark as read when opening
-      setTimeout(() => {
-        markAllAsRead.mutate();
-      }, 3000);
+      // Auto-mark as read after a delay when opening
+      const timer = setTimeout(() => {
+        markAllAsRead.mutate({});
+      }, 5000); // 5 seconds delay
+      
+      return () => clearTimeout(timer);
     }
-  }, [open, unreadCount]);
+  }, [open, unreadCount, markAllAsRead]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -140,16 +124,28 @@ export function NotificationsPopover() {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => markAllAsRead.mutate()}
+              onClick={() => markAllAsRead.mutate({})}
               disabled={markAllAsRead.isPending}
             >
+              <Check className="h-3 w-3 mr-1" />
               Mark all as read
             </Button>
           )}
         </div>
         <ScrollArea className="h-80">
           {isLoading ? (
-            <div className="p-4 text-center text-muted-foreground">Loading notifications...</div>
+            <div className="p-4 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-start space-x-4">
+                  <Skeleton className="h-2 w-2 rounded-full" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-2 w-1/4" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : notifications.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">No notifications</div>
           ) : (
@@ -157,16 +153,17 @@ export function NotificationsPopover() {
               {notifications.map((notification) => (
                 <div 
                   key={notification.id} 
-                  className={`p-4 hover:bg-muted/50 cursor-pointer transition-colors ${notification.read ? 'opacity-60' : ''}`}
-                  onClick={() => !notification.read && markAsRead.mutate(notification.id)}
+                  className={`p-4 hover:bg-muted/50 cursor-pointer transition-colors ${notification.status === 'read' ? 'opacity-60' : ''}`}
+                  onClick={() => navigateToResource(notification)}
                 >
                   <div className="flex">
-                    {getNotificationIcon(notification.type)}
+                    {getNotificationIcon(notification.notification_type)}
                     <div className="flex-1">
                       <h4 className="text-sm font-medium">{notification.title}</h4>
-                      <p className="text-sm text-muted-foreground">{notification.message}</p>
+                      <p className="text-sm text-muted-foreground">{notification.content}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                        {notification.created_at && 
+                          formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                       </p>
                     </div>
                   </div>
