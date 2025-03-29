@@ -898,6 +898,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_public_organization: {
+        Args: {
+          org_id: string
+        }
+        Returns: boolean
+      }
       list_organization_members: {
         Args: {
           org_id: string
@@ -910,7 +916,7 @@ export type Database = {
           user_id: string | null
         }[]
       }
-      list_organizations: {
+      list_public_organizations: {
         Args: Record<PropertyKey, never>
         Returns: {
           created_at: string | null

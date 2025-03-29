@@ -16,10 +16,12 @@ import {
   Users,
   X,
   Brain,
+  Zap,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { Badge } from '@/components/ui/badge';
 
 type SidebarNavProps = {
   onClose?: () => void;
@@ -31,12 +33,13 @@ type NavItem = {
   icon: React.ElementType;
   submenu?: NavItem[];
   expanded?: boolean;
+  badge?: string;
 };
 
 export function SidebarNav({ onClose }: SidebarNavProps) {
   const location = useLocation();
-  const { session } = useAuth();
-  const isAuthenticated = !!session.user;
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
 
   const mainNav: NavItem[] = [
     {
@@ -63,6 +66,12 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
       title: 'AI Tools',
       href: '/tools',
       icon: CircuitBoard,
+    },
+    {
+      title: 'Studio',
+      href: '/studio',
+      icon: Zap,
+      badge: 'Pro',
     },
   ];
 
@@ -136,8 +145,8 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
           <div className="text-sm">
             {isAuthenticated && (
               <>
-                <div className="font-medium">{session.user.user_metadata.full_name}</div>
-                <div className="text-sidebar-foreground/60">{session.user.email}</div>
+                <div className="font-medium">{user.user_metadata.full_name}</div>
+                <div className="text-sidebar-foreground/60">{user.email}</div>
               </>
             )
               || (
@@ -173,6 +182,11 @@ function NavLink({ item, active }: NavLinkProps) {
     >
       <item.icon className="h-4 w-4" />
       <span>{item.title}</span>
+      {item.badge && (
+        <Badge variant="outline" className="ml-auto text-xs bg-purple-100 text-purple-800 border-purple-300">
+          {item.badge}
+        </Badge>
+      )}
       {item.submenu && (
         <ChevronRight className="ml-auto h-4 w-4" />
       )}

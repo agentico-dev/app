@@ -13,10 +13,7 @@ interface AuthState {
 }
 
 interface AuthContextType {
-  session: {
-    user: User | null;
-    isLoading: boolean;
-  };
+  session: Session | null;
   user: User | null;
   profile: Profile | null;
   signIn: (provider: string, email?: string, password?: string) => Promise<{ error: any; data: any }>;
@@ -163,10 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider
       value={{
-        session: {
-          user: authState.user,
-          isLoading: authState.loading,
-        },
+        session: authState.session,
         user: authState.user,
         profile: authState.profile,
         signIn,

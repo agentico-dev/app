@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,6 +35,11 @@ const ServiceFormPage = lazy(() => import("./pages/applications/service/ServiceF
 const MessageFormPage = lazy(() => import("./pages/applications/message/MessageFormPage"));
 const ServerDetailPage = lazy(() => import("./pages/servers/ServerDetailPage"));
 
+// Studio pages
+const StudioPage = lazy(() => import("./pages/studio/StudioPage"));
+const StudioNewProjectPage = lazy(() => import("./pages/studio/NewProjectPage"));
+const WorkflowEditorPage = lazy(() => import("./pages/studio/WorkflowEditorPage"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -44,7 +50,7 @@ const queryClient = new QueryClient({
 });
 
 const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
@@ -54,13 +60,13 @@ const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const RedirectIfAuthenticated = ({ children }: { children: React.ReactNode }) => {
-  const { session, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
 
-  if (session.user) {
+  if (user) {
     return <Navigate to="/" replace />;
   }
 
@@ -82,9 +88,9 @@ const RedirectWithSlug: React.FC<RedirectWithSlugProps> = ({ path }) => {
 };
 
 const AppRoutes = () => {
-  const { session } = useAuth();
+  const { user } = useAuth();
 
-  if (!session.user && window.location.pathname === '/') {
+  if (!user && window.location.pathname === '/') {
     return (
       <Routes>
         <Route element={<DashboardLayout />}>
@@ -159,6 +165,11 @@ const AppRoutes = () => {
         <Route path="/tools/new" element={<Navigate to="/ai-tools/new" replace />} />
         <Route path="/ai-tools/:id" element={<AIToolsPage />} />
         <Route path="/tools/:serverSlug@:toolSlug" element={<Navigate to={`/ai-tools/${window.location.pathname.split('/')[2]}`} replace />} />
+
+        {/* Studio Routes */}
+        <Route path="/studio" element={<AuthenticatedRoute><StudioPage /></AuthenticatedRoute>} />
+        <Route path="/studio/new-project" element={<AuthenticatedRoute><StudioNewProjectPage /></AuthenticatedRoute>} />
+        <Route path="/studio/projects/:projectId" element={<AuthenticatedRoute><WorkflowEditorPage /></AuthenticatedRoute>} />
 
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
