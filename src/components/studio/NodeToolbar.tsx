@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NodeToolbar as ReactFlowNodeToolbar, Node, Position } from '@xyflow/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +13,16 @@ interface NodeToolbarProps {
 }
 
 export default function NodeToolbar({ node, setNodes }: NodeToolbarProps) {
-  const [label, setLabel] = useState(node.data.label || '');
-  const [description, setDescription] = useState(node.data.description || '');
+  const [label, setLabel] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+
+  // Initialize state when the node changes
+  useEffect(() => {
+    if (node && node.data) {
+      setLabel(node.data.label || '');
+      setDescription(node.data.description || '');
+    }
+  }, [node]);
 
   const updateNodeData = () => {
     setNodes((nds) =>
@@ -36,28 +44,36 @@ export default function NodeToolbar({ node, setNodes }: NodeToolbarProps) {
   };
 
   const duplicateNode = () => {
-    const nodePosition = { x: node.position.x + 50, y: node.position.y + 50 };
-    
-    setNodes((nds) => [
-      ...nds,
-      {
-        ...node,
-        id: `${node.type}-${Date.now()}`,
-        position: nodePosition,
-      },
-    ]);
-    
-    toast.success('Node duplicated');
+    if (node.data.onClone) {
+      node.data.onClone(node);
+    } else {
+      const nodePosition = { x: node.position.x + 50, y: node.position.y + 50 };
+      
+      setNodes((nds) => [
+        ...nds,
+        {
+          ...node,
+          id: `${node.type}-${Date.now()}`,
+          position: nodePosition,
+        },
+      ]);
+      
+      toast.success('Node duplicated');
+    }
   };
 
   const deleteNode = () => {
-    setNodes((nds) => nds.filter((n) => n.id !== node.id));
-    toast.success('Node deleted');
+    if (node.data.onDelete) {
+      node.data.onDelete(node.id);
+    } else {
+      setNodes((nds) => nds.filter((n) => n.id !== node.id));
+      toast.success('Node deleted');
+    }
   };
 
   return (
     <ReactFlowNodeToolbar
-      node={node}
+      nodeId={node.id}
       position={Position.Top}
       offset={10}
       align="center"

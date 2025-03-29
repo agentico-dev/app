@@ -75,7 +75,12 @@ export function useWorkflowFlow() {
         id: `${type}-${Date.now()}`,
         type,
         position,
-        data: { label: label || `${type.charAt(0).toUpperCase() + type.slice(1)}` },
+        data: { 
+          label: label || `${type.charAt(0).toUpperCase() + type.slice(1)}`,
+          onDelete: deleteNode,
+          onClone: cloneNode,
+          onSettings: selectNodeForEditing
+        },
       };
 
       setNodes((nds) => nds.concat(newNode));
@@ -97,6 +102,46 @@ export function useWorkflowFlow() {
     setIsNodePickerOpen(true);
   }, [reactFlowInstance]);
 
+  // Delete a node
+  const deleteNode = useCallback((nodeId: string) => {
+    setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+    if (selectedNode && selectedNode.id === nodeId) {
+      setSelectedNode(null);
+    }
+    toast.success('Node deleted');
+  }, [selectedNode, setNodes]);
+
+  // Clone a node
+  const cloneNode = useCallback((node: Node) => {
+    if (!node || !node.position) return;
+    
+    // Create a new position slightly offset from the original
+    const newPosition = {
+      x: node.position.x + 50,
+      y: node.position.y + 50,
+    };
+    
+    const newNode: Node = {
+      ...node,
+      id: `${node.type}-${Date.now()}`,
+      position: newPosition,
+      data: {
+        ...node.data,
+        onDelete: deleteNode,
+        onClone: cloneNode,
+        onSettings: selectNodeForEditing
+      },
+    };
+    
+    setNodes((nds) => [...nds, newNode]);
+    toast.success('Node cloned');
+  }, [setNodes]);
+
+  // Select a node for editing
+  const selectNodeForEditing = useCallback((node: Node) => {
+    setSelectedNode(node);
+  }, []);
+
   // Add a node from the toolbar
   const handleAddNodeFromToolbar = useCallback((type: NodeType, label: string) => {
     if (!reactFlowInstance) return;
@@ -111,11 +156,16 @@ export function useWorkflowFlow() {
       id: `${type}-${Date.now()}`,
       type,
       position: viewportCenter,
-      data: { label },
+      data: { 
+        label,
+        onDelete: deleteNode,
+        onClone: cloneNode,
+        onSettings: selectNodeForEditing
+      },
     };
     
     setNodes((nds) => nds.concat(newNode));
-  }, [reactFlowInstance, setNodes]);
+  }, [reactFlowInstance, setNodes, deleteNode, cloneNode, selectNodeForEditing]);
 
   // Add a node from the node picker
   const handleNodeAdd = useCallback((type: string, label: string) => {
@@ -123,12 +173,17 @@ export function useWorkflowFlow() {
       id: `${type}-${Date.now()}`,
       type,
       position: nodePickerPosition,
-      data: { label },
+      data: { 
+        label,
+        onDelete: deleteNode,
+        onClone: cloneNode,
+        onSettings: selectNodeForEditing
+      },
     };
     
     setNodes((nds) => nds.concat(newNode));
     setIsNodePickerOpen(false);
-  }, [nodePickerPosition, setNodes]);
+  }, [nodePickerPosition, setNodes, deleteNode, cloneNode, selectNodeForEditing]);
 
   // Save workflow
   const saveWorkflow = useCallback((workflowName: string) => {
@@ -153,6 +208,9 @@ export function useWorkflowFlow() {
     onAddNode,
     selectedNode,
     setSelectedNode,
+    deleteNode,
+    cloneNode,
+    selectNodeForEditing,
     reactFlowInstance,
     setReactFlowInstance,
     isNodePickerOpen,

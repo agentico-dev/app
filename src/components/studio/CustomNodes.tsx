@@ -8,11 +8,10 @@ import {
   ListTodo, 
   Database, 
   Lightbulb,
-  Settings,
-  X,
   FileInput,
   FileOutput
 } from 'lucide-react';
+import { NodeContextMenu } from './NodeContextMenu';
 
 // Map of node types to their corresponding Lucide icons
 const nodeIcons: { [key: string]: React.ElementType } = {
@@ -46,6 +45,9 @@ interface WorkflowNodeProps extends NodeProps {
   data: {
     label?: string;
     description?: string;
+    onDelete?: (nodeId: string) => void;
+    onClone?: (node: Node) => void;
+    onSettings?: (node: Node) => void;
   };
 }
 
@@ -53,9 +55,19 @@ const WorkflowNodeComponent = ({
   data, 
   icon: Icon, 
   bgColor, 
-  borderColor 
+  borderColor,
+  ...nodeProps
 }: WorkflowNodeProps) => {
-  return (
+  const node = {
+    id: nodeProps.id,
+    type: nodeProps.type || 'default',
+    position: nodeProps.xPos !== undefined && nodeProps.yPos !== undefined 
+      ? { x: nodeProps.xPos, y: nodeProps.yPos } 
+      : { x: 0, y: 0 },
+    data: data,
+  } as Node;
+
+  const nodeContent = (
     <div className={`px-4 py-2 rounded-md shadow-sm ${bgColor} ${borderColor} border-2 min-w-[180px]`}>
       <Handle
         type="target"
@@ -69,7 +81,7 @@ const WorkflowNodeComponent = ({
       </div>
       
       {data.description && (
-        <p className="text-xs text-muted-foreground">{data.description || ''}</p>
+        <p className="text-xs text-muted-foreground">{String(data.description)}</p>
       )}
       
       <Handle
@@ -79,6 +91,22 @@ const WorkflowNodeComponent = ({
       />
     </div>
   );
+
+  // Wrap node with context menu only if handlers are provided
+  if (data.onDelete && data.onClone && data.onSettings) {
+    return (
+      <NodeContextMenu
+        node={node}
+        onDelete={data.onDelete}
+        onClone={data.onClone}
+        onSettings={data.onSettings}
+      >
+        {nodeContent}
+      </NodeContextMenu>
+    );
+  }
+
+  return nodeContent;
 };
 
 // Create specialized node components for each node type
