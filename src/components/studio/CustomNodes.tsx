@@ -43,6 +43,10 @@ interface WorkflowNodeProps extends NodeProps {
   icon: React.ElementType;
   bgColor: string;
   borderColor: string;
+  data: {
+    label?: string;
+    description?: string;
+  };
 }
 
 const WorkflowNodeComponent = ({ 
