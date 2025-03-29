@@ -72,7 +72,8 @@ export default function StudioPage() {
     }
     
     toast.success('Generating workflow from your prompt...');
-    // In a real implementation, this would call an AI service
+    // @todo - In the real implementation, this will call agentico backend to generate a workflow
+    // For now, we will just navigate to the new project page with the prompt simulating the generation with a delay
     setTimeout(() => {
       navigate('/studio/new-project?aiGenerated=true&prompt=' + encodeURIComponent(aiPrompt));
     }, 1000);
@@ -110,13 +111,15 @@ export default function StudioPage() {
 
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">Your Projects</h2>
-        <Input
-          placeholder="Search projects..."
-          className="max-w-sm"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          startIcon={<Search className="mr-2 h-4 w-4" />}
-        />
+        <div className="relative max-w-sm">
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search projects..."
+            className="max-w-sm pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
 
       {filteredProjects.length === 0 ? (

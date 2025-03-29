@@ -168,6 +168,7 @@ const AppRoutes = () => {
 
         {/* Studio Routes */}
         <Route path="/studio" element={<AuthenticatedRoute><StudioPage /></AuthenticatedRoute>} />
+        {/* @fixme - Projects are the same as without Studio: /projects/new */}
         <Route path="/studio/new-project" element={<AuthenticatedRoute><StudioNewProjectPage /></AuthenticatedRoute>} />
         <Route path="/studio/projects/:projectId" element={<AuthenticatedRoute><WorkflowEditorPage /></AuthenticatedRoute>} />
 
@@ -177,6 +178,8 @@ const AppRoutes = () => {
 
         <Route path="/profile" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
         <Route path="/settings" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
+        {/* external link to documentation */}
+        <Route path="/docs" element={<Navigate to="https://agentico.dev/docs/intro/" replace />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

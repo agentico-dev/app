@@ -6,14 +6,20 @@ import { apiTable, handleSupabaseError } from '@/utils/supabaseHelpers';
 import { toast } from 'sonner';
 
 interface AuthState {
-  session: Session | null;
+  session: {
+    user: User | null;
+    isLoading: boolean;
+  };
   user: User | null;
   profile: Profile | null;
   loading: boolean;
 }
 
 interface AuthContextType {
-  session: Session | null;
+  session: {
+    user: User | null;
+    isLoading: boolean;
+  };
   user: User | null;
   profile: Profile | null;
   signIn: (provider: string, email?: string, password?: string) => Promise<{ error: any; data: any }>;
@@ -49,7 +55,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthState(prev => ({
         ...prev,
-        session,
+        session: {
+          ...prev.session,
+          user: session?.user ?? null,
+          isLoading: session ? false : true,
+        },
         user: session?.user ?? null,
         loading: session?.user ? true : false,
       }));
@@ -65,7 +75,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthState(prev => ({
         ...prev,
-        session,
+        session: {
+          ...prev.session,
+          user: session?.user ?? null,
+          isLoading: session ? false : true,
+        },
         user: session?.user ?? null,
         loading: session?.user ? true : false,
       }));
@@ -160,7 +174,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider
       value={{
-        session: authState.session,
+        session: {
+          user: authState.user,
+          isLoading: authState.loading,
+        },
         user: authState.user,
         profile: authState.profile,
         signIn,

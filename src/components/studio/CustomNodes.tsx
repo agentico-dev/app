@@ -4,7 +4,7 @@ import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { 
   AppWindow, 
   Brain, 
-  Tool, 
+  Wrench, 
   ListTodo, 
   Database, 
   Lightbulb,
@@ -15,7 +15,7 @@ import {
 // Map of node types to their corresponding Lucide icons
 const nodeIcons: { [key: string]: React.ElementType } = {
   application: AppWindow,
-  tool: Tool,
+  tool: Wrench,
   agent: Brain,
   task: ListTodo,
   memory: Database,

@@ -1,4 +1,4 @@
-
+//#region imports
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { toast } from 'sonner';
@@ -50,6 +50,7 @@ import { initialNodes, initialEdges } from '@/components/studio/initial-elements
 import NodeTypes from '@/components/studio/CustomNodes';
 import EdgeTypes from '@/components/studio/CustomEdges';
 import { WorkflowNode, WorkflowEdge } from '@/types/workflow';
+//#endregion
 
 export default function WorkflowEditorPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -150,8 +151,11 @@ export default function WorkflowEditorPage() {
   }, [nodes, edges]);
 
   const onAddNode = useCallback((event: React.MouseEvent) => {
+    console.log(`Adding node at ${event.clientX}, ${event.clientY} - reactFlowWrapper: ${reactFlowWrapper.current}`);
     if (!reactFlowWrapper.current || !reactFlowInstance) return;
-    
+    console.log('React Flow Instance:', reactFlowInstance);
+    // print the JSON representation of the reactFlowInstance
+    console.log('React Flow Instance JSON:', JSON.stringify(reactFlowInstance, null, 2));
     const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
     const position = reactFlowInstance.screenToFlowPosition({
       x: event.clientX - reactFlowBounds.left,

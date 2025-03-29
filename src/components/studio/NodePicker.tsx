@@ -4,12 +4,12 @@ import { NodeType } from '@/types/workflow';
 import { 
   AppWindow, 
   Brain, 
-  Tool, 
+  Wrench, 
   ListTodo, 
   Database, 
   Lightbulb,
-  Input,
-  Output
+  FileInput,
+  FileOutput
 } from 'lucide-react';
 
 interface NodePickerProps {
@@ -38,7 +38,7 @@ const nodeTypes: NodeTypeOption[] = [
   {
     type: 'tool',
     label: 'Tool',
-    icon: Tool,
+    icon: Wrench,
     description: 'Process or transform data',
     color: 'bg-blue-100 border-blue-300 hover:bg-blue-200'
   },
@@ -73,14 +73,14 @@ const nodeTypes: NodeTypeOption[] = [
   {
     type: 'input',
     label: 'Input',
-    icon: Input,
+    icon: FileInput,
     description: 'Starting point for data flow',
     color: 'bg-gray-100 border-gray-300 hover:bg-gray-200'
   },
   {
     type: 'output',
     label: 'Output',
-    icon: Output,
+    icon: FileOutput,
     description: 'Final result or endpoint',
     color: 'bg-gray-100 border-gray-300 hover:bg-gray-200'
   }
