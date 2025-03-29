@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { 
   useNodesState, 
   useEdgesState, 
@@ -7,7 +7,8 @@ import {
   Node, 
   Edge, 
   Connection,
-  useReactFlow
+  useReactFlow,
+  ReactFlowInstance
 } from '@xyflow/react';
 import { initialNodes, initialEdges } from '@/components/studio/initial-elements';
 import { NodeType } from '@/types/workflow';
@@ -16,10 +17,11 @@ import { toast } from 'sonner';
 export function useWorkflowFlow() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [nodePickerPosition, setNodePickerPosition] = useState({ x: 0, y: 0 });
   const [isNodePickerOpen, setIsNodePickerOpen] = useState(false);
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   // Connect two nodes with an edge
   const onConnect = useCallback(
@@ -138,8 +140,6 @@ export function useWorkflowFlow() {
     return true;
   }, []);
 
-  const reactFlowWrapper = { current: null } as React.RefObject<HTMLDivElement>;
-
   return {
     nodes,
     edges,
@@ -161,6 +161,7 @@ export function useWorkflowFlow() {
     handleNodeAdd,
     handleAddNodeFromToolbar,
     saveWorkflow,
-    reactFlowWrapper
+    reactFlowWrapper,
+    setNodes
   };
 }
