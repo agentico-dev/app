@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { NodeToolbar as ReactFlowNodeToolbar, Node } from '@xyflow/react';
+import { NodeToolbar as ReactFlowNodeToolbar, Node, Position } from '@xyflow/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -58,7 +58,7 @@ export default function NodeToolbar({ node, setNodes }: NodeToolbarProps) {
   return (
     <ReactFlowNodeToolbar
       node={node}
-      position="top"
+      position={Position.Top}
       offset={10}
       align="center"
       className="bg-white p-3 rounded-md shadow-md border w-[300px] z-10"

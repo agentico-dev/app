@@ -61,11 +61,11 @@ const WorkflowNodeComponent = ({
       
       <div className="flex items-center gap-2 mb-1">
         <Icon className="h-5 w-5" />
-        <span className="font-medium text-sm">{data.label}</span>
+        <span className="font-medium text-sm">{data.label || 'Node'}</span>
       </div>
       
       {data.description && (
-        <p className="text-xs text-muted-foreground">{data.description}</p>
+        <p className="text-xs text-muted-foreground">{data.description || ''}</p>
       )}
       
       <Handle
