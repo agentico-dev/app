@@ -9,7 +9,9 @@ import {
   Database, 
   Lightbulb,
   Settings,
-  X
+  X,
+  FileInput,
+  FileOutput
 } from 'lucide-react';
 
 // Map of node types to their corresponding Lucide icons
@@ -20,6 +22,8 @@ const nodeIcons: { [key: string]: React.ElementType } = {
   task: ListTodo,
   memory: Database,
   reasoning: Lightbulb,
+  input: FileInput,
+  output: FileOutput,
 };
 
 // Map of node types to their background/border colors
@@ -30,6 +34,8 @@ const nodeColors: { [key: string]: { bg: string; border: string } } = {
   task: { bg: 'bg-green-50', border: 'border-green-200' },
   memory: { bg: 'bg-purple-50', border: 'border-purple-200' },
   reasoning: { bg: 'bg-teal-50', border: 'border-teal-200' },
+  input: { bg: 'bg-gray-50', border: 'border-gray-200' },
+  output: { bg: 'bg-gray-50', border: 'border-gray-200' },
 };
 
 // Base node component with common styling and handles
@@ -126,6 +132,24 @@ const ReasoningNode = memo((props: NodeProps) => (
   />
 ));
 
+const InputNode = memo((props: NodeProps) => (
+  <WorkflowNodeComponent
+    {...props}
+    icon={nodeIcons.input}
+    bgColor={nodeColors.input.bg}
+    borderColor={nodeColors.input.border}
+  />
+));
+
+const OutputNode = memo((props: NodeProps) => (
+  <WorkflowNodeComponent
+    {...props}
+    icon={nodeIcons.output}
+    bgColor={nodeColors.output.bg}
+    borderColor={nodeColors.output.border}
+  />
+));
+
 // Define all node types
 const nodeTypes = {
   application: ApplicationNode,
@@ -134,6 +158,8 @@ const nodeTypes = {
   task: TaskNode,
   memory: MemoryNode,
   reasoning: ReasoningNode,
+  input: InputNode,
+  output: OutputNode,
 };
 
 export default nodeTypes;

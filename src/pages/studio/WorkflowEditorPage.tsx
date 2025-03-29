@@ -1,21 +1,16 @@
+
 //#region imports
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { 
-  ArrowLeft, 
-  Save, 
-  Play, 
   FileText, 
   Share2, 
   Download,
   Upload,
   Plus,
-  Settings,
   Trash2,
   Loader2,
   Code
@@ -46,10 +41,11 @@ import {
 import '@xyflow/react/dist/style.css';
 import NodeToolbar from '@/components/studio/NodeToolbar';
 import { NodePicker } from '@/components/studio/NodePicker';
+import { WorkflowHeader } from '@/components/studio/WorkflowHeader';
 import { initialNodes, initialEdges } from '@/components/studio/initial-elements';
 import NodeTypes from '@/components/studio/CustomNodes';
 import EdgeTypes from '@/components/studio/CustomEdges';
-import { WorkflowNode, WorkflowEdge } from '@/types/workflow';
+import { WorkflowNode, WorkflowEdge, NodeType } from '@/types/workflow';
 //#endregion
 
 export default function WorkflowEditorPage() {
@@ -151,11 +147,8 @@ export default function WorkflowEditorPage() {
   }, [nodes, edges]);
 
   const onAddNode = useCallback((event: React.MouseEvent) => {
-    console.log(`Adding node at ${event.clientX}, ${event.clientY} - reactFlowWrapper: ${reactFlowWrapper.current}`);
     if (!reactFlowWrapper.current || !reactFlowInstance) return;
-    console.log('React Flow Instance:', reactFlowInstance);
-    // print the JSON representation of the reactFlowInstance
-    console.log('React Flow Instance JSON:', JSON.stringify(reactFlowInstance, null, 2));
+    
     const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
     const position = reactFlowInstance.screenToFlowPosition({
       x: event.clientX - reactFlowBounds.left,
@@ -165,6 +158,25 @@ export default function WorkflowEditorPage() {
     setNodePickerPosition(position);
     setIsNodePickerOpen(true);
   }, [reactFlowInstance]);
+
+  const handleAddNodeFromToolbar = useCallback((type: NodeType, label: string) => {
+    if (!reactFlowInstance) return;
+    
+    // Position the node in the center of the viewport
+    const viewportCenter = reactFlowInstance.screenToFlowPosition({
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+    });
+    
+    const newNode: Node = {
+      id: `${type}-${Date.now()}`,
+      type,
+      position: viewportCenter,
+      data: { label },
+    };
+    
+    setNodes((nds) => nds.concat(newNode));
+  }, [reactFlowInstance, setNodes]);
 
   const handleNodeAdd = useCallback((type: string, label: string) => {
     const newNode: Node = {
@@ -184,47 +196,18 @@ export default function WorkflowEditorPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-5rem)]">
-      <div className="border-b p-4 flex justify-between items-center bg-white">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={handleBackToProjects} className="h-8 w-8 p-0">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          
-          <div>
-            <Input
-              value={workflowName}
-              onChange={(e) => setWorkflowName(e.target.value)}
-              className="font-medium text-lg border-none focus-visible:ring-0 focus-visible:ring-offset-0 h-8 p-0"
-            />
-            <p className="text-muted-foreground text-sm">Project: {projectId}</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            className="gap-1 h-8" 
-            onClick={onRun}
-            disabled={isRunning}
-          >
-            {isRunning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
-            Run
-          </Button>
-          
-          <Button 
-            className="gap-1 h-8" 
-            onClick={onSave}
-            disabled={isSaving}
-          >
-            {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-            Save
-          </Button>
-          
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Settings className="h-4 w-4" onClick={() => setIsSettingsOpen(true)} />
-          </Button>
-        </div>
-      </div>
+      <WorkflowHeader
+        workflowName={workflowName}
+        setWorkflowName={setWorkflowName}
+        onSave={onSave}
+        onRun={onRun}
+        onSettings={() => setIsSettingsOpen(true)}
+        onBack={handleBackToProjects}
+        projectId={projectId}
+        isSaving={isSaving}
+        isRunning={isRunning}
+        onAddNode={handleAddNodeFromToolbar}
+      />
       
       <div 
         className="flex-1 w-full overflow-hidden" 
@@ -255,11 +238,13 @@ export default function WorkflowEditorPage() {
               case 'task': return '#ccff00';
               case 'memory': return '#cc00ff';
               case 'reasoning': return '#00ffcc';
+              case 'input': return '#cccccc';
+              case 'output': return '#cccccc';
               default: return '#ffffff';
             }
           }} />
           
-          <Panel position="top-right" className="bg-white/80 backdrop-blur-sm p-2 rounded-md shadow-sm border">
+          <Panel position="bottom-right" className="bg-white/80 backdrop-blur-sm p-2 rounded-md shadow-sm border">
             <div className="flex flex-col gap-2">
               <Button size="sm" onClick={onAddNode}>
                 <Plus className="mr-1 h-3 w-3" /> Add Node
@@ -297,20 +282,22 @@ export default function WorkflowEditorPage() {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium">Workflow Name</label>
-              <Input
+              <input
                 id="name"
                 value={workflowName}
                 onChange={(e) => setWorkflowName(e.target.value)}
+                className="w-full p-2 border rounded"
               />
             </div>
             
             <div className="space-y-2">
               <label htmlFor="description" className="text-sm font-medium">Description</label>
-              <Textarea
+              <textarea
                 id="description"
                 value={workflowDescription}
                 onChange={(e) => setWorkflowDescription(e.target.value)}
                 rows={3}
+                className="w-full p-2 border rounded"
               />
             </div>
             
