@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef } from 'react';
 import { 
   useNodesState, 
@@ -20,6 +21,7 @@ export function useWorkflowFlow() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [nodePickerPosition, setNodePickerPosition] = useState({ x: 0, y: 0 });
   const [isNodePickerOpen, setIsNodePickerOpen] = useState(false);
+  const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
   
   // Note dialog state
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
@@ -43,11 +45,13 @@ export function useWorkflowFlow() {
   // Handle node click
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
+    setIsConfigPanelOpen(true);
   }, []);
 
   // Handle click on the pane (canvas)
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
+    setIsConfigPanelOpen(false);
   }, []);
 
   // Handle drag over for node dropping
@@ -113,6 +117,7 @@ export function useWorkflowFlow() {
     setNodes((nds) => nds.filter((n) => n.id !== nodeId));
     if (selectedNode && selectedNode.id === nodeId) {
       setSelectedNode(null);
+      setIsConfigPanelOpen(false);
     }
     toast.success('Node deleted');
   }, [selectedNode, setNodes]);
@@ -148,6 +153,7 @@ export function useWorkflowFlow() {
   // Select a node for editing
   const selectNodeForEditing = useCallback((node: Node) => {
     setSelectedNode(node);
+    setIsConfigPanelOpen(true);
   }, []);
 
   // Open the note dialog for a node
@@ -185,6 +191,29 @@ export function useWorkflowFlow() {
       toast.success('Note saved');
     }
   }, [setNodes]);
+
+  // Save node configuration changes
+  const saveNodeConfig = useCallback((node: Node, updatedData: Record<string, unknown>) => {
+    setNodes((nds) =>
+      nds.map((n) => {
+        if (n.id === node.id) {
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              ...updatedData,
+            },
+          };
+        }
+        return n;
+      })
+    );
+  }, [setNodes]);
+
+  // Close the config panel
+  const closeConfigPanel = useCallback(() => {
+    setIsConfigPanelOpen(false);
+  }, []);
 
   // Get the current note text and node name for the note dialog
   const getNodeNoteDetails = useCallback((): { note: string; nodeName: string } => {
@@ -304,6 +333,10 @@ export function useWorkflowFlow() {
     openNoteDialog,
     openEditNoteDialog,
     saveNodeNote,
-    noteDialogElement
+    noteDialogElement,
+    // Config panel related
+    isConfigPanelOpen,
+    closeConfigPanel,
+    saveNodeConfig
   };
 }

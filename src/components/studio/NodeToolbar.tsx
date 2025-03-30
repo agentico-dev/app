@@ -26,8 +26,8 @@ export default function NodeToolbar({ node, setNodes }: NodeToolbarProps) {
   // Initialize state when the node changes
   useEffect(() => {
     if (node && node.data) {
-      setLabel(node.data.label || '');
-      setDescription(node.data.description || '');
+      setLabel(node.data.label as string || '');
+      setDescription(node.data.description as string || '');
     }
   }, [node]);
 

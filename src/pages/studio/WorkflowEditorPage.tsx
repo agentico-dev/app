@@ -10,6 +10,7 @@ import { NodePicker } from '@/components/studio/NodePicker';
 import { WorkflowHeader } from '@/components/studio/WorkflowHeader';
 import { WorkflowSettingsDialog } from '@/components/studio/WorkflowSettingsDialog';
 import { WorkflowCanvas } from '@/components/studio/WorkflowCanvas';
+import { NodeConfigPanel } from '@/components/studio/NodeConfigPanel';
 
 export default function WorkflowEditorPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -47,6 +48,8 @@ export default function WorkflowEditorPage() {
     handleAddNodeFromToolbar,
     saveWorkflow,
     reactFlowWrapper,
+    closeConfigPanel,
+    saveNodeConfig,
     // Note dialog
     noteDialogElement
   } = useWorkflowFlow();
@@ -141,6 +144,13 @@ export default function WorkflowEditorPage() {
         setWorkflowName={setWorkflowName}
         workflowDescription={workflowDescription}
         setWorkflowDescription={setWorkflowDescription}
+      />
+      
+      {/* Node config panel */}
+      <NodeConfigPanel 
+        node={selectedNode}
+        onClose={closeConfigPanel}
+        onSaveChanges={saveNodeConfig}
       />
       
       {/* Node note dialog */}
