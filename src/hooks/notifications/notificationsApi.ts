@@ -39,12 +39,12 @@ export const createNotification = async (
       user_id: userId,
       organization_id: organizationId,
       title: notificationData.title,
-      content: notificationData.content,
-      resource_type: notificationData.resource_type,
-      resource_id: notificationData.resource_id,
-      related_resource_id: notificationData.related_resource_id,
+      content: notificationData.message || notificationData.content,
+      resource_type: notificationData.resource_type || 'generic',
+      resource_id: notificationData.resource_id || null,
+      related_resource_id: notificationData.related_resource_id || null,
       status: notificationData.status || 'unread',
-      notification_type: notificationData.notification_type || 'info',
+      notification_type: notificationData.type || notificationData.notification_type || 'info',
     })
     .select()
     .single();

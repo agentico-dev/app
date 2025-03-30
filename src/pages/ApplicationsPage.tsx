@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -46,8 +47,9 @@ export function ApplicationsPage() {
           tags: app.tags || [],
           created_at: app.created_at || new Date().toISOString(),
           updated_at: app.updated_at || new Date().toISOString(),
-          slug: app.slug || app.name.toLowerCase().replace(/\s+/g, '-') // Add the missing slug property
-        }));
+          slug: app.slug || app.name.toLowerCase().replace(/\s+/g, '-'),
+          organization_id: app.organization_id || '' // Add the missing organization_id
+        })) as Application[];
       } catch (err) {
         console.error('Unexpected error fetching applications:', err);
         toast({

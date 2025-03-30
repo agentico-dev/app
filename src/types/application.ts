@@ -41,6 +41,8 @@ export interface ApplicationAPI {
   content_format?: 'json' | 'yaml';
   protocol?: string;
   is_public?: boolean;
+  endpoint_url?: string; // Added missing properties
+  documentation_url?: string; // Added missing properties
   status?: 'active' | 'inactive' | 'deprecated' | 'archived';
   created_at: string;
   updated_at: string;
@@ -92,4 +94,18 @@ export interface Notification {
   read: boolean;
   user_id: string;
   link?: string;
+  // Additional fields for enhanced notifications
+  status?: 'read' | 'unread';
+  notification_type?: 'info' | 'success' | 'warning' | 'error';
+  content?: string;
+  resource_type?: string;
+  resource_id?: string;
+  related_resource_id?: string;
+  organization_id?: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  created_at: string;
 }

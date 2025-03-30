@@ -44,17 +44,18 @@ export default function NodeToolbar({ node, setNodes }: NodeToolbarProps) {
   };
 
   const duplicateNode = () => {
-    if (node.data.onClone) {
+    if (node.data.onClone && typeof node.data.onClone === 'function') {
       node.data.onClone(node);
     } else {
-      const nodePosition = { x: node.position.x + 50, y: node.position.y + 50 };
+      const nodePositionX = node.position?.x || 0;
+      const nodePositionY = node.position?.y || 0;
       
       setNodes((nds) => [
         ...nds,
         {
           ...node,
           id: `${node.type}-${Date.now()}`,
-          position: nodePosition,
+          position: { x: nodePositionX + 50, y: nodePositionY + 50 },
         },
       ]);
       
@@ -63,7 +64,7 @@ export default function NodeToolbar({ node, setNodes }: NodeToolbarProps) {
   };
 
   const deleteNode = () => {
-    if (node.data.onDelete) {
+    if (node.data.onDelete && typeof node.data.onDelete === 'function') {
       node.data.onDelete(node.id);
     } else {
       setNodes((nds) => nds.filter((n) => n.id !== node.id));

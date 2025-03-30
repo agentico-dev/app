@@ -104,7 +104,7 @@ export function useNotifications(): UseNotificationsResult {
 
   return {
     notifications,
-    unreadNotifications: notifications.filter(n => n.status === 'unread'),
+    unreadNotifications: notifications.filter(n => (n.status === 'unread' || n.read === false)),
     isLoading,
     error,
     isAuthenticated,
