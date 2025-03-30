@@ -182,9 +182,9 @@ const AppRoutes = () => {
         <Route path="/tools/:serverSlug@:toolSlug" element={<Navigate to={`/ai-tools/${window.location.pathname.split('/')[2]}`} replace />} />
 
         {/* Studio Routes */}
-        <Route path="/studio" element={<AuthenticatedRoute><StudioPage /></AuthenticatedRoute>} />
+        <Route path="/studio" element={<StudioPage />} />
         <Route path="/studio/new-project" element={<AuthenticatedRoute><StudioNewProjectPage /></AuthenticatedRoute>} />
-        <Route path="/studio/projects/:projectId" element={<AuthenticatedRoute><WorkflowEditorPage /></AuthenticatedRoute>} />
+        <Route path="/studio/projects/:projectId" element={<WorkflowEditorPage />} />
 
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
