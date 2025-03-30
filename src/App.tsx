@@ -61,6 +61,10 @@ const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
 
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
   return <>{children}</>;
 };
 
@@ -96,19 +100,20 @@ const AppRoutes = () => {
   initSentry();
   const { user } = useAuth();
 
-  if (!user && window.location.pathname === '/') {
-    return (
-      <Routes>
-        <Route element={<DashboardLayout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Route>
-        <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
-        <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    );
-  }
+  // Remove this special case for non-authenticated users that redirects to home
+  // if (!user && window.location.pathname === '/') {
+  //   return (
+  //     <Routes>
+  //       <Route element={<DashboardLayout />}>
+  //         <Route path="/" element={<Dashboard />} />
+  //         <Route path="/dashboard" element={<Dashboard />} />
+  //       </Route>
+  //       <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
+  //       <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
+  //       <Route path="*" element={<Navigate to="/" replace />} />
+  //     </Routes>
+  //   );
+  // }
 
   return (
     <Routes>
@@ -120,8 +125,8 @@ const AppRoutes = () => {
         <Route path="/" element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
 
-        <Route path="/orgs" element={<OrganizationsPage />} />
-        <Route path="/orgs/:slug" element={<OrganizationDetailPage />} />
+        <Route path="/orgs" element={<AuthenticatedRoute><OrganizationsPage /></AuthenticatedRoute>} />
+        <Route path="/orgs/:slug" element={<AuthenticatedRoute><OrganizationDetailPage /></AuthenticatedRoute>} />
 
         <Route path="/organizations">
           <Route path=":slug" element={<Navigate to={`/orgs/${useParams().slug}`} replace />} />
@@ -137,6 +142,7 @@ const AppRoutes = () => {
         <Route path="/projects/:orgSlug@:projSlug" element={<ProjectDetailPage />} />
         <Route path="/projs/:orgSlug@:projSlug" element={<Navigate to={`/projects/${useParams().orgSlug}@${useParams().projSlug}`} replace />} />
 
+        {/* Make applications page public too */}
         <Route path="/applications" element={<ApplicationsPage />} />
         <Route path="/applications/new" element={<AuthenticatedRoute><NewApplicationPage /></AuthenticatedRoute>} />
 
@@ -160,12 +166,14 @@ const AppRoutes = () => {
         <Route path="/applications/:applicationId/messages/:messageId" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/messages/:messageId" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
 
+        {/* Make servers page public too */}
         <Route path="/servers" element={<ServersPage />} />
         <Route path="/servers/new" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
         <Route path="/servers/:id" element={<AuthenticatedRoute><ServerDetailPage /></AuthenticatedRoute>} />
         <Route path="/servers/:id/edit" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
         <Route path="/servers/:projSlug@:serverSlug" element={<AuthenticatedRoute><ServerDetailPage /></AuthenticatedRoute>} />
 
+        {/* Make AI tools page public too */}
         <Route path="/ai-tools" element={<AIToolsPage />} />
         <Route path="/tools" element={<Navigate to="/ai-tools" replace />} />
         <Route path="/ai-tools/new" element={<AuthenticatedRoute><NewToolPage /></AuthenticatedRoute>} />
@@ -175,7 +183,6 @@ const AppRoutes = () => {
 
         {/* Studio Routes */}
         <Route path="/studio" element={<AuthenticatedRoute><StudioPage /></AuthenticatedRoute>} />
-        {/* @fixme - Projects are the same as without Studio: /projects/new */}
         <Route path="/studio/new-project" element={<AuthenticatedRoute><StudioNewProjectPage /></AuthenticatedRoute>} />
         <Route path="/studio/projects/:projectId" element={<AuthenticatedRoute><WorkflowEditorPage /></AuthenticatedRoute>} />
 

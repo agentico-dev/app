@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { ArrowLeft, Save, Trash, Badge } from 'lucide-react';
+import { ArrowLeft, Save, Trash } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const EnvironmentDetailPage = () => {
   const { id } = useParams();
@@ -172,11 +173,11 @@ const EnvironmentDetailPage = () => {
                             <td className="px-4 py-2 whitespace-nowrap">{variable.isSecret ? '********' : variable.value}</td>
                             <td className="px-4 py-2 whitespace-nowrap">
                               {variable.isSecret ? (
-                                <Badge className="bg-blue-100 text-blue-800 border-blue-300">
+                                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
                                   Secret
                                 </Badge>
                               ) : (
-                                <Badge>Plain</Badge>
+                                <Badge variant="outline">Plain</Badge>
                               )}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-right">
