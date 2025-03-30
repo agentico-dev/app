@@ -7,9 +7,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Trash2, Settings, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface NodeData extends Record<string, unknown> {
+  label?: string;
+  description?: string;
+  onClone?(node: Node): void;
+  onDelete?(id: string): void;
+}
+
 interface NodeToolbarProps {
-  node: Node;
-  setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
+  node: Node<NodeData>;
+  setNodes: React.Dispatch<React.SetStateAction<Node<NodeData>[]>>;
 }
 
 export default function NodeToolbar({ node, setNodes }: NodeToolbarProps) {

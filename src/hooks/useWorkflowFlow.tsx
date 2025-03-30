@@ -187,15 +187,15 @@ export function useWorkflowFlow() {
   }, [setNodes]);
 
   // Get the current note text and node name for the note dialog
-  const getNodeNoteDetails = useCallback(() => {
+  const getNodeNoteDetails = useCallback((): { note: string; nodeName: string } => {
     if (!noteNodeId) return { note: '', nodeName: '' };
     
     const node = nodes.find(node => node.id === noteNodeId);
     if (!node) return { note: '', nodeName: '' };
     
     return { 
-      note: node.data.note || '', 
-      nodeName: node.data.label || 'Node' 
+      note: typeof node.data.note === 'string' ? node.data.note : '', 
+      nodeName: typeof node.data.label === 'string' ? node.data.label : 'Node' 
     };
   }, [nodes, noteNodeId]);
 
