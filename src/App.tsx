@@ -127,6 +127,7 @@ const AppRoutes = () => {
           <Route path=":slug" element={<Navigate to={`/orgs/${useParams().slug}`} replace />} />
         </Route>
 
+        {/* Public access to projects page */}
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projs" element={<Navigate to="/projects" replace />} />
         <Route path="/projects/new" element={<AuthenticatedRoute><NewProjectPage /></AuthenticatedRoute>} />
