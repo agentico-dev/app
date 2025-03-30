@@ -82,6 +82,7 @@ export default function WorkflowEditorPage() {
       <WorkflowHeader
         workflowName={workflowName}
         setWorkflowName={setWorkflowName}
+        onViewCode={() => navigate(`/studio/projects/${projectId}/code`)}
         onSave={onSave}
         onRun={onRun}
         onSettings={() => setIsSettingsOpen(true)}

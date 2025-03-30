@@ -11,6 +11,7 @@ import { NodeTypesPanel } from './NodeTypesPanel';
 interface WorkflowHeaderProps {
   workflowName: string;
   setWorkflowName: (name: string) => void;
+  onViewCode: () => void;
   onSave: () => void;
   onRun: () => void;
   onSettings: () => void;
@@ -24,6 +25,7 @@ interface WorkflowHeaderProps {
 export function WorkflowHeader({
   workflowName,
   setWorkflowName,
+  onViewCode,
   onSave,
   onRun,
   onSettings,
@@ -51,6 +53,7 @@ export function WorkflowHeader({
         
         <div className="flex items-center gap-2">
           <WorkflowActions 
+            onViewCode={onViewCode}
             onRun={onRun}
             onSave={onSave}
             onSettings={onSettings}
