@@ -61,7 +61,7 @@ function WorkflowEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
-
+  
   // Use our custom hook for React Flow state and functions
   const {
     nodes,
@@ -121,8 +121,8 @@ function WorkflowEditor() {
     // randomly simulate an error
     const shouldError = Math.random() < 0.8; // 80% chance of error
     if (shouldError) {
-      setIsRunning(false);
       toast.error('Error: Workflow execution failed');
+      setIsRunning(false);
       throw new Error('Simulated error during workflow execution');
     }
     
