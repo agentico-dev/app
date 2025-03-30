@@ -18,7 +18,9 @@ interface WorkflowHeaderProps {
   onBack: () => void;
   projectId?: string;
   isSaving: boolean;
-  isRunning: boolean;
+  isRunning: boolean;  
+  isDeploying: boolean;
+  onDeploy: () => void;
   onAddNode: (type: NodeType, label: string) => void;
 }
 
@@ -33,6 +35,8 @@ export function WorkflowHeader({
   projectId,
   isSaving,
   isRunning,
+  isDeploying,
+  onDeploy,
   onAddNode
 }: WorkflowHeaderProps) {
   const [isOpen, setIsOpen] = useState(true);
@@ -59,6 +63,8 @@ export function WorkflowHeader({
             onSettings={onSettings}
             isSaving={isSaving}
             isRunning={isRunning}
+            isDeploying={false} // Placeholder, implement if needed
+            onDeploy={() => {}}
           />
 
           <CollapsibleTrigger asChild>

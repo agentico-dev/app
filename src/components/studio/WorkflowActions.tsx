@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Save, Settings, Code } from 'lucide-react';
+import { Play, Save, Settings, Code, CloudUpload } from 'lucide-react';
 
 interface WorkflowActionsProps {
   onViewCode: () => void;
@@ -10,6 +10,8 @@ interface WorkflowActionsProps {
   onSettings: () => void;
   isSaving: boolean;
   isRunning: boolean;
+  isDeploying: boolean;
+  onDeploy: () => void;
 }
 
 export function WorkflowActions({
@@ -18,7 +20,9 @@ export function WorkflowActions({
   onSave,
   onSettings,
   isSaving,
-  isRunning
+  isRunning,
+  isDeploying,
+  onDeploy,
 }: WorkflowActionsProps) {
   return (
     <div className="flex items-center gap-2">
@@ -34,6 +38,15 @@ export function WorkflowActions({
       >
         {isRunning ? <span className="h-3 w-3 animate-spin">⟳</span> : <Play className="h-3 w-3" />}
         Run
+      </Button>
+      <Button
+        variant="outline"
+        className="gap-1 h-8"
+        onClick={onDeploy}
+        disabled={isDeploying}
+      >
+        {isDeploying ? <span className="h-3 w-3 animate-spin">⟳</span> : <CloudUpload className="h-3 w-3" />}
+        Deploy
       </Button>
 
       <Button

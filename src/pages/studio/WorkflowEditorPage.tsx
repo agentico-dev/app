@@ -22,6 +22,7 @@ export default function WorkflowEditorPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
 
   // Use our custom hook for React Flow state and functions
   const {
@@ -63,6 +64,16 @@ export default function WorkflowEditorPage() {
     }, 1000);
   }, [workflowName, saveWorkflow]);
 
+  // Handle deploying the workflow
+  const onDeploy = useCallback(() => {
+    setIsDeploying(true);
+    setTimeout(() => {
+      toast.success('Workflow deployed successfully');
+      setIsDeploying(false);
+      // Simulate API call to deploy workflow with random delay between 1 and 2 seconds
+    }, Math.floor(Math.random() * 1000) + 1000);
+  }, []);
+
   // Handle running the workflow
   const onRun = useCallback(() => {
     setIsRunning(true);
@@ -71,7 +82,7 @@ export default function WorkflowEditorPage() {
     setTimeout(() => {
       toast.success('Workflow executed successfully');
       setIsRunning(false);
-    }, 2000);
+    }, Math.floor(Math.random() * 1500) + 500);
   }, []);
 
   // Navigate back to projects list
@@ -92,6 +103,8 @@ export default function WorkflowEditorPage() {
         projectId={projectId}
         isSaving={isSaving}
         isRunning={isRunning}
+        isDeploying={isDeploying}
+        onDeploy={onDeploy}
         onAddNode={handleAddNodeFromToolbar}
       />
       
