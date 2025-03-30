@@ -17,6 +17,7 @@ import {
   X,
   Brain,
   Zap,
+  Globe,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import { cn } from '@/lib/utils';
@@ -90,6 +91,18 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
       title: 'Settings',
       href: '/settings',
       icon: Settings,
+      submenu: [
+        {
+          title: 'Organizations',
+          href: '/orgs',
+          icon: Briefcase,
+        },
+        {
+          title: 'Environments',
+          href: '/settings/environments',
+          icon: Globe,
+        },
+      ],
     },
   ];
 
