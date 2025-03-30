@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from 'react';
 import { 
   useNodesState, 
@@ -265,7 +264,7 @@ export function useWorkflowFlow() {
     <NodeNoteDialog
       isOpen={isNoteDialogOpen}
       setIsOpen={setIsNoteDialogOpen}
-      nodeId={noteNodeId}
+      nodeId={noteNodeId || ''}
       nodeName={noteDetails.nodeName}
       initialNote={noteDetails.note}
       onSave={saveNodeNote}

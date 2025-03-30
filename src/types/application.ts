@@ -39,14 +39,15 @@ export interface ApplicationAPI {
   source_uri?: string;
   source_content?: string;
   content_format?: 'json' | 'yaml';
-  protocol?: string;
+  protocol?: 'REST' | 'gRPC' | 'WebSockets' | 'GraphQL';
   is_public?: boolean;
-  endpoint_url?: string; // Added missing properties
-  documentation_url?: string; // Added missing properties
+  endpoint_url?: string;
+  documentation_url?: string;
   status?: 'active' | 'inactive' | 'deprecated' | 'archived';
   created_at: string;
   updated_at: string;
   tags?: string[];
+  fetchContent?: boolean;
 }
 
 // Update the ApplicationMessage interface to include api_id

@@ -1,3 +1,4 @@
+
 import React, { memo } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { 
@@ -66,8 +67,8 @@ const WorkflowNodeComponent = ({
     id: nodeProps.id,
     type: nodeProps.type || 'default',
     position: { 
-      x: (nodeProps.positionAbsoluteX ?? nodeProps.xPos ?? 0), 
-      y: (nodeProps.positionAbsoluteY ?? nodeProps.yPos ?? 0)
+      x: nodeProps.positionAbsoluteX ?? 0, 
+      y: nodeProps.positionAbsoluteY ?? 0
     },
     data: data,
   } as Node;

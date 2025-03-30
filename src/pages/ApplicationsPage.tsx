@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router';
 import { Plus, Shield, LogOut } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { Application, ApplicationStatus } from '@/types/application';
+import { Application, ApplicationStatus, Tag } from '@/types/application';
 import { FilterControls } from '@/components/applications/FilterControls';
 import { ApplicationsTabContent } from '@/components/applications/ApplicationsTabContent';
 import { useAuth } from '@/hooks/useAuth';
@@ -64,12 +64,12 @@ export function ApplicationsPage() {
   });
 
   // Extract unique tags from all applications
-  const allTags = Array.from(
+  const allTags: Tag[] = Array.from(
     new Set(
       applications.flatMap(app => app.tags || [])
         .filter(Boolean)
     )
-  );
+  ).map(tagName => ({ id: tagName, name: tagName, created_at: new Date().toISOString() }));
 
   // Status options for filtering
   const statusOptions = [
