@@ -44,7 +44,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>({
-    session: null,
+    session: {
+      user: null,
+      isLoading: true,
+    },
     user: null,
     profile: null,
     loading: true,
@@ -56,9 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAuthState(prev => ({
         ...prev,
         session: {
-          ...prev.session,
           user: session?.user ?? null,
-          isLoading: session ? false : true,
+          isLoading: false,
         },
         user: session?.user ?? null,
         loading: session?.user ? true : false,
@@ -72,19 +74,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setAuthState(prev => ({
         ...prev,
         session: {
-          ...prev.session,
           user: session?.user ?? null,
-          isLoading: session ? false : true,
+          isLoading: false,
         },
         user: session?.user ?? null,
         loading: session?.user ? true : false,
       }));
       
-      if (session?.user.id) {
+      if (session?.user?.id) {
         loadUserProfile(session.user.id);
       } else {
         setAuthState(prev => ({ ...prev, profile: null, loading: false }));
@@ -164,11 +165,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setAuthState(prev => ({
-      ...prev, 
-      profile: null
-    }));
+    try {
+      await supabase.auth.signOut();
+      // Force reset the auth state to avoid stale data
+      setAuthState({
+        session: {
+          user: null,
+          isLoading: false,
+        },
+        user: null,
+        profile: null,
+        loading: false,
+      });
+      window.location.href = '/';  // Redirect to home page after logout
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('Failed to sign out. Please try again.');
+    }
   };
 
   return (
