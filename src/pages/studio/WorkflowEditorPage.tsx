@@ -79,6 +79,14 @@ export default function WorkflowEditorPage() {
   // Handle running the workflow
   const onRun = useCallback(() => {
     setIsRunning(true);
+
+    // randomly simulate an error
+    const shouldError = Math.random() < 0.8; // 80% chance of error
+    if (shouldError) {
+      setIsRunning(false);
+      toast.error('Error: Workflow execution failed');
+      throw new Error('Simulated error during workflow execution');
+    }
     
     // Simulate workflow execution
     setTimeout(() => {
