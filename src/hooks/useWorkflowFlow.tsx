@@ -7,12 +7,12 @@ import {
   Node, 
   Edge, 
   Connection,
-  useReactFlow,
   ReactFlowInstance
 } from '@xyflow/react';
 import { initialNodes, initialEdges } from '@/components/studio/initial-elements';
 import { NodeType } from '@/types/workflow';
 import { toast } from 'sonner';
+import { NodeNoteDialog } from '@/components/studio/NodeNoteDialog';
 
 export function useWorkflowFlow() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -21,6 +21,11 @@ export function useWorkflowFlow() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [nodePickerPosition, setNodePickerPosition] = useState({ x: 0, y: 0 });
   const [isNodePickerOpen, setIsNodePickerOpen] = useState(false);
+  
+  // Note dialog state
+  const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
+  const [noteNodeId, setNoteNodeId] = useState<string | null>(null);
+  
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   // Connect two nodes with an edge
@@ -79,7 +84,9 @@ export function useWorkflowFlow() {
           label: label || `${type.charAt(0).toUpperCase() + type.slice(1)}`,
           onDelete: deleteNode,
           onClone: cloneNode,
-          onSettings: selectNodeForEditing
+          onSettings: selectNodeForEditing,
+          onAddNote: openNoteDialog,
+          onEditNote: openEditNoteDialog
         },
       };
 
@@ -129,7 +136,9 @@ export function useWorkflowFlow() {
         ...node.data,
         onDelete: deleteNode,
         onClone: cloneNode,
-        onSettings: selectNodeForEditing
+        onSettings: selectNodeForEditing,
+        onAddNote: openNoteDialog,
+        onEditNote: openEditNoteDialog
       },
     };
     
@@ -141,6 +150,55 @@ export function useWorkflowFlow() {
   const selectNodeForEditing = useCallback((node: Node) => {
     setSelectedNode(node);
   }, []);
+
+  // Open the note dialog for a node
+  const openNoteDialog = useCallback((node: Node) => {
+    setNoteNodeId(node.id);
+    setIsNoteDialogOpen(true);
+  }, []);
+
+  // Open the note dialog for editing an existing note
+  const openEditNoteDialog = useCallback((nodeId: string) => {
+    setNoteNodeId(nodeId);
+    setIsNoteDialogOpen(true);
+  }, []);
+
+  // Save a note for a node
+  const saveNodeNote = useCallback((nodeId: string, note: string) => {
+    setNodes((nds) => 
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              note: note.trim() === '' ? undefined : note,
+            },
+          };
+        }
+        return node;
+      })
+    );
+    
+    if (note.trim() === '') {
+      toast.success('Note removed');
+    } else {
+      toast.success('Note saved');
+    }
+  }, [setNodes]);
+
+  // Get the current note text and node name for the note dialog
+  const getNodeNoteDetails = useCallback(() => {
+    if (!noteNodeId) return { note: '', nodeName: '' };
+    
+    const node = nodes.find(node => node.id === noteNodeId);
+    if (!node) return { note: '', nodeName: '' };
+    
+    return { 
+      note: node.data.note || '', 
+      nodeName: node.data.label || 'Node' 
+    };
+  }, [nodes, noteNodeId]);
 
   // Add a node from the toolbar
   const handleAddNodeFromToolbar = useCallback((type: NodeType, label: string) => {
@@ -160,12 +218,14 @@ export function useWorkflowFlow() {
         label,
         onDelete: deleteNode,
         onClone: cloneNode,
-        onSettings: selectNodeForEditing
+        onSettings: selectNodeForEditing,
+        onAddNote: openNoteDialog,
+        onEditNote: openEditNoteDialog
       },
     };
     
     setNodes((nds) => nds.concat(newNode));
-  }, [reactFlowInstance, setNodes, deleteNode, cloneNode, selectNodeForEditing]);
+  }, [reactFlowInstance, setNodes, deleteNode, cloneNode, selectNodeForEditing, openNoteDialog, openEditNoteDialog]);
 
   // Add a node from the node picker
   const handleNodeAdd = useCallback((type: string, label: string) => {
@@ -177,13 +237,15 @@ export function useWorkflowFlow() {
         label,
         onDelete: deleteNode,
         onClone: cloneNode,
-        onSettings: selectNodeForEditing
+        onSettings: selectNodeForEditing,
+        onAddNote: openNoteDialog,
+        onEditNote: openEditNoteDialog
       },
     };
     
     setNodes((nds) => nds.concat(newNode));
     setIsNodePickerOpen(false);
-  }, [nodePickerPosition, setNodes, deleteNode, cloneNode, selectNodeForEditing]);
+  }, [nodePickerPosition, setNodes, deleteNode, cloneNode, selectNodeForEditing, openNoteDialog, openEditNoteDialog]);
 
   // Save workflow
   const saveWorkflow = useCallback((workflowName: string) => {
@@ -194,6 +256,21 @@ export function useWorkflowFlow() {
     
     return true;
   }, []);
+
+  // Calculate the note dialog properties
+  const noteDetails = getNodeNoteDetails();
+  
+  // JSX for the note dialog
+  const noteDialogElement = (
+    <NodeNoteDialog
+      isOpen={isNoteDialogOpen}
+      setIsOpen={setIsNoteDialogOpen}
+      nodeId={noteNodeId}
+      nodeName={noteDetails.nodeName}
+      initialNote={noteDetails.note}
+      onSave={saveNodeNote}
+    />
+  );
 
   return {
     nodes,
@@ -220,6 +297,14 @@ export function useWorkflowFlow() {
     handleAddNodeFromToolbar,
     saveWorkflow,
     reactFlowWrapper,
-    setNodes
+    setNodes,
+    // Note related
+    isNoteDialogOpen,
+    setIsNoteDialogOpen,
+    noteNodeId,
+    openNoteDialog,
+    openEditNoteDialog,
+    saveNodeNote,
+    noteDialogElement
   };
 }

@@ -45,7 +45,9 @@ export default function WorkflowEditorPage() {
     handleNodeAdd,
     handleAddNodeFromToolbar,
     saveWorkflow,
-    reactFlowWrapper
+    reactFlowWrapper,
+    // Note dialog
+    noteDialogElement
   } = useWorkflowFlow();
 
   // Handle saving the workflow
@@ -127,6 +129,9 @@ export default function WorkflowEditorPage() {
         workflowDescription={workflowDescription}
         setWorkflowDescription={setWorkflowDescription}
       />
+      
+      {/* Node note dialog */}
+      {noteDialogElement}
     </div>
   );
 }

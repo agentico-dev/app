@@ -1,30 +1,23 @@
 
-import React from 'react';
-import {
-  ReactFlow,
-  Background,
-  Controls,
-  MiniMap,
-} from '@xyflow/react';
-import NodeTypes from './CustomNodes';
-import EdgeTypes from './CustomEdges';
-import NodeToolbar from './NodeToolbar';
-import { WorkflowPanel } from './WorkflowPanel';
+import React, { useCallback } from 'react';
+import { ReactFlow, Background, Controls, Node, Edge, OnNodesChange, OnEdgesChange, OnConnect, Connection, NodeTypes } from '@xyflow/react';
+import nodeTypes from './CustomNodes';
+import '@xyflow/react/dist/style.css';
 
 interface WorkflowCanvasProps {
-  nodes: any[];
-  edges: any[];
-  onNodesChange: any;
-  onEdgesChange: any;
-  onConnect: any;
-  setReactFlowInstance: any;
-  onDrop: any;
-  onDragOver: any;
-  onNodeClick: any;
-  onPaneClick: any;
-  selectedNode: any;
-  setNodes: any;
-  onAddNode: any;
+  nodes: Node[];
+  edges: Edge[];
+  onNodesChange: OnNodesChange;
+  onEdgesChange: OnEdgesChange;
+  onConnect: OnConnect;
+  onNodeClick: (event: React.MouseEvent, node: Node) => void;
+  onPaneClick: (event: React.MouseEvent) => void;
+  setReactFlowInstance: (instance: any) => void;
+  onDrop: (event: React.DragEvent<HTMLDivElement>, reactFlowWrapper: React.RefObject<HTMLDivElement>) => void;
+  onDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
+  selectedNode: Node | null;
+  setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
+  onAddNode: (event: React.MouseEvent) => void;
   reactFlowWrapper: React.RefObject<HTMLDivElement>;
 }
 
@@ -34,24 +27,30 @@ export function WorkflowCanvas({
   onNodesChange,
   onEdgesChange,
   onConnect,
+  onNodeClick,
+  onPaneClick,
   setReactFlowInstance,
   onDrop,
   onDragOver,
-  onNodeClick,
-  onPaneClick,
   selectedNode,
   setNodes,
   onAddNode,
   reactFlowWrapper
 }: WorkflowCanvasProps) {
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+  // Prevent default context menu on right-click
+  const handleContextMenu = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+  }, []);
+
+  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     onDrop(event, reactFlowWrapper);
-  };
+  }, [onDrop, reactFlowWrapper]);
 
   return (
     <div 
-      className="flex-1 w-full overflow-hidden" 
-      ref={reactFlowWrapper}
+      ref={reactFlowWrapper} 
+      className="flex-1 h-full" 
+      onContextMenu={handleContextMenu}
     >
       <ReactFlow
         nodes={nodes}
@@ -59,36 +58,19 @@ export function WorkflowCanvas({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
+        onContextMenu={handleContextMenu}
         onInit={setReactFlowInstance}
         onDrop={handleDrop}
         onDragOver={onDragOver}
-        onNodeClick={onNodeClick}
-        onPaneClick={onPaneClick}
-        nodeTypes={NodeTypes}
-        edgeTypes={EdgeTypes}
         fitView
+        attributionPosition="bottom-right"
+        nodeTypes={nodeTypes as NodeTypes}
+        onPaneContextMenu={onAddNode}
       >
-        <Background />
+        <Background gap={16} size={1} />
         <Controls />
-        <MiniMap nodeColor={(node) => {
-          switch (node.type) {
-            case 'application': return '#ffcc00';
-            case 'tool': return '#00ccff';
-            case 'agent': return '#ff00cc';
-            case 'task': return '#ccff00';
-            case 'memory': return '#cc00ff';
-            case 'reasoning': return '#00ffcc';
-            case 'input': return '#cccccc';
-            case 'output': return '#cccccc';
-            default: return '#ffffff';
-          }
-        }} />
-        
-        <WorkflowPanel onAddNode={onAddNode} />
-
-        {selectedNode && (
-          <NodeToolbar node={selectedNode} setNodes={setNodes} />
-        )}
       </ReactFlow>
     </div>
   );

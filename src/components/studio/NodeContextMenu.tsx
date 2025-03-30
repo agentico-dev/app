@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Node } from '@xyflow/react';
-import { Settings, Trash2, Copy } from 'lucide-react';
+import { Settings, Trash2, Copy, FileText } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -16,6 +16,7 @@ interface NodeContextMenuProps {
   onDelete: (nodeId: string) => void;
   onClone: (node: Node) => void;
   onSettings: (node: Node) => void;
+  onAddNote: (node: Node) => void;
 }
 
 export function NodeContextMenu({
@@ -24,6 +25,7 @@ export function NodeContextMenu({
   onDelete,
   onClone,
   onSettings,
+  onAddNote,
 }: NodeContextMenuProps) {
   return (
     <ContextMenu>
@@ -42,6 +44,13 @@ export function NodeContextMenu({
         >
           <Copy className="mr-2 h-4 w-4" />
           <span>Clone</span>
+        </ContextMenuItem>
+        <ContextMenuItem
+          onClick={() => onAddNote(node)}
+          className="cursor-pointer"
+        >
+          <FileText className="mr-2 h-4 w-4" />
+          <span>Add/Edit Note</span>
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem

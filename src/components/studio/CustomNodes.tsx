@@ -9,9 +9,11 @@ import {
   Database, 
   Lightbulb,
   FileInput,
-  FileOutput
+  FileOutput,
+  FileText
 } from 'lucide-react';
 import { NodeContextMenu } from './NodeContextMenu';
+import { Badge } from '@/components/ui/badge';
 
 // Map of node types to their corresponding Lucide icons
 const nodeIcons: { [key: string]: React.ElementType } = {
@@ -45,9 +47,12 @@ interface WorkflowNodeProps extends NodeProps {
   data: {
     label?: string;
     description?: string;
+    note?: string;
     onDelete?: (nodeId: string) => void;
     onClone?: (node: Node) => void;
     onSettings?: (node: Node) => void;
+    onAddNote?: (node: Node) => void;
+    onEditNote?: (nodeId: string) => void;
   };
 }
 
@@ -61,14 +66,12 @@ const WorkflowNodeComponent = ({
   const node = {
     id: nodeProps.id,
     type: nodeProps.type || 'default',
-    position: nodeProps.xPos !== undefined && nodeProps.yPos !== undefined 
-      ? { x: nodeProps.xPos, y: nodeProps.yPos } 
-      : { x: 0, y: 0 },
+    position: nodeProps.position || { x: 0, y: 0 },
     data: data,
   } as Node;
 
   const nodeContent = (
-    <div className={`px-4 py-2 rounded-md shadow-sm ${bgColor} ${borderColor} border-2 min-w-[180px]`}>
+    <div className={`px-4 py-2 rounded-md shadow-sm ${bgColor} ${borderColor} border-2 min-w-[180px] relative`}>
       <Handle
         type="target"
         position={Position.Left}
@@ -78,6 +81,16 @@ const WorkflowNodeComponent = ({
       <div className="flex items-center gap-2 mb-1">
         <Icon className="h-5 w-5" />
         <span className="font-medium text-sm">{data.label || 'Node'}</span>
+        
+        {data.note && (
+          <Badge 
+            variant="outline" 
+            className="ml-auto cursor-pointer bg-white border-blue-400 hover:bg-blue-50"
+            onClick={() => data.onEditNote && data.onEditNote(nodeProps.id)}
+          >
+            <FileText className="h-3 w-3 mr-1" /> Note
+          </Badge>
+        )}
       </div>
       
       {data.description && (
@@ -93,13 +106,14 @@ const WorkflowNodeComponent = ({
   );
 
   // Wrap node with context menu only if handlers are provided
-  if (data.onDelete && data.onClone && data.onSettings) {
+  if (data.onDelete && data.onClone && data.onSettings && data.onAddNote) {
     return (
       <NodeContextMenu
         node={node}
         onDelete={data.onDelete}
         onClone={data.onClone}
         onSettings={data.onSettings}
+        onAddNote={data.onAddNote}
       >
         {nodeContent}
       </NodeContextMenu>
