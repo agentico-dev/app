@@ -1,144 +1,216 @@
-import React from 'react';
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
-import Index from "./pages/Index";
-import DashboardLayout from "./components/layout/DashboardLayout";
-import ErrorBoundary from "./components/ErrorBoundary";
-import ProjectsPage from "./pages/ProjectsPage";
-import ApplicationsPage from "./pages/ApplicationsPage";
-import ServersPage from "./pages/ServersPage";
-import AIToolsPage from "./pages/AIToolsPage";
-import StudioPage from "./pages/StudioPage";
-import SearchPage from "./pages/SearchPage";
-import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
-import OrganizationsPage from "./pages/OrganizationsPage";
-import OrganizationDetailPage from "./pages/OrganizationDetailPage";
-import ProjectDetailPage from "./pages/ProjectDetailPage";
-import ApplicationDetailPage from "./pages/ApplicationDetailPage";
-import ServerDetailPage from "./pages/ServerDetailPage";
-import AIToolDetailPage from "./pages/AIToolDetailPage";
-import LoginPage from "./pages/LoginPage";
-import { useAuth } from './hooks/useAuth';
-import { useEffect } from 'react';
+
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router";
+import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { TagsProvider } from "./contexts/TagsContext";
+import { lazy, Suspense } from "react";
+
+// Lazy-loaded components
+const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
+const ProjectDetailPage = lazy(() => import("./pages/projects/ProjectDetailPage"));
+const AIToolsPage = lazy(() => import("./pages/AIToolsPage"));
+const ApplicationsPage = lazy(() => import("./pages/ApplicationsPage"));
+const ServersPage = lazy(() => import("./pages/ServersPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const OrganizationsPage = lazy(() => import("./pages/OrganizationsPage"));
+const OrganizationDetailPage = lazy(() => import("./pages/OrganizationDetailPage"));
+
+const NewProjectPage = lazy(() => import("./pages/projects/NewProjectPage"));
+const NewApplicationPage = lazy(() => import("./pages/applications/NewApplicationPage"));
+const NewServerPage = lazy(() => import("./pages/servers/NewServerPage"));
+const NewToolPage = lazy(() => import("./pages/ai-tools/NewToolPage"));
+
+const ApplicationDetailPage = lazy(() => import("./pages/applications/ApplicationDetailPage"));
+const ApiFormPage = lazy(() => import("./pages/applications/api/ApiFormPage"));
+const ServiceFormPage = lazy(() => import("./pages/applications/service/ServiceFormPage"));
+const MessageFormPage = lazy(() => import("./pages/applications/message/MessageFormPage"));
+const ServerDetailPage = lazy(() => import("./pages/servers/ServerDetailPage"));
+
+// Studio pages
+const StudioPage = lazy(() => import("./pages/studio/StudioPage"));
+const StudioNewProjectPage = lazy(() => import("./pages/studio/NewProjectPage"));
+const WorkflowEditorPage = lazy(() => import("./pages/studio/WorkflowEditorPage"));
 import EnvironmentsPage from "./pages/settings/EnvironmentsPage";
 import EnvironmentDetailPage from "./pages/settings/EnvironmentDetailPage";
 
-function App() {
-  const { session, isLoading, supabase } = useAuth();
 
-  useEffect(() => {
-    // Check auth condition once the session is loaded
-    if (isLoading) {
-      console.log('Auth is loading...');
-      return; // Do nothing until auth is loaded
-    }
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
-    if (!session) {
-      console.log('No active Supabase session found.');
-    } else {
-      console.log('Supabase session found:', session);
-    }
-  }, [session, isLoading, supabase]);
+const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
 
-  // Show a loading indicator while the auth state is loading
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (loading) {
+    return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
 
-  const router = createBrowserRouter([
-    {
-      path: "/",
-      element: <DashboardLayout />,
-      errorElement: <ErrorBoundary />,
-      children: [
-        {
-          path: "index",
-          element: <Index />,
-        },
-        {
-          path: "/",
-          element: <ProjectsPage />,
-        },
-        {
-          path: "projects",
-          element: <ProjectsPage />,
-        },
-        {
-          path: "projects/:slug",
-          element: <ProjectDetailPage />,
-        },
-        {
-          path: "apps",
-          element: <ApplicationsPage />,
-        },
-        {
-          path: "apps/:slug",
-          element: <ApplicationDetailPage />,
-        },
-        {
-          path: "servers",
-          element: <ServersPage />,
-        },
-        {
-          path: "servers/:slug",
-          element: <ServerDetailPage />,
-        },
-        {
-          path: "tools",
-          element: <AIToolsPage />,
-        },
-        {
-          path: "tools/:slug",
-          element: <AIToolDetailPage />,
-        },
-        {
-          path: "studio",
-          element: <StudioPage />,
-        },
-        {
-          path: "search",
-          element: <SearchPage />,
-        },
-        {
-          path: "profile",
-          element: <ProfilePage />,
-        },
-        {
-          path: "settings",
-          element: <SettingsPage />,
-        },
-        {
-          path: "orgs",
-          element: <OrganizationsPage />,
-        },
-        {
-          path: "orgs/:slug",
-          element: <OrganizationDetailPage />,
-        },
-        {
-          path: "settings/environments",
-          element: <EnvironmentsPage />,
-        },
-        {
-          path: "settings/environments/:id",
-          element: <EnvironmentDetailPage />,
-        },
-      ],
-    },
-    {
-      path: "/login",
-      element: <LoginPage />,
-    },
-  ], { basename: import.meta.env.BASE_URL });
+  return <>{children}</>;
+};
+
+const RedirectIfAuthenticated = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
+  }
+
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+interface RedirectWithSlugProps {
+  path: string;
+}
+
+interface RedirectWithSlugParams extends Record<string, string> {
+  parentSlug: string;
+  childSlug: string;
+}
+
+const RedirectWithSlug: React.FC<RedirectWithSlugProps> = ({ path }) => {
+  const params = useParams<RedirectWithSlugParams>();
+  return <Navigate to={`/${path}/${params.parentSlug}@${params.childSlug}`} replace />;
+};
+
+const AppRoutes = () => {
+  const { user } = useAuth();
+
+  if (!user && window.location.pathname === '/') {
+    return (
+      <Routes>
+        <Route element={<DashboardLayout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
+        <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
+        <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    );
+  }
 
   return (
-    <React.StrictMode>
-      <RouterProvider router={router} />
-    </React.StrictMode>
+    <Routes>
+      <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
+      <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
+      <Route path="/index" element={<LandingPage />} />
+
+      <Route element={<DashboardLayout />}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+
+        <Route path="/orgs" element={<OrganizationsPage />} />
+        <Route path="/orgs/:slug" element={<OrganizationDetailPage />} />
+
+        <Route path="/organizations">
+          <Route path=":slug" element={<Navigate to={`/orgs/${useParams().slug}`} replace />} />
+        </Route>
+
+        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projs" element={<Navigate to="/projects" replace />} />
+        <Route path="/projects/new" element={<AuthenticatedRoute><NewProjectPage /></AuthenticatedRoute>} />
+        <Route path="/projs/new" element={<Navigate to="/projects/new" replace />} />
+        <Route path="/projects/:id" element={<ProjectDetailPage />} />
+        <Route path="/projects/:id/edit" element={<AuthenticatedRoute><NewProjectPage /></AuthenticatedRoute>} />
+        <Route path="/projects/:orgSlug@:projSlug" element={<ProjectDetailPage />} />
+        <Route path="/projs/:orgSlug@:projSlug" element={<Navigate to={`/projects/${useParams().orgSlug}@${useParams().projSlug}`} replace />} />
+
+        <Route path="/applications" element={<ApplicationsPage />} />
+        <Route path="/applications/new" element={<AuthenticatedRoute><NewApplicationPage /></AuthenticatedRoute>} />
+
+        <Route path="/apps/:orgSlug@:appSlug" element={<AuthenticatedRoute><ApplicationDetailPage /></AuthenticatedRoute>} />
+        <Route path="/apps" element={<Navigate to="/applications" replace />} />
+        <Route path="/apps/new" element={<Navigate to="/applications/new" replace />} />
+        <Route path="/applications/:id" element={<AuthenticatedRoute><ApplicationDetailPage /></AuthenticatedRoute>} />
+
+        <Route path="/applications/:applicationId/apis/new" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug/apis/new" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
+        <Route path="/applications/:applicationId/apis/:apiId" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug/apis/:apiSlug" element={<AuthenticatedRoute><ApiFormPage /></AuthenticatedRoute>} />
+
+        <Route path="/applications/:applicationId/services/new" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug/services/new" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
+        <Route path="/applications/:applicationId/services/:serviceId" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug/services/:serviceSlug" element={<AuthenticatedRoute><ServiceFormPage /></AuthenticatedRoute>} />
+
+        <Route path="/applications/:applicationId/messages/new" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug/messages/new" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
+        <Route path="/applications/:applicationId/messages/:messageId" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
+        <Route path="/apps/:orgSlug@:appSlug/messages/:messageId" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
+
+        <Route path="/servers" element={<ServersPage />} />
+        <Route path="/servers/new" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
+        <Route path="/servers/:id" element={<AuthenticatedRoute><ServerDetailPage /></AuthenticatedRoute>} />
+        <Route path="/servers/:id/edit" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
+        <Route path="/servers/:projSlug@:serverSlug" element={<AuthenticatedRoute><ServerDetailPage /></AuthenticatedRoute>} />
+
+        <Route path="/ai-tools" element={<AIToolsPage />} />
+        <Route path="/tools" element={<Navigate to="/ai-tools" replace />} />
+        <Route path="/ai-tools/new" element={<AuthenticatedRoute><NewToolPage /></AuthenticatedRoute>} />
+        <Route path="/tools/new" element={<Navigate to="/ai-tools/new" replace />} />
+        <Route path="/ai-tools/:id" element={<AIToolsPage />} />
+        <Route path="/tools/:serverSlug@:toolSlug" element={<Navigate to={`/ai-tools/${window.location.pathname.split('/')[2]}`} replace />} />
+
+        {/* Studio Routes */}
+        <Route path="/studio" element={<AuthenticatedRoute><StudioPage /></AuthenticatedRoute>} />
+        {/* @fixme - Projects are the same as without Studio: /projects/new */}
+        <Route path="/studio/new-project" element={<AuthenticatedRoute><StudioNewProjectPage /></AuthenticatedRoute>} />
+        <Route path="/studio/projects/:projectId" element={<AuthenticatedRoute><WorkflowEditorPage /></AuthenticatedRoute>} />
+
+        <Route path="/models" element={<ProjectsPage />} />
+        <Route path="/data" element={<ProjectsPage />} />
+        <Route path="/agents" element={<ProjectsPage />} />
+
+        <Route path="/profile" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
+        <Route path="/settings" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} >
+          <Route path="environments" element={<EnvironmentsPage />} />
+          <Route path="environments/:id" element={<EnvironmentDetailPage />} />
+        </Route>
+        {/* external link to documentation */}
+        <Route path="/docs" element={<Navigate to="https://agentico.dev/docs/intro/" replace />} />
+      </Route>
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
-}
+};
+
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <TagsProvider>
+              <Suspense fallback={<div className="flex h-screen w-full items-center justify-center">Loading...</div>}>
+                <AppRoutes />
+              </Suspense>
+            </TagsProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
