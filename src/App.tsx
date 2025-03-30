@@ -39,9 +39,10 @@ const ServerDetailPage = lazy(() => import("./pages/servers/ServerDetailPage"));
 const StudioPage = lazy(() => import("./pages/studio/StudioPage"));
 const StudioNewProjectPage = lazy(() => import("./pages/studio/NewProjectPage"));
 const WorkflowEditorPage = lazy(() => import("./pages/studio/WorkflowEditorPage"));
-import EnvironmentsPage from "./pages/settings/EnvironmentsPage";
-import EnvironmentDetailPage from "./pages/settings/EnvironmentDetailPage";
 
+// Environment pages
+const EnvironmentsPage = lazy(() => import("./pages/settings/EnvironmentsPage"));
+const EnvironmentDetailPage = lazy(() => import("./pages/settings/EnvironmentDetailPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -180,7 +181,7 @@ const AppRoutes = () => {
         <Route path="/agents" element={<ProjectsPage />} />
 
         <Route path="/profile" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
-        <Route path="/settings" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} >
+        <Route path="/settings" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>}>
           <Route path="environments" element={<EnvironmentsPage />} />
           <Route path="environments/:id" element={<EnvironmentDetailPage />} />
         </Route>

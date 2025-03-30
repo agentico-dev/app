@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useEnvironments } from '@/hooks/useEnvironments';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Buildings, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, Building, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -40,7 +39,6 @@ export default function EnvironmentsPage() {
     status: 'active'
   });
 
-  // Set the selected organization when user organizations load
   React.useEffect(() => {
     if (userOrganizations && userOrganizations.length > 0 && !selectedOrgId) {
       setSelectedOrgId(userOrganizations[0].id);
@@ -88,7 +86,6 @@ export default function EnvironmentsPage() {
       
       await createEnvironment.mutateAsync(payload);
       
-      // Close the dialog and reset form
       setOpen(false);
       setNewEnvironment({
         name: '',
@@ -301,7 +298,7 @@ export default function EnvironmentsPage() {
               </div>
             ) : !environments || environments.length === 0 ? (
               <div className="text-center py-8">
-                <Buildings className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
+                <Building className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
                 <h3 className="mt-4 text-lg font-semibold">No Environments</h3>
                 <p className="text-sm text-muted-foreground mt-2">
                   {selectedOrgId ? 'This organization doesn\'t have any environments yet.' : 'Select an organization to view its environments.'}
