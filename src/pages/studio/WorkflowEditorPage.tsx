@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { toast } from 'sonner';
@@ -93,8 +92,13 @@ export default function WorkflowEditorPage() {
     navigate(`/studio`);
   };
 
+  // Calculate main content class based on whether a node is selected
+  const mainContentClass = selectedNode 
+    ? 'flex flex-col h-[calc(100vh-5rem)] pr-[360px] transition-all duration-300' 
+    : 'flex flex-col h-[calc(100vh-5rem)] transition-all duration-300';
+
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)]">
+    <div className={mainContentClass}>
       <WorkflowHeader
         workflowName={workflowName}
         setWorkflowName={setWorkflowName}
@@ -146,7 +150,7 @@ export default function WorkflowEditorPage() {
         setWorkflowDescription={setWorkflowDescription}
       />
       
-      {/* Node config panel */}
+      {/* Node config panel as a sidebar */}
       <NodeConfigPanel 
         node={selectedNode}
         onClose={closeConfigPanel}
