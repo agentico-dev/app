@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +26,7 @@ export function useProjectTools(projectId: string) {
   });
 
   // Fetch AI tools linked to the associated applications' services
+  // projects → project_applications → application_apis → application_services → ai_tools
   const { data: applicationTools, isLoading: isLoadingApplicationTools } = useQuery({
     queryKey: ['application-tools', projectId, projectApplications],
     queryFn: async () => {
@@ -36,28 +36,38 @@ export function useProjectTools(projectId: string) {
 
       // Get application IDs associated with this project
       const applicationIds = projectApplications.map(pa => pa.application_id);
-      
-      // Find services from these applications
-      const { data: services, error: servicesError } = await supabase
-        .from('application_services')
-        .select('id')
-        .in('application_id', applicationIds);
-      
-      if (servicesError) throw servicesError;
-      
-      if (!services || services.length === 0) {
-        return [] as AITool[];
-      }
-      
-      // Find tools linked to these services
-      const serviceIds = services.map(service => service.id);
+
+      // Use a single join query to get all tools linked to the project's applications
+      // @note - prefer using inner joins to improve performance! from 550ms to 103ms
       const { data, error } = await supabase
-        .from('ai_tools')
-        .select('*')
-        .in('application_service_id', serviceIds);
-      
+        .from('applications')
+        .select(`
+          id,
+          application_apis!inner (
+            id,
+            application_services!inner (
+              id,
+              ai_tools (*)
+            )
+          )
+        `)
+        .in('id', applicationIds);
+
       if (error) throw error;
-      return data as AITool[];
+      
+      // Extract and flatten the tools from the nested structure
+      const tools: AITool[] = [];
+      data?.forEach(app => {
+        app.application_apis?.forEach(api => {
+          api.application_services?.forEach(service => {
+            if (service.ai_tools && service.ai_tools.length > 0) {
+              tools.push(...service.ai_tools);
+            }
+          });
+        });
+      });
+
+      return tools as AITool[];
     },
     enabled: !!projectId && !!projectApplications,
   });

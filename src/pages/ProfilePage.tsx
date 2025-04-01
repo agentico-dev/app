@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,14 +9,21 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { AlertCircle, Trash2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { apiTable } from '@/utils/supabaseHelpers';
 import { supabase } from '@/integrations/supabase/client';
+import PlanSelector from '@/components/PlanSelector';
+import { Separator } from '@/components/ui/separator';
+import { usePlans } from '@/hooks/usePlans';
 
 const ProfilePage = () => {
   const location = useLocation();
   const { user, profile, loading } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
-  
+
+  const { plans, currentPlan, updatePlan, cancelSubscription, isLoading: plansLoading } = usePlans();
+
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       full_name: profile?.full_name || user?.user_metadata?.full_name || '',
@@ -88,13 +94,30 @@ const ProfilePage = () => {
     .map(part => part[0])
     .join('')
     .toUpperCase();
+    const handlePlanChange = async (planId: string) => {
+      try {
+        await updatePlan.mutateAsync(planId);
+        toast.success("Plan updated", {
+          description: "Your subscription plan has been updated successfully.",
+        });
+      } catch (error: any) {
+        toast.error("Error updating plan", {
+          description: error.message || "Failed to update your plan.",
+        });
+      }
+    };
+  
+    const handleCancelSubscription = () => {
+      cancelSubscription.mutate();
+    };
 
   return (
     <div className="container mx-auto py-8">
       <Tabs defaultValue="profile" className="w-full max-w-4xl mx-auto">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="settings">Account Settings</TabsTrigger>
+          <TabsTrigger value="plan">Subscription</TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile">
@@ -187,7 +210,56 @@ const ProfilePage = () => {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent>        
+          
+        <TabsContent value="plan">
+            <Card>
+              <CardHeader>
+                <CardTitle>Subscription Plan</CardTitle>
+                <CardDescription>
+                  Manage your subscription and billing.
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    During the beta period, all plans are free. Choose the plan that best suits your needs.
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Current Plan: <span className="text-primary capitalize">{currentPlan?.name || 'Free'}</span></h3>
+                  <p className="text-muted-foreground">Select a plan to change your subscription:</p>
+                  
+                  <PlanSelector
+                    plans={plans}
+                    selectedPlan={profile?.plan_id || 'free'}
+                    onSelectPlan={handlePlanChange}
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium text-destructive">Cancel Subscription</h3>
+                  <p className="text-muted-foreground">
+                    Cancel your subscription and downgrade to the Free plan.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="mt-2"
+                    onClick={handleCancelSubscription}
+                    disabled={profile?.plan_id === 'free' || !profile?.plan_id}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Cancel Subscription
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
       </Tabs>
       
       <Outlet />
