@@ -60,6 +60,7 @@ const ResourceContainer = ({
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
+                      className="transition-all duration-200"
                     >
                       {resourceType === 'application' ? (
                         <ApplicationCard application={item as Application} />
@@ -103,6 +104,16 @@ export function DraggableResourceList({
   createButtonLabel,
   onCreateClick
 }: DraggableResourceListProps) {
+  const [localAvailable, setLocalAvailable] = React.useState<(Application | AITool)[]>([]);
+  const [localAssociated, setLocalAssociated] = React.useState<(Application | AITool)[]>([]);
+  const [isUpdating, setIsUpdating] = React.useState(false);
+
+  // Initialize local state from props
+  React.useEffect(() => {
+    setLocalAvailable(availableResources);
+    setLocalAssociated(associatedResources);
+  }, [availableResources, associatedResources]);
+
   const handleDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId } = result;
     
@@ -117,7 +128,36 @@ export function DraggableResourceList({
       return;
     }
     
+    // Optimistic UI update
+    const sourceItems = source.droppableId === 'available' ? [...localAvailable] : [...localAssociated];
+    const destItems = destination.droppableId === 'available' ? [...localAvailable] : [...localAssociated];
+    
+    // Find the item being moved
+    const itemToMove = sourceItems.find(item => item.id === draggableId);
+    if (!itemToMove) return;
+    
+    // Remove from source
+    const newSourceItems = sourceItems.filter(item => item.id !== draggableId);
+    
+    // Add to destination
+    const newDestItems = [...destItems];
+    newDestItems.splice(destination.index, 0, itemToMove);
+    
+    // Update local state immediately for responsive UI
+    if (source.droppableId === 'available') {
+      setLocalAvailable(newSourceItems);
+    } else {
+      setLocalAssociated(newSourceItems);
+    }
+    
+    if (destination.droppableId === 'available') {
+      setLocalAvailable(newDestItems);
+    } else {
+      setLocalAssociated(newDestItems);
+    }
+    
     // Handle association or disassociation
+    setIsUpdating(true);
     try {
       await onResourceMoved(draggableId, source.droppableId, destination.droppableId);
       
@@ -130,6 +170,12 @@ export function DraggableResourceList({
     } catch (error) {
       console.error('Error moving resource:', error);
       toast.error(`Failed to update ${resourceType} association`);
+      
+      // Revert local state on error
+      setLocalAvailable(availableResources);
+      setLocalAssociated(associatedResources);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -139,7 +185,7 @@ export function DraggableResourceList({
         <ResourceContainer
           id="available"
           title="Available"
-          items={availableResources}
+          items={localAvailable}
           resourceType={resourceType}
           emptyMessage={`No available ${resourceType === 'application' ? 'applications' : 'AI tools'}`}
           emptyIcon={resourceType === 'application' 
@@ -157,7 +203,7 @@ export function DraggableResourceList({
         <ResourceContainer
           id="associated"
           title={`Associated with Project`}
-          items={associatedResources}
+          items={localAssociated}
           resourceType={resourceType}
           emptyMessage={`No ${resourceType === 'application' ? 'applications' : 'AI tools'} associated with this project`}
           emptyIcon={resourceType === 'application' 

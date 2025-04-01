@@ -102,6 +102,9 @@ export function useProjectApplications(projectId: string) {
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['project-applications-join', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project-applications', projectId] });
+      
+      // Also invalidate the project detail to update any application counts
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
     },
     onError: (error) => {
       console.error('Error updating association:', error);
@@ -129,16 +132,39 @@ export function useProjectApplications(projectId: string) {
     sourceList: string,
     destinationList: string
   ) => {
-    if (sourceList === 'available' && destinationList === 'associated') {
-      await updateProjectAssociation({ 
-        applicationId, 
-        action: 'associate' 
-      });
-    } else if (sourceList === 'associated' && destinationList === 'available') {
-      await updateProjectAssociation({ 
-        applicationId, 
-        action: 'disassociate' 
-      });
+    try {
+      if (sourceList === 'available' && destinationList === 'associated') {
+        await updateProjectAssociation({ 
+          applicationId, 
+          action: 'associate' 
+        });
+        
+        // Update local state to provide immediate feedback
+        if (allApplications) {
+          const appToMove = availableApplications.find(app => app.id === applicationId);
+          if (appToMove) {
+            setAvailableApplications(prev => prev.filter(app => app.id !== applicationId));
+            setAssociatedApplications(prev => [...prev, appToMove]);
+          }
+        }
+      } else if (sourceList === 'associated' && destinationList === 'available') {
+        await updateProjectAssociation({ 
+          applicationId, 
+          action: 'disassociate' 
+        });
+        
+        // Update local state to provide immediate feedback
+        const appToMove = associatedApplications.find(app => app.id === applicationId);
+        if (appToMove) {
+          setAssociatedApplications(prev => prev.filter(app => app.id !== applicationId));
+          setAvailableApplications(prev => [...prev, appToMove]);
+        }
+      }
+    } catch (error) {
+      console.error('Error in handleMoveApplication:', error);
+      // Revert the UI back in case of an error by refreshing data
+      queryClient.invalidateQueries({ queryKey: ['project-applications-join', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project-applications', projectId] });
     }
   };
 

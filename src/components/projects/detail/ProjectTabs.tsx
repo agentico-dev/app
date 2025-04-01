@@ -60,6 +60,7 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
             </div>
           ) : (
             <DraggableResourceList
+              key={`applications-${associatedApplications.length}-${availableApplications.length}`}
               projectId={project.id}
               availableResources={availableApplications}
               associatedResources={associatedApplications}
@@ -80,6 +81,7 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
             </div>
           ) : (
             <DraggableResourceList
+              key={`tools-${associatedTools.length}-${availableTools.length}`}
               projectId={project.id}
               availableResources={availableTools}
               associatedResources={associatedTools}
