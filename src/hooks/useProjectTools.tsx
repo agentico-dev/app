@@ -11,17 +11,55 @@ export function useProjectTools(projectId: string) {
   const [availableTools, setAvailableTools] = useState<AITool[]>([]);
   const [associatedTools, setAssociatedTools] = useState<AITool[]>([]);
 
-  // Fetch all AI tools
-  const { data: allTools, isLoading: isLoadingAll } = useQuery({
-    queryKey: ['ai-tools'],
+  // Fetch project_applications to find associated applications
+  const { data: projectApplications } = useQuery({
+    queryKey: ['project-applications-join', projectId],
     queryFn: async () => {
       const { data, error } = await supabase
+        .from('project_applications')
+        .select('*')
+        .eq('project_id', projectId);
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!projectId,
+  });
+
+  // Fetch AI tools linked to the associated applications' services
+  const { data: applicationTools, isLoading: isLoadingApplicationTools } = useQuery({
+    queryKey: ['application-tools', projectId, projectApplications],
+    queryFn: async () => {
+      if (!projectApplications || projectApplications.length === 0) {
+        return [] as AITool[];
+      }
+
+      // Get application IDs associated with this project
+      const applicationIds = projectApplications.map(pa => pa.application_id);
+      
+      // Find services from these applications
+      const { data: services, error: servicesError } = await supabase
+        .from('application_services')
+        .select('id')
+        .in('application_id', applicationIds);
+      
+      if (servicesError) throw servicesError;
+      
+      if (!services || services.length === 0) {
+        return [] as AITool[];
+      }
+      
+      // Find tools linked to these services
+      const serviceIds = services.map(service => service.id);
+      const { data, error } = await supabase
         .from('ai_tools')
-        .select('*');
+        .select('*')
+        .in('application_service_id', serviceIds);
       
       if (error) throw error;
       return data as AITool[];
     },
+    enabled: !!projectId && !!projectApplications,
   });
 
   // Fetch project_tools join records
@@ -105,17 +143,19 @@ export function useProjectTools(projectId: string) {
 
   // Set available and associated tools
   useEffect(() => {
-    if (allTools && projectTools) {
-      // Available tools are those not already associated with the project
+    if (applicationTools && projectTools) {
+      // Available tools are those linked to the applications but not already associated with the project
       const associated = projectTools || [];
       const associatedIds = associated.map(tool => tool.id);
       
+      const available = applicationTools || [];
+      
       setAvailableTools(
-        allTools.filter(tool => !associatedIds.includes(tool.id))
+        available.filter(tool => !associatedIds.includes(tool.id))
       );
       setAssociatedTools(associated);
     }
-  }, [allTools, projectTools]);
+  }, [applicationTools, projectTools]);
 
   // Handle moving tool between available and associated
   const handleMoveTool = async (
@@ -139,7 +179,8 @@ export function useProjectTools(projectId: string) {
   return {
     availableTools,
     associatedTools,
-    isLoading: isLoadingAll || isLoadingAssociated || isLoadingJoin,
+    isLoading: isLoadingApplicationTools || isLoadingAssociated || isLoadingJoin,
+    hasAssociatedApplications: projectApplications && projectApplications.length > 0,
     handleMoveTool,
   };
 }

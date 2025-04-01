@@ -25,6 +25,7 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
     availableTools, 
     associatedTools, 
     isLoading: isLoadingTools,
+    hasAssociatedApplications,
     handleMoveTool
   } = useProjectTools(project.id);
 
@@ -34,6 +35,66 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
 
   const handleCreateTool = () => {
     navigate('/tools/new', { state: { projectId: project.id } });
+  };
+
+  const renderToolsTab = () => {
+    if (isLoadingTools) {
+      return (
+        <div className="flex justify-center p-6">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+
+    // If there are no associated applications, show an empty state
+    if (!hasAssociatedApplications) {
+      return (
+        <DraggableResourceList
+          key={`tools-empty-${associatedTools.length}`}
+          projectId={project.id}
+          availableResources={[]}
+          associatedResources={associatedTools}
+          resourceType="tool"
+          onResourceMoved={handleMoveTool}
+          showEmptyState={true}
+          emptyStateMessage="No tools available - associate applications with this project first"
+          createButtonLabel="Create AI Tool"
+          onCreateClick={handleCreateTool}
+        />
+      );
+    }
+
+    // If there are no available tools for the associated applications
+    if (availableTools.length === 0 && associatedTools.length === 0) {
+      return (
+        <DraggableResourceList
+          key={`tools-no-available-${associatedTools.length}`}
+          projectId={project.id}
+          availableResources={[]}
+          associatedResources={[]}
+          resourceType="tool"
+          onResourceMoved={handleMoveTool}
+          showEmptyState={true}
+          emptyStateMessage="No tools available for the associated applications"
+          createButtonLabel="Create AI Tool"
+          onCreateClick={handleCreateTool}
+        />
+      );
+    }
+
+    // Normal state with available tools
+    return (
+      <DraggableResourceList
+        key={`tools-${associatedTools.length}-${availableTools.length}`}
+        projectId={project.id}
+        availableResources={availableTools}
+        associatedResources={associatedTools}
+        resourceType="tool"
+        onResourceMoved={handleMoveTool}
+        createButtonLabel="Create AI Tool"
+        onCreateClick={handleCreateTool}
+      />
+    );
   };
 
   return (
@@ -75,22 +136,7 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
           value: 'tools',
           label: 'AI Tools',
           description: 'Manage AI tools associated with this project',
-          content: isLoadingTools ? (
-            <div className="flex justify-center p-6">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <DraggableResourceList
-              key={`tools-${associatedTools.length}-${availableTools.length}`}
-              projectId={project.id}
-              availableResources={availableTools}
-              associatedResources={associatedTools}
-              resourceType="tool"
-              onResourceMoved={handleMoveTool}
-              createButtonLabel="Create AI Tool"
-              onCreateClick={handleCreateTool}
-            />
-          ),
+          content: renderToolsTab(),
         },
       ]}
     />
