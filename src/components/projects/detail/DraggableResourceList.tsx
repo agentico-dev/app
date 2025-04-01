@@ -185,7 +185,7 @@ export function DraggableResourceList({
         <ResourceContainer
           id="available"
           title="Available"
-          items={localAvailable}
+          items={localAvailable as Application[] | AITool[]}
           resourceType={resourceType}
           emptyMessage={`No available ${resourceType === 'application' ? 'applications' : 'AI tools'}`}
           emptyIcon={resourceType === 'application' 
@@ -203,7 +203,7 @@ export function DraggableResourceList({
         <ResourceContainer
           id="associated"
           title={`Associated with Project`}
-          items={localAssociated}
+          items={localAssociated as Application[] | AITool[]}
           resourceType={resourceType}
           emptyMessage={`No ${resourceType === 'application' ? 'applications' : 'AI tools'} associated with this project`}
           emptyIcon={resourceType === 'application' 
