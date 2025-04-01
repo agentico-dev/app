@@ -87,6 +87,7 @@ export default function ApiDetailsView({ api }: ApiDetailsViewProps) {
               language={api.content_format || 'json'}
               className="min-h-[300px] max-h-[600px]"
               readOnly={true}
+              onChange={() => {}} 
             />
           </CardContent>
         </Card>

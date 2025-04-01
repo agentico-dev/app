@@ -1,3 +1,4 @@
+
 export interface Application {
   id: string;
   name: string;
@@ -7,7 +8,7 @@ export interface Application {
   created_at: string;
   updated_at: string;
   tags?: string[];
-  status?: 'active' | 'inactive' | 'maintenance';
+  status?: ApplicationStatus;
   category?: string;
   favorite?: boolean;
   // helpers for the UI
@@ -16,6 +17,8 @@ export interface Application {
   tools_count?: number;
   // Add any other fields that are part of the application object
 }
+
+export type ApplicationStatus = 'active' | 'inactive' | 'maintenance' | 'deprecated' | 'archived';
 
 export interface Organization {
   id: string;
@@ -36,12 +39,15 @@ export interface ApplicationAPI {
   source_uri?: string;
   source_content?: string;
   content_format?: 'json' | 'yaml';
-  protocol?: string;
+  protocol?: 'REST' | 'gRPC' | 'WebSockets' | 'GraphQL';
   is_public?: boolean;
+  endpoint_url?: string;
+  documentation_url?: string;
   status?: 'active' | 'inactive' | 'deprecated' | 'archived';
   created_at: string;
   updated_at: string;
   tags?: string[];
+  fetchContent?: boolean;
 }
 
 // Update the ApplicationMessage interface to include api_id
@@ -78,4 +84,29 @@ export interface ApplicationService {
 export interface ApiResponse<T> {
   data: T[] | null;
   error: any | null;
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  created_at: string;
+  read: boolean;
+  user_id: string;
+  link?: string;
+  // Additional fields for enhanced notifications
+  status?: 'read' | 'unread';
+  notification_type?: 'info' | 'success' | 'warning' | 'error';
+  content?: string;
+  resource_type?: string;
+  resource_id?: string;
+  related_resource_id?: string;
+  organization_id?: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  created_at: string;
 }

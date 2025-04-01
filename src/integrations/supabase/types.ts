@@ -334,6 +334,59 @@ export type Database = {
           },
         ]
       }
+      environments: {
+        Row: {
+          cluster_url: string
+          created_at: string
+          created_by: string | null
+          credential_certificate: string | null
+          credential_token: string | null
+          credential_type: string
+          description: string | null
+          id: string
+          name: string
+          organization_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cluster_url: string
+          created_at?: string
+          created_by?: string | null
+          credential_certificate?: string | null
+          credential_token?: string | null
+          credential_type?: string
+          description?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cluster_url?: string
+          created_at?: string
+          created_by?: string | null
+          credential_certificate?: string | null
+          credential_token?: string | null
+          credential_type?: string
+          description?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "environments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           content: string
@@ -898,6 +951,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_public_organization: {
+        Args: {
+          org_id: string
+        }
+        Returns: boolean
+      }
       list_organization_members: {
         Args: {
           org_id: string
@@ -910,7 +969,7 @@ export type Database = {
           user_id: string | null
         }[]
       }
-      list_organizations: {
+      list_public_organizations: {
         Args: Record<PropertyKey, never>
         Returns: {
           created_at: string | null

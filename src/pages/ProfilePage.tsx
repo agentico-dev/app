@@ -1,376 +1,198 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Outlet, useLocation } from 'react-router';
+import { useAuth } from '@/hooks/useAuth';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { apiTable } from '@/utils/supabaseHelpers';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AlertCircle, CheckCircle, KeyRound, LogOut, Save, Trash2, User } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
-import PlanSelector from '@/components/PlanSelector';
-import { usePlans } from '@/hooks/usePlans';
+import { supabase } from '@/integrations/supabase/client';
 
-export default function ProfilePage() {
-  const { user, profile, signOut, loading } = useAuth();
-  const { toast } = useToast();
-  const { plans, currentPlan, updatePlan, cancelSubscription, isLoading: plansLoading } = usePlans();
+const ProfilePage = () => {
+  const location = useLocation();
+  const { user, profile, loading } = useAuth();
+  const [isUpdating, setIsUpdating] = useState(false);
   
-  const [saving, setSaving] = useState(false);
-  const [fullName, setFullName] = useState('');
-  const [bio, setBio] = useState('');
-  const [jobTitle, setJobTitle] = useState('');
-  const [company, setCompany] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [error, setError] = useState('');
-  const [deleteConfirm, setDeleteConfirm] = useState('');
-  const [currentTab, setCurrentTab] = useState('profile');
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    defaultValues: {
+      full_name: profile?.full_name || user?.user_metadata?.full_name || '',
+      job_title: profile?.job_title || '',
+      company: profile?.company || '',
+      bio: profile?.bio || '',
+    }
+  });
 
+  const onSubmit = async (data) => {
+    if (!user) return;
+    
+    setIsUpdating(true);
+    try {
+      // Update user metadata in auth
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { full_name: data.full_name }
+      });
+      
+      if (authError) throw authError;
+      
+      // Update profile in profiles table
+      const { error: profileError } = await apiTable('profiles')
+        .upsert({
+          id: user.id,
+          full_name: data.full_name,
+          job_title: data.job_title,
+          company: data.company,
+          bio: data.bio,
+          updated_at: new Date().toISOString()
+        });
+      
+      if (profileError) throw profileError;
+      
+      toast.success('Profile updated successfully');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error(`Failed to update profile: ${error.message || 'Unknown error'}`);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+  
+  // Check if we're on a nested route
+  const isNestedRoute = location.pathname !== '/profile' && location.pathname !== '/settings';
+  
+  if (isNestedRoute) {
+    return <Outlet />;
+  }
+  
   if (loading) {
-    return (
-      <div className="container py-10">
-        <div className="max-w-3xl mx-auto">
-          <Card>
-            <CardHeader className="text-center">
-              <CardTitle>Loading profile...</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="animate-pulse space-y-4">
-                <div className="h-10 bg-muted rounded" />
-                <div className="h-10 bg-muted rounded" />
-                <div className="h-20 bg-muted rounded" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return <div className="flex items-center justify-center p-8">Loading profile...</div>;
   }
 
   if (!user) {
     return (
-      <div className="container py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Not Available</CardTitle>
-            <CardDescription>
-              You need to be logged in to view your profile.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild>
-              <a href="/login">Log In</a>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="max-w-md mx-auto my-8">
+        <CardHeader>
+          <CardTitle>Profile Not Available</CardTitle>
+          <CardDescription>You need to be logged in to view your profile.</CardDescription>
+        </CardHeader>
+      </Card>
     );
   }
 
-  useEffect(() => {
-    if (profile) {
-      setFullName(profile.full_name || '');
-      setBio(profile.bio || '');
-      setJobTitle(profile.job_title || '');
-      setCompany(profile.company || '');
-    }
-  }, [profile]);
-
-  const handleUpdateProfile = async () => {
-    if (!user) return;
-    
-    setSaving(true);
-    setError('');
-    setSuccessMessage('');
-    
-    try {
-      const { error } = await apiTable('profiles')
-        .update({
-          full_name: fullName,
-          bio: bio,
-          job_title: jobTitle,
-          company: company,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
-      
-      if (error) throw error;
-      
-      setSuccessMessage('Profile updated successfully');
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
-      });
-    } catch (err: any) {
-      console.error('Error updating profile:', err);
-      setError(err.message || 'Failed to update profile');
-      toast({
-        title: "Error updating profile",
-        description: err.message || "There was an error updating your profile.",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handlePlanChange = async (planId: string) => {
-    try {
-      await updatePlan.mutateAsync(planId);
-      toast({
-        title: "Plan updated",
-        description: "Your subscription plan has been updated successfully.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error updating plan",
-        description: error.message || "Failed to update your plan.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleCancelSubscription = () => {
-    cancelSubscription.mutate();
-  };
+  const userInitials = (profile?.full_name || user.user_metadata?.full_name || user.email || '')
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase();
 
   return (
-    <div className="container py-8">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Your Profile</h1>
+    <div className="container mx-auto py-8">
+      <Tabs defaultValue="profile" className="w-full max-w-4xl mx-auto">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="settings">Account Settings</TabsTrigger>
+        </TabsList>
         
-        <Tabs defaultValue={currentTab} onValueChange={setCurrentTab}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="plan">Subscription</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>
-                  Update your personal information and public profile.
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-6">
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Error</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-                
-                {successMessage && (
-                  <Alert variant="default" className="bg-green-50 border-green-200">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <AlertTitle>Success</AlertTitle>
-                    <AlertDescription>{successMessage}</AlertDescription>
-                  </Alert>
-                )}
-                
-                <div className="flex flex-col md:flex-row gap-6 items-start">
-                  <div className="flex flex-col items-center space-y-2">
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage src={user.user_metadata?.avatar_url || ''} />
-                      <AvatarFallback className="text-lg">
-                        {fullName ? fullName.charAt(0).toUpperCase() : <User />}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  
-                  <div className="flex-1 space-y-4 w-full">
-                    <div className="space-y-2">
-                      <Label htmlFor="fullName">Full Name</Label>
-                      <Input
-                        id="fullName"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="Enter your full name"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
-                      <Textarea
-                        id="bio"
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        placeholder="Tell us a bit about yourself"
-                        rows={4}
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="jobTitle">Job Title</Label>
-                        <Input
-                          id="jobTitle"
-                          value={jobTitle}
-                          onChange={(e) => setJobTitle(e.target.value)}
-                          placeholder="Your position or role"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="company">Company / Organization</Label>
-                        <Input
-                          id="company"
-                          value={company}
-                          onChange={(e) => setCompany(e.target.value)}
-                          placeholder="Where you work"
-                        />
-                      </div>
-                    </div>
-                  </div>
+        <TabsContent value="profile">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={user.user_metadata?.avatar_url} />
+                  <AvatarFallback>{userInitials}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <CardTitle>{profile?.full_name || user.user_metadata?.full_name || user.email}</CardTitle>
+                  <CardDescription>{user.email}</CardDescription>
                 </div>
-              </CardContent>
-              
-              <CardFooter className="flex justify-between">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (profile) {
-                      setFullName(profile.full_name || '');
-                      setBio(profile.bio || '');
-                      setJobTitle(profile.job_title || '');
-                      setCompany(profile.company || '');
-                    }
-                    setError('');
-                    setSuccessMessage('');
-                  }}
-                >
-                  Reset
-                </Button>
-                <Button onClick={handleUpdateProfile} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="account">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Settings</CardTitle>
-                <CardDescription>
-                  Manage your account settings and preferences.
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Email</h3>
-                  <p className="text-muted-foreground">{user.email}</p>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Password</h3>
-                  <p className="text-muted-foreground">Change your account password.</p>
-                  <Button variant="outline" className="mt-2">
-                    <KeyRound className="mr-2 h-4 w-4" />
-                    Change Password
-                  </Button>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Logout</h3>
-                  <p className="text-muted-foreground">Sign out of your account.</p>
-                  <Button variant="outline" className="mt-2" onClick={signOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </Button>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium text-destructive">Danger Zone</h3>
-                  <p className="text-muted-foreground">
-                    Permanently delete your account and all associated data.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                    <Input
-                      placeholder="Type 'delete' to confirm"
-                      value={deleteConfirm}
-                      onChange={(e) => setDeleteConfirm(e.target.value)}
-                      className="max-w-xs"
-                    />
-                    <Button
-                      variant="destructive"
-                      disabled={deleteConfirm !== 'delete'}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Account
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="plan">
-            <Card>
-              <CardHeader>
-                <CardTitle>Subscription Plan</CardTitle>
-                <CardDescription>
-                  Manage your subscription and billing.
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-6">
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    During the beta period, all plans are free. Choose the plan that best suits your needs.
-                  </AlertDescription>
-                </Alert>
-                
+              </div>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Current Plan: <span className="text-primary capitalize">{currentPlan?.name || 'Free'}</span></h3>
-                  <p className="text-muted-foreground">Select a plan to change your subscription:</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="full_name">Full Name</Label>
+                      <Input 
+                        id="full_name" 
+                        {...register('full_name')} 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="job_title">Job Title</Label>
+                      <Input 
+                        id="job_title" 
+                        {...register('job_title')} 
+                      />
+                    </div>
+                  </div>
                   
-                  <PlanSelector
-                    plans={plans}
-                    selectedPlan={profile?.plan_id || 'free'}
-                    onSelectPlan={handlePlanChange}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="company">Company</Label>
+                    <Input 
+                      id="company" 
+                      {...register('company')} 
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Input 
+                      id="bio" 
+                      {...register('bio')} 
+                    />
+                  </div>
                 </div>
                 
-                <Separator />
+                <Button type="submit" disabled={isUpdating}>
+                  {isUpdating ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Settings</CardTitle>
+              <CardDescription>Manage your account settings and preferences.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium">Email</h3>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
                 
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium text-destructive">Cancel Subscription</h3>
-                  <p className="text-muted-foreground">
-                    Cancel your subscription and downgrade to the Free plan.
+                <div>
+                  <h3 className="text-lg font-medium">Change Password</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Update your password to improve account security.
                   </p>
-                  <Button
-                    variant="outline"
-                    className="mt-2"
-                    onClick={handleCancelSubscription}
-                    disabled={profile?.plan_id === 'free' || !profile?.plan_id}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Cancel Subscription
-                  </Button>
+                  <Button variant="outline">Change Password</Button>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+                
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-medium text-destructive">Danger Zone</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Delete your account and all associated data.
+                  </p>
+                  <Button variant="destructive">Delete Account</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      <Outlet />
     </div>
   );
-}
+};
+
+export default ProfilePage;

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router';
 import { Plus, Shield, LogOut } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { Application, ApplicationStatus } from '@/types/application';
+import { Application, ApplicationStatus, Tag } from '@/types/application';
 import { FilterControls } from '@/components/applications/FilterControls';
 import { ApplicationsTabContent } from '@/components/applications/ApplicationsTabContent';
 import { useAuth } from '@/hooks/useAuth';
@@ -46,8 +47,9 @@ export function ApplicationsPage() {
           tags: app.tags || [],
           created_at: app.created_at || new Date().toISOString(),
           updated_at: app.updated_at || new Date().toISOString(),
-          slug: app.slug || app.name.toLowerCase().replace(/\s+/g, '-') // Add the missing slug property
-        }));
+          slug: app.slug || app.name.toLowerCase().replace(/\s+/g, '-'),
+          organization_id: app.organization_id || '' // Add the missing organization_id
+        })) as Application[];
       } catch (err) {
         console.error('Unexpected error fetching applications:', err);
         toast({
@@ -62,12 +64,12 @@ export function ApplicationsPage() {
   });
 
   // Extract unique tags from all applications
-  const allTags = Array.from(
+  const allTags: Tag[] = Array.from(
     new Set(
       applications.flatMap(app => app.tags || [])
         .filter(Boolean)
     )
-  );
+  ).map(tagName => ({ id: tagName, name: tagName, created_at: new Date().toISOString() }));
 
   // Status options for filtering
   const statusOptions = [

@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router"
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { TagsProvider } from "./contexts/TagsContext";
 import { lazy, Suspense } from "react";
+import { initSentry } from "./utils/sentry";
 
 // Lazy-loaded components
 const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout"));
@@ -34,6 +36,15 @@ const ServiceFormPage = lazy(() => import("./pages/applications/service/ServiceF
 const MessageFormPage = lazy(() => import("./pages/applications/message/MessageFormPage"));
 const ServerDetailPage = lazy(() => import("./pages/servers/ServerDetailPage"));
 
+// Studio pages
+const StudioPage = lazy(() => import("./pages/studio/StudioPage"));
+const StudioNewProjectPage = lazy(() => import("./pages/studio/NewProjectPage"));
+const WorkflowEditorPage = lazy(() => import("./pages/studio/WorkflowEditorPage"));
+
+// Environment pages
+const EnvironmentsPage = lazy(() => import("./pages/settings/EnvironmentsPage"));
+const EnvironmentDetailPage = lazy(() => import("./pages/settings/EnvironmentDetailPage"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -44,23 +55,27 @@ const queryClient = new QueryClient({
 });
 
 const AuthenticatedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
 };
 
 const RedirectIfAuthenticated = ({ children }: { children: React.ReactNode }) => {
-  const { session, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
 
-  if (session.user) {
+  if (user) {
     return <Navigate to="/" replace />;
   }
 
@@ -82,21 +97,22 @@ const RedirectWithSlug: React.FC<RedirectWithSlugProps> = ({ path }) => {
 };
 
 const AppRoutes = () => {
-  const { session } = useAuth();
+  const { user } = useAuth();
 
-  if (!session.user && window.location.pathname === '/') {
-    return (
-      <Routes>
-        <Route element={<DashboardLayout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Route>
-        <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
-        <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    );
-  }
+  // Remove this special case for non-authenticated users that redirects to home
+  // if (!user && window.location.pathname === '/') {
+  //   return (
+  //     <Routes>
+  //       <Route element={<DashboardLayout />}>
+  //         <Route path="/" element={<Dashboard />} />
+  //         <Route path="/dashboard" element={<Dashboard />} />
+  //       </Route>
+  //       <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
+  //       <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
+  //       <Route path="*" element={<Navigate to="/" replace />} />
+  //     </Routes>
+  //   );
+  // }
 
   return (
     <Routes>
@@ -108,13 +124,14 @@ const AppRoutes = () => {
         <Route path="/" element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
 
-        <Route path="/orgs" element={<OrganizationsPage />} />
-        <Route path="/orgs/:slug" element={<OrganizationDetailPage />} />
+        <Route path="/orgs" element={<AuthenticatedRoute><OrganizationsPage /></AuthenticatedRoute>} />
+        <Route path="/orgs/:slug" element={<AuthenticatedRoute><OrganizationDetailPage /></AuthenticatedRoute>} />
 
         <Route path="/organizations">
           <Route path=":slug" element={<Navigate to={`/orgs/${useParams().slug}`} replace />} />
         </Route>
 
+        {/* Public access to projects page */}
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projs" element={<Navigate to="/projects" replace />} />
         <Route path="/projects/new" element={<AuthenticatedRoute><NewProjectPage /></AuthenticatedRoute>} />
@@ -124,6 +141,7 @@ const AppRoutes = () => {
         <Route path="/projects/:orgSlug@:projSlug" element={<ProjectDetailPage />} />
         <Route path="/projs/:orgSlug@:projSlug" element={<Navigate to={`/projects/${useParams().orgSlug}@${useParams().projSlug}`} replace />} />
 
+        {/* Make applications page public too */}
         <Route path="/applications" element={<ApplicationsPage />} />
         <Route path="/applications/new" element={<AuthenticatedRoute><NewApplicationPage /></AuthenticatedRoute>} />
 
@@ -147,12 +165,14 @@ const AppRoutes = () => {
         <Route path="/applications/:applicationId/messages/:messageId" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
         <Route path="/apps/:orgSlug@:appSlug/messages/:messageId" element={<AuthenticatedRoute><MessageFormPage /></AuthenticatedRoute>} />
 
+        {/* Make servers page public too */}
         <Route path="/servers" element={<ServersPage />} />
         <Route path="/servers/new" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
         <Route path="/servers/:id" element={<AuthenticatedRoute><ServerDetailPage /></AuthenticatedRoute>} />
         <Route path="/servers/:id/edit" element={<AuthenticatedRoute><NewServerPage /></AuthenticatedRoute>} />
         <Route path="/servers/:projSlug@:serverSlug" element={<AuthenticatedRoute><ServerDetailPage /></AuthenticatedRoute>} />
 
+        {/* Make AI tools page public too */}
         <Route path="/ai-tools" element={<AIToolsPage />} />
         <Route path="/tools" element={<Navigate to="/ai-tools" replace />} />
         <Route path="/ai-tools/new" element={<AuthenticatedRoute><NewToolPage /></AuthenticatedRoute>} />
@@ -160,12 +180,22 @@ const AppRoutes = () => {
         <Route path="/ai-tools/:id" element={<AIToolsPage />} />
         <Route path="/tools/:serverSlug@:toolSlug" element={<Navigate to={`/ai-tools/${window.location.pathname.split('/')[2]}`} replace />} />
 
+        {/* Studio Routes */}
+        <Route path="/studio" element={<StudioPage />} />
+        <Route path="/studio/new-project" element={<AuthenticatedRoute><StudioNewProjectPage /></AuthenticatedRoute>} />
+        <Route path="/studio/projects/:projectId" element={<WorkflowEditorPage />} />
+
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
         <Route path="/agents" element={<ProjectsPage />} />
 
         <Route path="/profile" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
-        <Route path="/settings" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>} />
+        <Route path="/settings" element={<AuthenticatedRoute><ProfilePage /></AuthenticatedRoute>}>
+          <Route path="environments" element={<EnvironmentsPage />} />
+          <Route path="environments/:id" element={<EnvironmentDetailPage />} />
+        </Route>
+        {/* external link to documentation */}
+        <Route path="/docs" element={<Navigate to="https://agentico.dev/docs/intro/" replace />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

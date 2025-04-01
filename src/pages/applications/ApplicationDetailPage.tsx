@@ -23,6 +23,7 @@ export default function ApplicationDetailPage() {
   
   // Function to get application by slug
   const getApplicationBySlug = async () => {
+    console.log('Fetching application by slug:', orgSlug, appSlug);
     if (!orgSlug || !appSlug) return null;
     
     // First, get the organization ID from the slug

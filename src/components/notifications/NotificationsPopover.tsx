@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router';
 import { useNotifications } from '@/hooks/notifications';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Notification } from '@/types/application';
 
 export function NotificationsPopover() {
   const [open, setOpen] = useState(false);
@@ -44,7 +45,7 @@ export function NotificationsPopover() {
     }
   };
 
-  const navigateToResource = (notification: any) => {
+  const navigateToResource = (notification: Notification) => {
     if (!notification.resource_id) return;
     
     let url = '';
@@ -78,7 +79,8 @@ export function NotificationsPopover() {
     }
     
     // Mark as read when navigating
-    if (notification.status === 'unread') {
+    const isUnread = notification.status === 'unread' || notification.read === false;
+    if (isUnread && notification.id) {
       markAsRead.mutate(notification.id);
     }
     
@@ -150,25 +152,31 @@ export function NotificationsPopover() {
             <div className="p-4 text-center text-muted-foreground">No notifications</div>
           ) : (
             <div className="divide-y">
-              {notifications.map((notification) => (
-                <div 
-                  key={notification.id} 
-                  className={`p-4 hover:bg-muted/50 cursor-pointer transition-colors ${notification.status === 'read' ? 'opacity-60' : ''}`}
-                  onClick={() => navigateToResource(notification)}
-                >
-                  <div className="flex">
-                    {getNotificationIcon(notification.notification_type)}
-                    <div className="flex-1">
-                      <h4 className="text-sm font-medium">{notification.title}</h4>
-                      <p className="text-sm text-muted-foreground">{notification.content}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {notification.created_at && 
-                          formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                      </p>
+              {notifications.map((notification) => {
+                const isRead = notification.status === 'read' || notification.read === true;
+                const notificationType = notification.notification_type || notification.type || 'info';
+                const content = notification.content || notification.message;
+                
+                return (
+                  <div 
+                    key={notification.id} 
+                    className={`p-4 hover:bg-muted/50 cursor-pointer transition-colors ${isRead ? 'opacity-60' : ''}`}
+                    onClick={() => navigateToResource(notification)}
+                  >
+                    <div className="flex">
+                      {getNotificationIcon(notificationType)}
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium">{notification.title}</h4>
+                        <p className="text-sm text-muted-foreground">{content}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {notification.created_at && 
+                            formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </ScrollArea>
