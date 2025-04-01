@@ -71,16 +71,6 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
           ),
         },
         {
-          value: 'services',
-          label: 'Services',
-          description: 'Services associated with this project',
-          content: (
-            <p className="text-center text-muted-foreground p-6">
-              Services information will be displayed here.
-            </p>
-          ),
-        },
-        {
           value: 'tools',
           label: 'AI Tools',
           description: 'Manage AI tools associated with this project',

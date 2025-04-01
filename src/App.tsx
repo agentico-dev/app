@@ -38,7 +38,7 @@ const ServerDetailPage = lazy(() => import("./pages/servers/ServerDetailPage"));
 
 // Studio pages
 const StudioPage = lazy(() => import("./pages/studio/StudioPage"));
-const StudioNewProjectPage = lazy(() => import("./pages/studio/NewProjectPage"));
+const StudioNewWorkflowPage = lazy(() => import("./pages/studio/NewWorkflowPage"));
 const WorkflowEditorPage = lazy(() => import("./pages/studio/WorkflowEditorPage"));
 
 // Environment pages
@@ -182,8 +182,8 @@ const AppRoutes = () => {
 
         {/* Studio Routes */}
         <Route path="/studio" element={<StudioPage />} />
-        <Route path="/studio/new-project" element={<AuthenticatedRoute><StudioNewProjectPage /></AuthenticatedRoute>} />
-        <Route path="/studio/projects/:projectId" element={<WorkflowEditorPage />} />
+        <Route path="/studio/new-workflow" element={<AuthenticatedRoute><StudioNewWorkflowPage /></AuthenticatedRoute>} />
+        <Route path="/studio/workflows/:workflowId" element={<WorkflowEditorPage />} />
 
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
