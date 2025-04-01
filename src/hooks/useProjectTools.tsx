@@ -1,14 +1,15 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AITool } from '@/types/ai-tool';
+import { AITool, EnhancedAITool } from '@/types/ai-tool';
 import { ProjectTool } from '@/types/project-tool';
 import { toast } from 'sonner';
 
 export function useProjectTools(projectId: string) {
   const queryClient = useQueryClient();
-  const [availableTools, setAvailableTools] = useState<AITool[]>([]);
-  const [associatedTools, setAssociatedTools] = useState<AITool[]>([]);
+  const [availableTools, setAvailableTools] = useState<EnhancedAITool[]>([]);
+  const [associatedTools, setAssociatedTools] = useState<EnhancedAITool[]>([]);
 
   // Fetch project_applications to find associated applications
   const { data: projectApplications } = useQuery({
@@ -31,7 +32,7 @@ export function useProjectTools(projectId: string) {
     queryKey: ['application-tools', projectId, projectApplications],
     queryFn: async () => {
       if (!projectApplications || projectApplications.length === 0) {
-        return [] as AITool[];
+        return [] as EnhancedAITool[];
       }
 
       // Get application IDs associated with this project
@@ -43,10 +44,15 @@ export function useProjectTools(projectId: string) {
         .from('applications')
         .select(`
           id,
+          name,
+          slug,
           application_apis!inner (
             id,
+            name,
+            slug,
             application_services!inner (
               id,
+              name,
               ai_tools (*)
             )
           )
@@ -56,18 +62,37 @@ export function useProjectTools(projectId: string) {
       if (error) throw error;
       
       // Extract and flatten the tools from the nested structure
-      const tools: AITool[] = [];
+      const tools: EnhancedAITool[] = [];
       data?.forEach(app => {
         app.application_apis?.forEach(api => {
           api.application_services?.forEach(service => {
             if (service.ai_tools && service.ai_tools.length > 0) {
-              tools.push(...service.ai_tools);
+              service.ai_tools.forEach(tool => {
+                tools.push({
+                  ...tool as AITool,
+                  associated: false, // Will be set correctly later
+                  application: {
+                    id: app.id,
+                    name: app.name,
+                    slug: app.slug
+                  },
+                  application_api: {
+                    id: api.id,
+                    name: api.name,
+                    slug: api.slug
+                  },
+                  application_service: {
+                    id: service.id,
+                    name: service.name
+                  }
+                });
+              });
             }
           });
         });
       });
 
-      return tools as AITool[];
+      return tools as EnhancedAITool[];
     },
     enabled: !!projectId && !!projectApplications,
   });
@@ -92,7 +117,7 @@ export function useProjectTools(projectId: string) {
     queryKey: ['project-tools', projectId],
     queryFn: async () => {
       if (!projectToolsJoin || projectToolsJoin.length === 0) {
-        return [] as AITool[];
+        return [] as EnhancedAITool[];
       }
 
       const toolIds = projectToolsJoin.map(join => join.ai_tool_id);
@@ -103,7 +128,7 @@ export function useProjectTools(projectId: string) {
         .in('id', toolIds);
       
       if (error) throw error;
-      return data as AITool[];
+      return data as EnhancedAITool[];
     },
     enabled: !!projectId && !!projectToolsJoin,
   });
@@ -160,10 +185,28 @@ export function useProjectTools(projectId: string) {
       
       const available = applicationTools || [];
       
-      setAvailableTools(
-        available.filter(tool => !associatedIds.includes(tool.id))
-      );
-      setAssociatedTools(associated);
+      // Set associated flag
+      const enhancedAssociated = associated.map(tool => {
+        // Find the matching tool from applicationTools to get the related info
+        const matchingTool = available.find(t => t.id === tool.id);
+        return {
+          ...tool,
+          associated: true,
+          application: matchingTool?.application,
+          application_api: matchingTool?.application_api,
+          application_service: matchingTool?.application_service
+        };
+      });
+      
+      const enhancedAvailable = available
+        .filter(tool => !associatedIds.includes(tool.id))
+        .map(tool => ({
+          ...tool,
+          associated: false
+        }));
+      
+      setAvailableTools(enhancedAvailable);
+      setAssociatedTools(enhancedAssociated);
     }
   }, [applicationTools, projectTools]);
 
@@ -186,11 +229,20 @@ export function useProjectTools(projectId: string) {
     }
   };
 
+  // Handle toggling association status directly
+  const handleAssociationToggle = async (toolId: string, associated: boolean) => {
+    await updateToolAssociation({
+      toolId,
+      action: associated ? 'associate' : 'disassociate'
+    });
+  };
+
   return {
     availableTools,
     associatedTools,
     isLoading: isLoadingApplicationTools || isLoadingAssociated || isLoadingJoin,
     hasAssociatedApplications: projectApplications && projectApplications.length > 0,
     handleMoveTool,
+    handleAssociationToggle,
   };
 }

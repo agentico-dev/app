@@ -22,3 +22,22 @@ export interface AITool {
 }
 
 export type AIToolStatus = 'active' | 'development' | 'maintenance' | 'archived';
+
+// Enhanced AI Tool with related data
+export interface EnhancedAITool extends AITool {
+  associated: boolean;
+  application_service?: {
+    id: string;
+    name: string;
+  };
+  application_api?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  application?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+}

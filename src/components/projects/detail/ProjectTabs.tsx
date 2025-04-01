@@ -7,6 +7,7 @@ import { DraggableResourceList } from './DraggableResourceList';
 import { useProjectApplications } from '@/hooks/useProjectApplications';
 import { useProjectTools } from '@/hooks/useProjectTools';
 import { useNavigate } from 'react-router';
+import { AIToolsTable } from './AIToolsTable';
 
 interface ProjectTabsProps {
   project: Project;
@@ -26,7 +27,7 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
     associatedTools, 
     isLoading: isLoadingTools,
     hasAssociatedApplications,
-    handleMoveTool
+    handleAssociationToggle
   } = useProjectTools(project.id);
 
   const handleCreateApplication = () => {
@@ -49,50 +50,40 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
     // If there are no associated applications, show an empty state
     if (!hasAssociatedApplications) {
       return (
-        <DraggableResourceList
-          key={`tools-empty-${associatedTools.length}`}
-          projectId={project.id}
-          availableResources={[]}
-          associatedResources={associatedTools}
-          resourceType="tool"
-          onResourceMoved={handleMoveTool}
-          showEmptyState={true}
-          emptyStateMessage="No tools available - associate applications with this project first"
-          createButtonLabel="Create AI Tool"
-          onCreateClick={handleCreateTool}
-        />
+        <div className="flex flex-col items-center justify-center text-center p-12 border rounded-lg bg-muted/10">
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M18 16H6a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2Z"/><path d="m10 10-2-2m0 0L6 6m2 2 2-2m4 2 2-2m0 0 2-2m-2 2-2-2"/></svg>
+          </div>
+          <h3 className="text-lg font-medium mt-4 mb-2">No tools available - associate applications with this project first</h3>
+          <Button onClick={handleCreateTool} className="mt-4">
+            Create AI Tool
+          </Button>
+        </div>
       );
     }
 
     // If there are no available tools for the associated applications
     if (availableTools.length === 0 && associatedTools.length === 0) {
       return (
-        <DraggableResourceList
-          key={`tools-no-available-${associatedTools.length}`}
-          projectId={project.id}
-          availableResources={[]}
-          associatedResources={[]}
-          resourceType="tool"
-          onResourceMoved={handleMoveTool}
-          showEmptyState={true}
-          emptyStateMessage="No tools available for the associated applications"
-          createButtonLabel="Create AI Tool"
-          onCreateClick={handleCreateTool}
-        />
+        <div className="flex flex-col items-center justify-center text-center p-12 border rounded-lg bg-muted/10">
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M18 16H6a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2Z"/><path d="m10 10-2-2m0 0L6 6m2 2 2-2m4 2 2-2m0 0 2-2m-2 2-2-2"/></svg>
+          </div>
+          <h3 className="text-lg font-medium mt-4 mb-2">No tools available for the associated applications</h3>
+          <Button onClick={handleCreateTool} className="mt-4">
+            Create AI Tool
+          </Button>
+        </div>
       );
     }
 
-    // Normal state with available tools
+    // Normal state with available tools - use our new table component
     return (
-      <DraggableResourceList
-        key={`tools-${associatedTools.length}-${availableTools.length}`}
-        projectId={project.id}
-        availableResources={availableTools}
-        associatedResources={associatedTools}
-        resourceType="tool"
-        onResourceMoved={handleMoveTool}
-        createButtonLabel="Create AI Tool"
-        onCreateClick={handleCreateTool}
+      <AIToolsTable
+        availableTools={availableTools}
+        associatedTools={associatedTools}
+        isLoading={isLoadingTools}
+        onAssociateChange={handleAssociationToggle}
       />
     );
   };
