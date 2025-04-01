@@ -67,7 +67,6 @@ export function WorkflowCanvas({
         fitView
         attributionPosition="bottom-right"
         nodeTypes={nodeTypes as NodeTypes}
-        onPaneContextMenu={onAddNode}
       >
         <Background gap={16} size={1} />
         <Controls />
