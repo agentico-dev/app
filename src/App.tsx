@@ -97,7 +97,6 @@ const RedirectWithSlug: React.FC<RedirectWithSlugProps> = ({ path }) => {
 };
 
 const AppRoutes = () => {
-  initSentry();
   const { user } = useAuth();
 
   // Remove this special case for non-authenticated users that redirects to home
