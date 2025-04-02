@@ -256,7 +256,7 @@ export default function LandingPage() {
             >
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 mix-blend-overlay" />
               <img 
-                src="/lovable-uploads/087344af-bf48-481d-acab-ffef1a303c98.png" 
+                src="/intent-based-ai-architecture-for-mcp.svg" 
                 alt="AI Robot Assistant" 
                 className="w-full h-auto rounded-2xl"
               />
