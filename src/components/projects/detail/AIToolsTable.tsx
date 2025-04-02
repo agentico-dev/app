@@ -24,7 +24,7 @@ import {
 import { EnhancedAITool } from '@/types/ai-tool';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Badge } from '@/components/ui/badge';
 
 interface AIToolsTableProps {
@@ -239,10 +239,10 @@ export function AIToolsTable({
                         <div className="text-sm">
                           <span className="font-medium">API:</span>{' '}
                           <Link 
-                            to={`/applications/api/${tool.application_api.slug}`}
+                            to={`/applications/${tool.application.id}/apis/${tool.application_api.id}`}
                             className="text-primary hover:underline"
                           >
-                            {tool.application_api.name}
+                            {tool.application_api.name} {tool.application_api.version}
                           </Link>
                         </div>
                       )}

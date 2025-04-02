@@ -33,6 +33,7 @@ export interface EnhancedAITool extends AITool {
   application_api?: {
     id: string;
     name: string;
+    version: string;
     slug: string;
   };
   application?: {

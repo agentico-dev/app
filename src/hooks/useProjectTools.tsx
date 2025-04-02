@@ -49,6 +49,7 @@ export function useProjectTools(projectId: string) {
           application_apis!inner (
             id,
             name,
+            version,
             slug,
             application_services!inner (
               id,
@@ -79,6 +80,7 @@ export function useProjectTools(projectId: string) {
                   application_api: {
                     id: api.id,
                     name: api.name,
+                    version: api.version,
                     slug: api.slug
                   },
                   application_service: {
