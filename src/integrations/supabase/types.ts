@@ -610,6 +610,42 @@ export type Database = {
           },
         ]
       }
+      project_servers: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          server_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          server_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          server_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_servers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_servers_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_tools: {
         Row: {
           ai_tool_id: string

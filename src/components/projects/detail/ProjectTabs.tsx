@@ -6,8 +6,10 @@ import { Project } from '@/types/project';
 import { DraggableResourceList } from './DraggableResourceList';
 import { useProjectApplications } from '@/hooks/useProjectApplications';
 import { useProjectTools } from '@/hooks/useProjectTools';
+import { useProjectServers } from '@/hooks/useProjectServers';
 import { useNavigate } from 'react-router';
 import { AIToolsTable } from './AIToolsTable';
+import { ServersTable } from './ServersTable';
 
 interface ProjectTabsProps {
   project: Project;
@@ -29,6 +31,12 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
     hasAssociatedApplications,
     handleAssociationToggle
   } = useProjectTools(project.id);
+
+  const {
+    associatedServers,
+    isLoadingAssociatedServers,
+    hasAssociatedServers
+  } = useProjectServers(project.id);
 
   const handleCreateApplication = () => {
     navigate('/applications/new', { state: { projectId: project.id } });
@@ -88,6 +96,24 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
     );
   };
 
+  const renderServersTab = () => {
+    if (isLoadingAssociatedServers) {
+      return (
+        <div className="flex justify-center p-6">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+
+    // Display servers in a table
+    return (
+      <ServersTable
+        servers={associatedServers?.map(item => item.server) || []}
+        isLoading={isLoadingAssociatedServers}
+      />
+    );
+  };
+
   return (
     <ResourceTabs
       defaultTab="applications"
@@ -128,6 +154,12 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
           label: 'AI Tools',
           description: 'Manage AI tools associated with this project',
           content: renderToolsTab(),
+        },
+        {
+          value: 'servers',
+          label: 'Servers',
+          description: 'Manage servers associated with this project',
+          content: renderServersTab(),
         },
       ]}
     />
