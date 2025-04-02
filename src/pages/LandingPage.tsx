@@ -85,14 +85,14 @@ export default function LandingPage() {
     }
   };
   
-  const pulseAnimation = {
+  const pulseAnimationVariants = {
     initial: { scale: 1 },
-    pulse: { 
+    animate: { 
       scale: [1, 1.05, 1],
       transition: { 
         duration: 2,
         repeat: Infinity,
-        repeatType: "reverse"
+        repeatType: "reverse" as const
       }
     }
   };
@@ -103,12 +103,50 @@ export default function LandingPage() {
       <motion.div 
         className="fixed inset-0 w-full h-full z-0"
         style={{
-          background: 'linear-gradient(135deg, rgba(239,108,0,0.8) 0%, rgba(249,120,33,0.7) 30%, rgba(201,0,82,0.6) 70%, rgba(40,5,100,0.5) 100%)',
+          background: 'linear-gradient(135deg, rgba(97,218,251,0.8) 0%, rgba(97,218,251,0.7) 30%, rgba(61,164,203,0.6) 70%, rgba(28,93,153,0.5) 100%)',
           y: backgroundY,
         }}
       />
       
       <div className="absolute inset-0 w-full h-full bg-black/20 backdrop-blur-[2px] z-0" />
+      
+      {/* Wave effect */}
+      <div className="absolute w-full h-64 top-[60vh] left-0 z-0 overflow-hidden">
+        <motion.div
+          className="absolute w-[200%] h-40 -left-[50%]"
+          style={{
+            backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%2361dafb' opacity='0.4'%3E%3C/path%3E%3C/svg%3E\")",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            height: "120px"
+          }}
+          animate={{
+            x: [0, -50, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+        />
+        <motion.div
+          className="absolute w-[200%] h-40 -left-[50%] top-20"
+          style={{
+            backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z' fill='%2361dafb' opacity='0.2'%3E%3C/path%3E%3C/svg%3E\")",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            height: "120px"
+          }}
+          animate={{
+            x: [0, 50, 0],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+        />
+      </div>
       
       {/* Floating elements */}
       <motion.div 
@@ -179,7 +217,7 @@ export default function LandingPage() {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
                   <Button 
                     size="lg" 
-                    className="w-full sm:w-auto bg-gradient-to-r from-accent to-accent/80 text-primary hover:from-accent/90 hover:to-accent/70 shadow-lg hover:shadow-accent/25 transition-all duration-300 hover:translate-y-[-2px] font-medium"
+                    className="w-full sm:w-auto bg-gradient-to-r from-white to-white/90 text-primary hover:from-white/90 hover:to-white/70 shadow-lg hover:shadow-primary/25 transition-all duration-300 hover:translate-y-[-2px] font-medium"
                   >
                     Try Agentico for Free
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -213,8 +251,8 @@ export default function LandingPage() {
             <motion.div 
               className="relative rounded-2xl overflow-hidden shadow-2xl"
               initial="initial"
-              animate="pulse"
-              variants={pulseAnimation}
+              animate="animate"
+              variants={pulseAnimationVariants}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 mix-blend-overlay" />
               <img 
@@ -370,7 +408,7 @@ export default function LandingPage() {
               transition={{ duration: 0.7 }}
             >
               <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 via-accent/50 to-purple-600/50 rounded-lg blur-lg opacity-75"></div>
-              <div className="relative bg-background/90 backdrop-blur-md rounded-lg shadow-xl p-6 border border-white/10">
+              <div className="relative bg-gray-900 backdrop-blur-md rounded-lg shadow-xl p-6 border border-white/10">
                 <div className="flex items-center mb-3">
                   <div className="flex space-x-2">
                     <div className="w-3 h-3 rounded-full bg-red-500"></div>
@@ -379,8 +417,8 @@ export default function LandingPage() {
                   </div>
                   <div className="ml-4 text-xs font-medium text-gray-400">server.js</div>
                 </div>
-                <div className="border border-border rounded-md bg-card/70 p-4 font-mono text-sm overflow-hidden backdrop-blur-sm">
-                  <pre className="text-primary-foreground">
+                <div className="border border-gray-700 rounded-md bg-gray-800/70 p-4 font-mono text-sm overflow-hidden backdrop-blur-sm">
+                  <pre className="text-green-400">
                     <code>{`// Initialize Agentico MCP server
 import { AgenticoServer } from 'agentico';
 
