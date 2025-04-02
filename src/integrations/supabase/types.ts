@@ -919,6 +919,14 @@ export type Database = {
           user_id: string | null
         }
       }
+      count_project_ai_tools: {
+        Args: {
+          project_id: string
+        }
+        Returns: {
+          count: number
+        }[]
+      }
       create_organization: {
         Args: {
           org_name: string
