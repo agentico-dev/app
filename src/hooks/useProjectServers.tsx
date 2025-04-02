@@ -1,5 +1,5 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Server } from '@/types/server';
 
@@ -12,8 +12,13 @@ interface ProjectServer {
 }
 
 export function useProjectServers(projectId: string) {
+  const queryClient = useQueryClient();
+
   // Fetch servers associated with the project
-  const { data: associatedServers, isLoading: isLoadingAssociatedServers } = useQuery({
+  const { 
+    data: associatedServers, 
+    isLoading: isLoadingAssociatedServers 
+  } = useQuery({
     queryKey: ['project-servers', projectId],
     queryFn: async () => {
       if (!projectId) return [];
@@ -34,6 +39,48 @@ export function useProjectServers(projectId: string) {
     enabled: !!projectId,
   });
 
+  // Add mutation to associate a server with a project
+  const associateServer = useMutation({
+    mutationFn: async ({ serverId }: { serverId: string }) => {
+      const { data, error } = await supabase
+        .from('project_servers')
+        .insert({
+          project_id: projectId,
+          server_id: serverId,
+        })
+        .select();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-servers', projectId] });
+    },
+  });
+
+  // Add mutation to disassociate a server from a project
+  const disassociateServer = useMutation({
+    mutationFn: async ({ serverId }: { serverId: string }) => {
+      const { data, error } = await supabase
+        .from('project_servers')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('server_id', serverId)
+        .select();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-servers', projectId] });
+    },
+  });
+
+  // Function to manually invalidate the query and refetch data
+  const mutateAssociatedServers = () => {
+    queryClient.invalidateQueries({ queryKey: ['project-servers', projectId] });
+  };
+
   // Determine if there are associated servers
   const hasAssociatedServers = associatedServers && associatedServers.length > 0;
 
@@ -41,5 +88,8 @@ export function useProjectServers(projectId: string) {
     associatedServers,
     isLoadingAssociatedServers,
     hasAssociatedServers,
+    associateServer,
+    disassociateServer,
+    mutateAssociatedServers,
   };
 }

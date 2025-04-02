@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 interface ServersTableProps {
   servers: Server[];
   isLoading: boolean;
+  projectId?: string;
 }
 
-export function ServersTable({ servers, isLoading }: ServersTableProps) {
+export function ServersTable({ servers, isLoading, projectId }: ServersTableProps) {
   const navigate = useNavigate();
 
   const handleServerClick = (serverId: string) => {
@@ -33,9 +34,6 @@ export function ServersTable({ servers, isLoading }: ServersTableProps) {
         </div>
         <h3 className="text-lg font-medium mt-4 mb-2">No servers associated with this project</h3>
         <p className="text-muted-foreground mb-4">Add servers to enhance your project infrastructure</p>
-        <Button onClick={() => navigate('/servers/new')}>
-          Create Server
-        </Button>
       </div>
     );
   }
@@ -67,6 +65,7 @@ export function ServersTable({ servers, isLoading }: ServersTableProps) {
                 <div className={`w-2 h-2 rounded-full ${
                   server.status === 'active' ? 'bg-green-500' : 
                   server.status === 'maintenance' ? 'bg-yellow-500' : 
+                  server.status === 'offline' ? 'bg-gray-500' :
                   server.status === 'development' ? 'bg-blue-500' : 
                   'bg-gray-500'
                 }`}></div>

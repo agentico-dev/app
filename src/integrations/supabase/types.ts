@@ -776,42 +776,6 @@ export type Database = {
           },
         ]
       }
-      server_ai_tools: {
-        Row: {
-          ai_tool_id: string | null
-          created_at: string | null
-          id: string
-          server_id: string | null
-        }
-        Insert: {
-          ai_tool_id?: string | null
-          created_at?: string | null
-          id?: string
-          server_id?: string | null
-        }
-        Update: {
-          ai_tool_id?: string | null
-          created_at?: string | null
-          id?: string
-          server_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "server_ai_tools_ai_tool_id_fkey"
-            columns: ["ai_tool_id"]
-            isOneToOne: false
-            referencedRelation: "ai_tools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "server_ai_tools_server_id_fkey"
-            columns: ["server_id"]
-            isOneToOne: false
-            referencedRelation: "servers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       server_applications: {
         Row: {
           application_id: string | null
@@ -841,6 +805,42 @@ export type Database = {
           },
           {
             foreignKeyName: "server_applications_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      server_tools: {
+        Row: {
+          ai_tool_id: string | null
+          created_at: string | null
+          id: string
+          server_id: string | null
+        }
+        Insert: {
+          ai_tool_id?: string | null
+          created_at?: string | null
+          id?: string
+          server_id?: string | null
+        }
+        Update: {
+          ai_tool_id?: string | null
+          created_at?: string | null
+          id?: string
+          server_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "server_ai_tools_ai_tool_id_fkey"
+            columns: ["ai_tool_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "server_ai_tools_server_id_fkey"
             columns: ["server_id"]
             isOneToOne: false
             referencedRelation: "servers"
