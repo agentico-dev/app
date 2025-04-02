@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { useServers } from '@/hooks/useServers';
+import { useServers } from '@/hooks/servers';
 import { FilterControls } from '@/components/applications/FilterControls';
 import { useTags } from '@/contexts/TagsContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';

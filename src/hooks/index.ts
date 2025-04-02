@@ -15,4 +15,3 @@ export * from './servers';
 export * from './useOrganizations';
 export * from './use-mobile';
 export * from './use-toast';
-
