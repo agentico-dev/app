@@ -12,7 +12,7 @@ import {
   PlugZap,
   Sparkles
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
@@ -27,6 +27,11 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Parallax effect variables
+  const { scrollYProgress } = useScroll();
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+  
   const features = [
     {
       title: 'Quick MCP Server Setup',
@@ -79,12 +84,35 @@ export default function LandingPage() {
       }
     }
   };
+  
+  const pulseAnimation = {
+    initial: { scale: 1 },
+    pulse: { 
+      scale: [1, 1.05, 1],
+      transition: { 
+        duration: 2,
+        repeat: Infinity,
+        repeatType: "reverse"
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen overflow-hidden relative">
-      {/* Floating background elements */}
+      {/* Animated gradient background */}
       <motion.div 
-        className="absolute top-20 left-10 w-64 h-64 rounded-full bg-primary/5 blur-3xl"
+        className="fixed inset-0 w-full h-full z-0"
+        style={{
+          background: 'linear-gradient(135deg, rgba(239,108,0,0.8) 0%, rgba(249,120,33,0.7) 30%, rgba(201,0,82,0.6) 70%, rgba(40,5,100,0.5) 100%)',
+          y: backgroundY,
+        }}
+      />
+      
+      <div className="absolute inset-0 w-full h-full bg-black/20 backdrop-blur-[2px] z-0" />
+      
+      {/* Floating elements */}
+      <motion.div 
+        className="absolute top-20 left-10 w-64 h-64 rounded-full bg-primary/20 blur-3xl z-0"
         animate={{
           x: [0, 15, 0],
           y: [0, 10, 0],
@@ -92,11 +120,11 @@ export default function LandingPage() {
         transition={{
           duration: 8,
           repeat: Infinity,
-          repeatType: 'reverse',
+          repeatType: "reverse",
         }}
       />
       <motion.div 
-        className="absolute bottom-40 right-10 w-80 h-80 rounded-full bg-accent/10 blur-3xl"
+        className="absolute bottom-40 right-10 w-80 h-80 rounded-full bg-accent/20 blur-3xl z-0"
         animate={{
           x: [0, -20, 0],
           y: [0, 15, 0],
@@ -104,67 +132,77 @@ export default function LandingPage() {
         transition={{
           duration: 10,
           repeat: Infinity,
-          repeatType: 'reverse',
+          repeatType: "reverse",
         }}
       />
 
       {/* Hero Section */}
-      <header className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-blue-700 z-0" />
-        <div 
-          className="absolute inset-0 opacity-20 z-0"
-          style={{
-            backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.2"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-          }}
-        />
-        
-        <div className="container mx-auto px-4 py-24 flex flex-col lg:flex-row items-center relative z-10">
+      <motion.header className="relative pt-24 pb-32 overflow-hidden z-10" style={{ opacity: heroOpacity }}>
+        <div className="container mx-auto px-4 flex flex-col lg:flex-row items-center">
           <motion.div 
-            className="lg:w-1/2 lg:pr-10"
+            className="lg:w-1/2 lg:pr-10 z-10"
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
           >
-            <motion.h1 
-              className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white"
+            <motion.div 
+              className="inline-block bg-white/10 backdrop-blur-md px-3 py-1 mb-6 rounded-full"
               variants={fadeInUp}
             >
-              Standardizing MCP for the Future of AI
+              <span className="text-sm font-medium text-white">Introducing Agentico</span>
+            </motion.div>
+
+            <motion.h1 
+              className="text-5xl sm:text-6xl md:text-7xl font-bold mb-6 text-white"
+              variants={fadeInUp}
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
+            >
+              <span className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+                Where AI<br />Meets Standards
+              </span>
             </motion.h1>
+            
             <motion.p 
-              className="text-xl mb-8 text-white/90"
+              className="text-xl mb-8 text-white/90 max-w-lg"
               variants={fadeInUp}
             >
               Agentico provides a structured, reusable approach to MCP implementation, making integration seamless across your AI projects.
             </motion.p>
+            
             <motion.div 
               className="flex flex-col sm:flex-row gap-4"
               variants={fadeInUp}
             >
               <Link to="/register">
-                <Button 
-                  size="lg" 
-                  className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 transition-all duration-300 hover:shadow-lg group"
-                >
-                  Try Agentico for Free
-                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                  <Button 
+                    size="lg" 
+                    className="w-full sm:w-auto bg-gradient-to-r from-accent to-accent/80 text-primary hover:from-accent/90 hover:to-accent/70 shadow-lg hover:shadow-accent/25 transition-all duration-300 hover:translate-y-[-2px] font-medium"
+                  >
+                    Try Agentico for Free
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </motion.div>
               </Link>
               <Link to="/">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="w-full sm:w-auto bg-transparent border-white text-white hover:bg-white/10 transition-all duration-300"
-                >
-                  Sign In
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="w-full sm:w-auto border-white/30 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all duration-300 font-medium"
+                  >
+                    Sign In
+                  </Button>
+                </motion.div>
               </Link>
             </motion.div>
           </motion.div>
           
           <motion.div 
-            className="lg:w-1/2 mt-10 lg:mt-0"
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            className="lg:w-1/2 mt-16 lg:mt-0 z-10"
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ 
               duration: 0.7, 
@@ -172,58 +210,47 @@ export default function LandingPage() {
               ease: [0.215, 0.61, 0.355, 1] 
             }}
           >
-            <div className="relative">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-accent to-purple-600 rounded-lg blur opacity-75"></div>
-              <div className="relative bg-background rounded-lg shadow-xl p-6">
-                <div className="border border-border rounded-md bg-card p-4 font-mono text-sm overflow-hidden">
-                  <pre className="text-primary-foreground">
-                    <code>{`// Initialize Agentico MCP server
-import { AgenticoServer } from 'agentico';
-
-const server = new AgenticoServer({
-  tools: standardTools,
-  contextProviders: myContextProviders,
-});
-
-// Start serving MCP requests
-server.listen(3000);
-
-// That's it! MCP-compliant and ready to go.`}</code>
-                  </pre>
-                </div>
-              </div>
-            </div>
+            <motion.div 
+              className="relative rounded-2xl overflow-hidden shadow-2xl"
+              initial="initial"
+              animate="pulse"
+              variants={pulseAnimation}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 mix-blend-overlay" />
+              <img 
+                src="/lovable-uploads/087344af-bf48-481d-acab-ffef1a303c98.png" 
+                alt="AI Robot Assistant" 
+                className="w-full h-auto rounded-2xl"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+            </motion.div>
           </motion.div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Problem Statement */}
       <motion.section 
-        className="py-24 bg-muted/30 relative overflow-hidden"
+        className="py-24 relative z-10"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.5 }}
       >
-        <motion.div
-          className="absolute top-0 left-0 w-full h-full"
-          style={{
-            background: 'radial-gradient(circle at 10% 20%, rgba(0,0,0,0.01) 0%, rgba(0,0,0,0.02) 90%)',
-          }}
-          animate={{
-            scale: [1, 1.05, 1],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            repeatType: 'reverse',
-          }}
-        />
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-md z-0" />
         
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="mb-4"
+            >
+              <span className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-primary/10 text-primary mb-2">The Challenge</span>
+            </motion.div>
             <motion.h2 
-              className="text-3xl font-bold mb-6"
+              className="text-3xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
@@ -255,29 +282,33 @@ server.listen(3000);
 
       {/* Features Section */}
       <motion.section 
-        className="py-24 relative"
+        className="py-24 relative z-10"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.5 }}
       >
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-b from-background to-background/50 z-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/90 to-card/50 backdrop-blur-sm z-0" />
         
         <div className="container mx-auto px-4 relative z-10">
-          <motion.h2 
-            className="text-3xl font-bold text-center mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
+            className="text-center mb-12"
           >
-            The Agentico Solution
-          </motion.h2>
+            <span className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-accent/10 text-accent mb-2">Our Solution</span>
+            <motion.h2 
+              className="text-3xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              The Agentico Advantage
+            </motion.h2>
+          </motion.div>
           
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
@@ -289,10 +320,10 @@ server.listen(3000);
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                className={`p-6 rounded-lg transition-all duration-300 ${
+                className={`p-6 rounded-xl transition-all duration-300 ${
                   hoveredFeature === index 
-                    ? 'bg-gradient-to-br from-primary/5 to-accent/5 shadow-xl scale-105' 
-                    : 'bg-card shadow-md'
+                    ? 'bg-gradient-to-br from-primary/10 to-accent/5 shadow-xl backdrop-blur-sm border border-white/10' 
+                    : 'bg-card/80 shadow-md backdrop-blur-sm border border-white/5'
                 }`}
                 onMouseEnter={() => setHoveredFeature(index)}
                 onMouseLeave={() => setHoveredFeature(null)}
@@ -319,17 +350,68 @@ server.listen(3000);
         </div>
       </motion.section>
 
-      {/* CTA Section */}
+      {/* Code Block Section */}
       <motion.section 
-        className="py-16 relative overflow-hidden"
+        className="py-16 relative z-10 overflow-hidden"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.5 }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-blue-700 z-0" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 backdrop-blur-sm z-0" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <motion.div 
+              className="relative"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 via-accent/50 to-purple-600/50 rounded-lg blur-lg opacity-75"></div>
+              <div className="relative bg-background/90 backdrop-blur-md rounded-lg shadow-xl p-6 border border-white/10">
+                <div className="flex items-center mb-3">
+                  <div className="flex space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <div className="ml-4 text-xs font-medium text-gray-400">server.js</div>
+                </div>
+                <div className="border border-border rounded-md bg-card/70 p-4 font-mono text-sm overflow-hidden backdrop-blur-sm">
+                  <pre className="text-primary-foreground">
+                    <code>{`// Initialize Agentico MCP server
+import { AgenticoServer } from 'agentico';
+
+const server = new AgenticoServer({
+  tools: standardTools,
+  contextProviders: myContextProviders,
+});
+
+// Start serving MCP requests
+server.listen(3000);
+
+// That's it! MCP-compliant and ready to go.`}</code>
+                  </pre>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* CTA Section */}
+      <motion.section 
+        className="py-16 relative z-10 overflow-hidden"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-primary via-blue-700 to-primary z-0" />
         <motion.div 
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-20"
           style={{
             backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M30 0l30 30-30 30L0 30 30 0zm0 6.5L6.5 30 30 53.5 53.5 30 30 6.5z" fill="%23ffffff" fill-opacity="1" fill-rule="nonzero"/%3E%3C/svg%3E%0A")',
             backgroundSize: '30px 30px',
@@ -357,11 +439,12 @@ server.listen(3000);
                 rotate: [0, 5, -5, 0],
                 transition: { duration: 1, repeat: Infinity }
               }}
+              className="inline-block"
             >
               <Sparkles className="h-12 w-12 mx-auto mb-6 text-white" />
             </motion.div>
             <motion.h2 
-              className="text-3xl font-bold mb-6 text-white"
+              className="text-3xl sm:text-4xl font-bold mb-6 text-white"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -385,14 +468,16 @@ server.listen(3000);
               transition={{ duration: 0.5, delay: 0.3 }}
             >
               <Link to="/register">
-                <Button 
-                  size="lg" 
-                  variant="secondary" 
-                  className="text-primary font-bold group hover:shadow-lg transition-all duration-300 hover:scale-105"
-                >
-                  Start Building with Agentico 
-                  <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                  <Button 
+                    size="lg" 
+                    variant="secondary" 
+                    className="bg-white text-primary font-bold shadow-xl shadow-primary/20 hover:shadow-lg transition-all duration-300"
+                  >
+                    Start Building with Agentico 
+                    <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </motion.div>
               </Link>
             </motion.div>
           </motion.div>
@@ -400,13 +485,14 @@ server.listen(3000);
       </motion.section>
 
       {/* Footer */}
-      <footer className="py-8 bg-card border-t border-border">
+      <footer className="py-8 relative z-10 bg-card/90 backdrop-blur-md border-t border-border">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <motion.div 
               className="flex items-center mb-4 md:mb-0"
               initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
               <img src="/favicon-32x32.png" alt="Agentico Logo" className="h-8 w-8 mr-2" />
@@ -415,7 +501,8 @@ server.listen(3000);
             <motion.div 
               className="text-sm text-muted-foreground"
               initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
               &copy; {new Date().getFullYear()} Agentico by <a href='https://rebelion.la' className="hover:text-primary transition-colors">La Rebelion Labs</a>. Building the future of standardized AI.
