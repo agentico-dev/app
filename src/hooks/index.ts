@@ -11,7 +11,8 @@ export * from './usePlans';
 export * from './useProjectApplications';
 export * from './useProjectTools';
 export * from './useProjectServers';
-export * from './useServers';
+export * from './servers';
 export * from './useOrganizations';
 export * from './use-mobile';
 export * from './use-toast';
+
