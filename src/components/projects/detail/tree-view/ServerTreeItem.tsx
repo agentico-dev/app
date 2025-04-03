@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import { Server } from '@/types/server';
 import { EnhancedAITool } from '@/types/ai-tool';
-import { ChevronRight, ChevronDown, Server as ServerIcon, Tool } from 'lucide-react';
+import { ChevronRight, ChevronDown, Server as ServerIcon, Wrench } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -118,7 +118,7 @@ export function ServerTreeItem({
               <div className="w-6"></div>
               <div className="grid grid-cols-12 flex-grow gap-2 items-center">
                 <div className="flex items-center gap-2 col-span-4">
-                  <Tool className="h-4 w-4 text-muted-foreground" />
+                  <Wrench className="h-4 w-4 text-muted-foreground" />
                   <Link 
                     to={`/tools/${tool.id}`} 
                     className="hover:underline truncate"

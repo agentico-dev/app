@@ -1,5 +1,5 @@
 
-import { FolderIcon, Server, Tool } from 'lucide-react';
+import { FolderIcon, Server, Wrench } from 'lucide-react';
 import { ResourceTabs } from '../../detail/ResourceTabs';
 import { Project } from '@/types/project';
 import { OverviewTab, ApplicationsTab, ServersTab, ToolsTab } from './tabs';
@@ -37,7 +37,7 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
           value: 'tools',
           label: `AI Tools (${project.tools_count || 0})`,
           description: 'AI tools for this project',
-          icon: <Tool className="h-4 w-4" />,
+          icon: <Wrench className="h-4 w-4" />,
           content: <ToolsTab projectId={project.id} />,
         },
       ]}

@@ -42,11 +42,14 @@ export function useProjectServerDetails(projectId: string) {
         if (!toolsByServerId[item.server_id]) {
           toolsByServerId[item.server_id] = [];
         }
+        
+        // Make sure ai_tool is not null and is properly cast to EnhancedAITool
         if (item.ai_tool) {
-          toolsByServerId[item.server_id].push({
+          const enhancedTool: EnhancedAITool = {
             ...item.ai_tool,
             associated: true
-          });
+          };
+          toolsByServerId[item.server_id].push(enhancedTool);
         }
       });
       
