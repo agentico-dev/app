@@ -18,13 +18,13 @@ export default function ProjectDetailPage() {
   useEffect(() => {
     const fetchProjectDetails = async () => {
       if (!id) return;
-      
+
       setIsLoading(true);
       try {
         console.log('Fetching project details for ID/slug:', id);
-        
+
         let query = supabase.from('projects').select('*');
-        
+
         // Check if the ID is a UUID format or a slug
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
         if (isUuid) {
@@ -32,15 +32,15 @@ export default function ProjectDetailPage() {
         } else {
           query = query.eq('slug', id);
         }
-        
+
         const { data, error } = await query.single();
-        
+
         if (error) {
           console.error('Error fetching project details:', error);
           toast.error(`Failed to load project: ${error.message}`);
           throw error;
         }
-        
+
         console.log('Fetched project details:', data);
         setProject(data);
       } catch (error) {
@@ -50,7 +50,7 @@ export default function ProjectDetailPage() {
         setIsLoading(false);
       }
     };
-    
+
     fetchProjectDetails();
   }, [id]);
 
@@ -67,21 +67,50 @@ export default function ProjectDetailPage() {
 
   const handleDeleteProject = async () => {
     if (!project) return;
-    
+
     try {
       const { error } = await supabase
         .from('projects')
         .delete()
         .eq('id', project.id);
-      
+
       if (error) throw error;
-      
+
       toast.success('Project deleted successfully');
       navigate('/projects');
     } catch (error: any) {
       console.error('Error deleting project:', error);
       toast.error(`Failed to delete project: ${error.message}`);
     }
+  };
+
+  const handleImportProject = async () => {
+    if (!project) return;
+    // simulate import process
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // @todo After import, I can update the project status or any other field
+    toast.success('Project imported successfully');
+  };
+  const handleExportProject = async () => {
+    if (!project) return;
+    // simulate import process
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // @todo After import, I can update the project status or any other field
+    toast.success('Project exported successfully');
+  };
+  const handleDeployProject = async () => {
+    if (!project) return;
+    // simulate import process
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // @todo After import, I can update the project status or any other field
+    toast.success('Project deployed successfully');
+  };
+  const handleUndeployProject = async () => {
+    if (!project) return;
+    // simulate import process
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // @todo After import, I can update the project status or any other field
+    toast.success('Project undeployed successfully');
   };
 
   const getStatusColorClass = (status: string) => {
@@ -114,9 +143,9 @@ export default function ProjectDetailPage() {
             resourceId={project!.id}
             resourceType="Project"
           />
-          
+
           <ProjectResourceCards project={project!} />
-          
+
           <ProjectTabs project={project!} />
         </>
       )}

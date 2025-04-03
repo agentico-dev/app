@@ -125,6 +125,35 @@ export default function ServerDetailPage() {
       toast.error(`Failed to delete server: ${error.message}`);
     }
   };
+  
+  const handleImportServer = async () => {
+    if (!server) return;
+    // simulate import process
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // @todo After import, I can update the server status or any other field
+    toast.success('Server imported successfully');
+  };
+  const handleExportServer = async () => {
+    if (!server) return;
+    // simulate import process
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // @todo After import, I can update the server status or any other field
+    toast.success('Server exported successfully');
+  };
+  const handleDeployServer = async () => {
+    if (!server) return;
+    // simulate import process
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // @todo After import, I can update the server status or any other field
+    toast.success('Server deployed successfully');
+  };
+  const handleUndeployServer = async () => {
+    if (!server) return;
+    // simulate import process
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // @todo After import, I can update the server status or any other field
+    toast.success('Server undeployed successfully');
+  };
 
   const getStatusColorClass = (status: string) => {
     switch (status.toLowerCase()) {
