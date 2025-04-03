@@ -54,7 +54,7 @@ export function ServerTabs({ server }: ServerTabsProps) {
           description: `AI tools associated to this server ${isOrganizationLevel ? 'at organization level' : 'at project level'}`,
           reference: isOrganizationLevel
             ? null
-            : '/projects/${server.project_id}',
+            : `/projects/${server.project_id}`,
           icon: <FolderInput className="h-4 w-4" />,
           content: (
             <ServerAIToolsTable
