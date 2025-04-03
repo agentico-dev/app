@@ -1,7 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router';
-import { useProjectTools } from '@/hooks/useProjectTools';
+import { useProjectTools } from '@/hooks/projects/useProjectTools';
 import { AIToolsTable } from '../AIToolsTable';
 
 interface ToolsTabProps {
