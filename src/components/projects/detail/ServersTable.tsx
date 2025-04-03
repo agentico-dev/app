@@ -64,7 +64,7 @@ export function ServersTable({ servers, isLoading, projectId }: ServersTableProp
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${
                   server.status === 'active' ? 'bg-green-500' : 
-                  server.status === 'maintenance' ? 'bg-yellow-500' : 
+                  server.status === 'suspended' ? 'bg-yellow-500' : 
                   server.status === 'offline' ? 'bg-gray-500' :
                   server.status === 'development' ? 'bg-blue-500' : 
                   'bg-gray-500'

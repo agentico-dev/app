@@ -30,22 +30,16 @@ export function ProjectResourceCards({ project }: ProjectResourceCardsProps) {
         if (toolError) throw toolError;
         
         // Get application IDs for the project
-        const { data, error: appError } = await supabase
-        .from('project_applications')
-        .select('application_id')
-        .eq('project_id', project.id);
-
-        const appCount = data?.length || 0;
+        const { data: appCount, error: appError } = await supabase
+          .rpc('count_project_applications', { project_id: project.id })
+          .single();
         
         if (appError) throw appError;
         
-        // select count(true) from server_applications sa join project_applications pa
-        // on pa.application_id = sa.application_id  
-        // WHERE pa.project_id =$1
-        const { count: serverCount, error: serverError } = await supabase
-          .from('server_applications')
-          .select('id', { count: 'exact', head: true })
-          .in('application_id', data?.map((item) => item.application_id) || []);
+        // Get server IDs for the project
+        const { data: serverCount, error: serverError } = await supabase
+          .rpc('count_project_servers', { project_id: project.id })
+          .single();
           
         if (serverError) throw serverError;
         
@@ -64,8 +58,8 @@ export function ProjectResourceCards({ project }: ProjectResourceCardsProps) {
         
         // Update state with fresh counts - toolsCount is an object with key 'count'
         setToolsCount((toolCount as any)?.count || 0);
-        setApplicationsCount(appCount || 0);
-        setServersCount(serverCount || 0);
+        setApplicationsCount((appCount as any).count || 0);
+        setServersCount((serverCount as any).count || 0);
         
       } catch (error) {
         console.error('Error fetching resource counts:', error);

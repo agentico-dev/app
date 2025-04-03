@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
 } from '@/components/ui/form';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +28,7 @@ interface CreateServerFormProps {
 interface ServerFormValues {
   name: string;
   description: string;
+  slug: string;
   type: string;
   status: string;
 }
@@ -36,12 +37,13 @@ export function CreateServerForm({ projectId, onSuccess }: CreateServerFormProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { session } = useAuth();
   const { mutateAssociatedServers } = useProjectServers(projectId);
-  
+
   const form = useForm<ServerFormValues>({
     defaultValues: {
       name: '',
+      slug: '',
       description: '',
-      type: 'Virtual',
+      type: 'Agent',
       status: 'development',
     },
   });
@@ -51,28 +53,25 @@ export function CreateServerForm({ projectId, onSuccess }: CreateServerFormProps
       toast.error("You need to be logged in to create a server");
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Get organization from localStorage
       const organizationId = localStorage.getItem('selectedOrganizationId');
-      
+
       if (!organizationId) {
         toast.error("Please select an organization from the top navigation bar");
         setIsSubmitting(false);
         return;
       }
-      
-      // Generate slug from name
-      const slug = generateSlug(data.name);
-      
+
       // First, create the server
       const { data: newServer, error } = await supabase
         .from('servers')
         .insert({
           name: data.name,
-          slug: slug,
+          slug: data.slug,
           description: data.description,
           type: data.type,
           status: data.status,
@@ -81,9 +80,9 @@ export function CreateServerForm({ projectId, onSuccess }: CreateServerFormProps
         })
         .select('*')
         .single();
-      
+
       if (error) throw error;
-      
+
       // Then, associate the server with the project
       if (newServer) {
         const { error: relationError } = await supabase
@@ -92,16 +91,16 @@ export function CreateServerForm({ projectId, onSuccess }: CreateServerFormProps
             project_id: projectId,
             server_id: newServer.id,
           });
-        
+
         if (relationError) throw relationError;
       }
-      
+
       toast.success('Server created and added to project');
       form.reset();
-      
+
       // Refresh the server list
       mutateAssociatedServers();
-      
+
       // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess();
@@ -124,7 +123,14 @@ export function CreateServerForm({ projectId, onSuccess }: CreateServerFormProps
             <FormItem>
               <FormLabel>Server Name</FormLabel>
               <FormControl>
-                <Input placeholder="Enter server name" {...field} />
+                <Input
+                  placeholder="Enter server name"
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    form.setValue('slug', generateSlug(e.target.value));
+                  }}
+                />
               </FormControl>
               <FormDescription>
                 A descriptive name for your server
@@ -133,7 +139,19 @@ export function CreateServerForm({ projectId, onSuccess }: CreateServerFormProps
             </FormItem>
           )}
         />
-        
+        <FormField
+          control={form.control}
+          name="slug"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Slug</FormLabel>
+              <div className="text-sm text-muted-foreground">
+                {field.value ? field.value.length > 35 ? field.value.slice(0, 35) + '...' : field.value : 'Auto-generated from the server name'}
+              </div>
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="description"
@@ -141,10 +159,10 @@ export function CreateServerForm({ projectId, onSuccess }: CreateServerFormProps
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Describe your server" 
-                  className="min-h-[100px]" 
-                  {...field} 
+                <Textarea
+                  placeholder="Describe your server"
+                  className="min-h-[100px]"
+                  {...field}
                 />
               </FormControl>
               <FormDescription>
@@ -154,7 +172,7 @@ export function CreateServerForm({ projectId, onSuccess }: CreateServerFormProps
             </FormItem>
           )}
         />
-        
+
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -172,10 +190,8 @@ export function CreateServerForm({ projectId, onSuccess }: CreateServerFormProps
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Virtual">Virtual</SelectItem>
-                    <SelectItem value="Physical">Physical</SelectItem>
-                    <SelectItem value="Cloud">Cloud</SelectItem>
-                    <SelectItem value="Hybrid">Hybrid</SelectItem>
+                    <SelectItem value="Agent">Agent</SelectItem>
+                    <SelectItem value="MCP">MCP</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>
@@ -185,15 +201,15 @@ export function CreateServerForm({ projectId, onSuccess }: CreateServerFormProps
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="status"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
+                <Select
+                  onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
@@ -216,11 +232,11 @@ export function CreateServerForm({ projectId, onSuccess }: CreateServerFormProps
             )}
           />
         </div>
-        
+
         <div className="flex justify-end space-x-4 pt-4">
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={() => {
               form.reset();
               if (onSuccess) onSuccess();
