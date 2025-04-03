@@ -26,6 +26,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Link } from 'react-router';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 interface AIToolsTableProps {
   availableTools: EnhancedAITool[];
@@ -40,19 +41,28 @@ export function AIToolsTable({
   isLoading, 
   onAssociateChange 
 }: AIToolsTableProps) {
-  // Combine available and associated tools
-  const allTools = [...availableTools.map(tool => ({...tool, associated: false})), 
-                     ...associatedTools.map(tool => ({...tool, associated: true}))];
+  // State for tools after combining available and associated
+  const [displayTools, setDisplayTools] = useState<EnhancedAITool[]>([]);
   
   // State for search, sorting, and pagination
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<keyof EnhancedAITool>('name');
+  const [sortField, setSortField] = useState<keyof EnhancedAITool | 'associated'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Update displayTools whenever availableTools or associatedTools change
+  useEffect(() => {
+    const combined = [
+      ...availableTools.map(tool => ({...tool, associated: false})), 
+      ...associatedTools.map(tool => ({...tool, associated: true}))
+    ];
+    setDisplayTools(combined);
+  }, [availableTools, associatedTools]);
   
   // Filter tools based on search term
-  const filteredTools = allTools.filter(tool => 
+  const filteredTools = displayTools.filter(tool => 
     tool.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     (tool.description && tool.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -65,8 +75,8 @@ export function AIToolsTable({
         : Number(b.associated) - Number(a.associated);
     }
     
-    const aValue = a[sortField];
-    const bValue = b[sortField];
+    const aValue = a[sortField as keyof EnhancedAITool];
+    const bValue = b[sortField as keyof EnhancedAITool];
     
     if (typeof aValue === 'string' && typeof bValue === 'string') {
       return sortDirection === 'asc' 
@@ -84,7 +94,7 @@ export function AIToolsTable({
   const totalPages = Math.ceil(sortedTools.length / itemsPerPage);
   
   // Handle sort
-  const handleSort = (field: keyof EnhancedAITool) => {
+  const handleSort = (field: keyof EnhancedAITool | 'associated') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -92,14 +102,30 @@ export function AIToolsTable({
       setSortDirection('asc');
     }
   };
+
+  // Handle tool association change
+  const handleToolAssociationChange = async (toolId: string, associated: boolean) => {
+    setIsUpdating(true);
+    try {
+      await onAssociateChange(toolId, associated);
+      
+      // Update the display tools optimistically
+      setDisplayTools(prevTools => 
+        prevTools.map(tool => 
+          tool.id === toolId ? { ...tool, associated } : tool
+        )
+      );
+      
+      toast.success(`Tool ${associated ? 'associated' : 'disassociated'} successfully`);
+    } catch (error) {
+      toast.error('Failed to update tool association');
+      console.error('Error updating tool association:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
   
   // Generate page numbers for pagination
-  const pageNumbers = [];
-  for (let i = 1; i <= totalPages; i++) {
-    pageNumbers.push(i);
-  }
-  
-  // Show limited page numbers with ellipsis
   const getPageRange = () => {
     const maxPagesToShow = 5;
     
@@ -214,7 +240,8 @@ export function AIToolsTable({
                   <TableCell>
                     <Switch
                       checked={tool.associated}
-                      onCheckedChange={(checked) => onAssociateChange(tool.id, checked)}
+                      onCheckedChange={(checked) => handleToolAssociationChange(tool.id, checked)}
+                      disabled={isUpdating}
                     />
                   </TableCell>
                   <TableCell className="font-medium">{tool.name}</TableCell>
@@ -239,7 +266,7 @@ export function AIToolsTable({
                         <div className="text-sm">
                           <span className="font-medium">API:</span>{' '}
                           <Link 
-                            to={`/applications/${tool.application.id}/apis/${tool.application_api.id}`}
+                            to={`/applications/${tool.application?.id}/apis/${tool.application_api.id}`}
                             className="text-primary hover:underline"
                           >
                             {tool.application_api.name} {tool.application_api.version}
