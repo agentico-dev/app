@@ -46,7 +46,7 @@ export function useProjectServerDetails(projectId: string) {
         // Make sure ai_tool is not null and is properly cast to EnhancedAITool
         if (item.ai_tool) {
           const enhancedTool: EnhancedAITool = {
-            ...item.ai_tool,
+            ...(item.ai_tool as unknown as EnhancedAITool),
             associated: true
           };
           toolsByServerId[item.server_id].push(enhancedTool);

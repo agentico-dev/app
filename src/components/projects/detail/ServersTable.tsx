@@ -68,6 +68,9 @@ export function ServersTable({
     <Table>
       <TableHeader>
         <TableRow>
+          {projectId && (
+            <TableHead className="text-center">Associate</TableHead>
+          )}
           <TableHead 
             className="cursor-pointer"
             onClick={() => handleSortClick('name')}
@@ -92,9 +95,6 @@ export function ServersTable({
               Type {renderSortIcon('type')}
             </div>
           </TableHead>
-          {projectId && (
-            <TableHead className="text-center">Associate</TableHead>
-          )}
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -108,6 +108,19 @@ export function ServersTable({
               className="cursor-pointer hover:bg-muted/50"
               onClick={() => handleServerClick(server.id)}
             >
+            {projectId && (
+              <TableCell className="text-center">
+                <Switch
+                  checked={isAssociated}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onAssociationToggle) {
+                      onAssociationToggle(server.id, isAssociated);
+                    }
+                  }}
+                />
+              </TableCell>
+            )}
               <TableCell className="font-medium flex items-center gap-2">
                 <ServerIcon className="h-4 w-4 text-muted-foreground" />
                 {server.name}
@@ -126,19 +139,6 @@ export function ServersTable({
                 </div>
               </TableCell>
               <TableCell>{server.type || 'Standard'}</TableCell>
-              {projectId && (
-                <TableCell className="text-center">
-                  <Switch
-                    checked={isAssociated}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onAssociationToggle) {
-                        onAssociationToggle(server.id, isAssociated);
-                      }
-                    }}
-                  />
-                </TableCell>
-              )}
               <TableCell className="text-right">
                 <Button 
                   variant="ghost" 
