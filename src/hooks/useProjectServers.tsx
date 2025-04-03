@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Server } from '@/types/server';
+import { toast } from 'sonner';
 
 interface ProjectServer {
   id: string;
@@ -42,6 +43,32 @@ export function useProjectServers(projectId: string) {
   // Add mutation to associate a server with a project
   const associateServer = useMutation({
     mutationFn: async ({ serverId }: { serverId: string }) => {
+      // Optimistically update the UI
+      queryClient.setQueryData(['project-servers', projectId], (oldData: ProjectServer[] | undefined) => {
+        if (!oldData) return [];
+        
+        // Check if the server is already associated
+        const existingAssociation = oldData.find(item => item.server_id === serverId);
+        if (existingAssociation) return oldData;
+        
+        // Find the server data from another query if available
+        const serverData = queryClient.getQueryData<Server[]>(['servers'])?.find(s => s.id === serverId);
+        
+        if (!serverData) return oldData;
+        
+        // Add the association
+        return [
+          ...oldData,
+          {
+            id: `temp-${Date.now()}`,
+            project_id: projectId,
+            server_id: serverId,
+            created_at: new Date().toISOString(),
+            server: serverData
+          }
+        ];
+      });
+      
       const { data, error } = await supabase
         .from('project_servers')
         .insert({
@@ -55,12 +82,24 @@ export function useProjectServers(projectId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-servers', projectId] });
+      toast.success('Server associated with project');
+    },
+    onError: (error) => {
+      queryClient.invalidateQueries({ queryKey: ['project-servers', projectId] });
+      console.error('Error associating server:', error);
+      toast.error('Failed to associate server with project');
     },
   });
 
   // Add mutation to disassociate a server from a project
   const disassociateServer = useMutation({
     mutationFn: async ({ serverId }: { serverId: string }) => {
+      // Optimistically update the UI
+      queryClient.setQueryData(['project-servers', projectId], (oldData: ProjectServer[] | undefined) => {
+        if (!oldData) return [];
+        return oldData.filter(item => item.server_id !== serverId);
+      });
+      
       const { data, error } = await supabase
         .from('project_servers')
         .delete()
@@ -73,6 +112,12 @@ export function useProjectServers(projectId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-servers', projectId] });
+      toast.success('Server removed from project');
+    },
+    onError: (error) => {
+      queryClient.invalidateQueries({ queryKey: ['project-servers', projectId] });
+      console.error('Error removing server:', error);
+      toast.error('Failed to remove server from project');
     },
   });
 
