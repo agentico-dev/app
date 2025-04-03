@@ -1,163 +1,33 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { EnhancedAITool } from '@/types/ai-tool';
-import { useAuth } from '../useAuth';
-import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
+import { EnhancedAITool } from '@/types/ai-tool';
+import { useServerDetails } from './useServerDetails';
+import { useServerTools } from './tools/useServerTools';
+import { useProjectTools } from './tools/useProjectTools';
+import { useOrganizationTools } from './tools/useOrganizationTools';
+import { useToolMutations } from './tools/useToolMutations';
 
-// Hook to manage server-AI tool relationships
+/**
+ * Main hook to manage server-AI tool relationships
+ * This hook combines multiple smaller hooks to provide comprehensive AI tools management
+ */
 export function useServerAITools(serverId?: string, projectId?: string) {
-  const { session } = useAuth();
-  const { toast: uiToast } = useToast();
-  const queryClient = useQueryClient();
   const [availableTools, setAvailableTools] = useState<EnhancedAITool[]>([]);
   const [associatedTools, setAssociatedTools] = useState<EnhancedAITool[]>([]);
   const [isOrganizationLevel, setIsOrganizationLevel] = useState(false);
   
   // Fetch server information to get organization_id
-  const { data: serverData } = useQuery({
-    queryKey: ['server-detail', serverId],
-    queryFn: async () => {
-      if (!serverId) return null;
-      
-      const { data, error } = await supabase
-        .from('servers')
-        .select('organization_id')
-        .eq('id', serverId)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!serverId && !projectId,
-  });
+  const { data: serverData } = useServerDetails(serverId);
 
-  // Fetch AI tools linked to the server (server_ai_tools table)
-  const { data: serverTools, isLoading: isLoadingServerTools } = useQuery({
-    queryKey: ['server-ai-tools', serverId],
-    queryFn: async () => {
-      if (!serverId) return [];
-      
-      const { data, error } = await supabase
-        .from('server_tools')
-        .select('*, ai_tool:ai_tool_id(*)')
-        .eq('server_id', serverId);
-      
-      if (error) throw error;
-      
-      return data.map(item => ({
-        ...item.ai_tool,
-        associated: true
-      }));
-    },
-    enabled: !!serverId,
-  });
+  // Fetch AI tools from different sources
+  const { data: serverTools, isLoading: isLoadingServerTools } = useServerTools(serverId);
+  const { data: projectTools, isLoading: isLoadingProjectTools } = useProjectTools(projectId);
+  const { data: organizationTools, isLoading: isLoadingOrgTools } = useOrganizationTools(
+    serverData?.organization_id
+  );
 
-  // Fetch AI tools linked to the project (project_tools table)
-  const { data: projectTools, isLoading: isLoadingProjectTools } = useQuery({
-    queryKey: ['project-tools', projectId],
-    queryFn: async () => {
-      if (!projectId) return [];
-      
-      const { data, error } = await supabase
-        .from('project_tools')
-        .select('*, ai_tool:ai_tool_id(*)')
-        .eq('project_id', projectId);
-      
-      if (error) throw error;
-      
-      return data.map(item => ({
-        ...item.ai_tool,
-        associated: false
-      }));
-    },
-    enabled: !!projectId,
-  });
-
-  // Fetch organization AI tools if no project is provided
-  const { data: organizationTools, isLoading: isLoadingOrgTools } = useQuery({
-    queryKey: ['organization-tools', serverData?.organization_id],
-    queryFn: async () => {
-      if (!serverData?.organization_id) return [];
-      
-      const { data, error } = await supabase
-        .from('ai_tools')
-        .select('*')
-        .eq('organization_id', serverData.organization_id);
-      
-      if (error) throw error;
-      
-      return data.map(tool => ({
-        ...tool,
-        associated: false
-      }));
-    },
-    enabled: !!serverData?.organization_id && !projectId,
-  });
-
-  // Link an AI tool to the server
-  const linkAITool = useMutation({
-    mutationFn: async ({ serverId, aiToolId }: { serverId: string; aiToolId: string }) => {
-      if (!session?.user) throw new Error('Authentication required');
-      
-      const { data, error } = await supabase
-        .from('server_tools')
-        .insert({
-          server_id: serverId,
-          ai_tool_id: aiToolId,
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['server-ai-tools', serverId] });
-      uiToast({
-        title: 'AI Tool linked',
-        description: 'The AI tool has been linked to the server successfully.',
-      });
-    },
-    onError: (error) => {
-      uiToast({
-        title: 'Error linking AI tool',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Unlink an AI tool from the server
-  const unlinkAITool = useMutation({
-    mutationFn: async ({ serverId, aiToolId }: { serverId: string; aiToolId: string }) => {
-      if (!session?.user) throw new Error('Authentication required');
-      
-      const { error } = await supabase
-        .from('server_tools')
-        .delete()
-        .eq('server_id', serverId)
-        .eq('ai_tool_id', aiToolId);
-      
-      if (error) throw error;
-      return { serverId, aiToolId };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['server-ai-tools', serverId] });
-      uiToast({
-        title: 'AI Tool unlinked',
-        description: 'The AI tool has been unlinked from the server successfully.',
-      });
-    },
-    onError: (error) => {
-      uiToast({
-        title: 'Error unlinking AI tool',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
+  // Get tool mutation functions
+  const { linkAITool, unlinkAITool } = useToolMutations(serverId);
 
   // Process and separate available and associated tools
   useEffect(() => {
