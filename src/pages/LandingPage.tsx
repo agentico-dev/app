@@ -213,7 +213,7 @@ export default function LandingPage() {
               className="flex flex-col sm:flex-row gap-4"
               variants={fadeInUp}
             >
-              <Link to="/register">
+              <Link to="/">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
                   <Button 
                     size="lg" 
@@ -224,14 +224,14 @@ export default function LandingPage() {
                   </Button>
                 </motion.div>
               </Link>
-              <Link to="/">
+              <Link to="/register">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
                   <Button 
                     variant="outline" 
                     size="lg" 
                     className="w-full sm:w-auto border-white/30 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all duration-300 font-medium"
                   >
-                    Sign In
+                    Sign Up
                   </Button>
                 </motion.div>
               </Link>

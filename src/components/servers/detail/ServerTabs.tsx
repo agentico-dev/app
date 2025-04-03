@@ -1,6 +1,5 @@
 
-import { AppWindow, CircuitBoard } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { FolderInput } from 'lucide-react';
 import { ResourceTabs } from '../../detail/ResourceTabs';
 import { Server } from '@/types/server';
 import { ServerAIToolsTable } from './AIToolsTable';
@@ -50,24 +49,13 @@ export function ServerTabs({ server }: ServerTabsProps) {
           ),
         },
         {
-          value: 'applications',
-          label: 'Applications',
-          description: 'Applications associated with this server',
-          content: (
-            <div className="text-center p-6">
-              <AppWindow className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No Applications</h3>
-              <p className="text-muted-foreground mb-4">
-                There are no applications associated with this server yet.
-              </p>
-              <Button>Deploy Application</Button>
-            </div>
-          ),
-        },
-        {
           value: 'ai-tools',
-          label: 'AI Tools',
-          description: 'AI tools deployed on this server',
+          label: `AI Tools (${aiTools?.length || 0})`,
+          description: `AI tools associated to this server ${isOrganizationLevel ? 'at organization level' : 'at project level'}`,
+          reference: isOrganizationLevel
+            ? null
+            : '/projects/${server.project_id}',
+          icon: <FolderInput className="h-4 w-4" />,
           content: (
             <ServerAIToolsTable
               availableTools={availableTools || []}
