@@ -26,7 +26,13 @@ export default function ServerDetailPage() {
       try {
         console.log('Fetching server details for ID/slug:', id);
         
-        let query = supabase.from('servers').select('*');
+        let query = supabase.from('servers')
+          .select(`
+            *,
+            project_servers!inner (
+              project_id
+            )
+          `);
         
         // Check if the ID is a UUID format or a slug
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -36,7 +42,21 @@ export default function ServerDetailPage() {
           query = query.eq('slug', id);
         }
         
-        const { data, error } = await query.single();
+        let { data, error } = await query;
+        
+        if (error) {
+          // If no results found with inner join, try without the join
+          query = supabase.from('servers').select('*');
+          if (isUuid) {
+            query = query.eq('id', id);
+          } else {
+            query = query.eq('slug', id);
+          }
+          
+          const result = await query.single();
+          data = result.data;
+          error = result.error;
+        }
         
         if (error) {
           console.error('Error fetching server details:', error);
@@ -44,8 +64,27 @@ export default function ServerDetailPage() {
           throw error;
         }
         
-        console.log('Fetched server details:', data);
-        setServer(data as Server);
+        // Process the data to extract project_id if available
+        let serverData;
+        if (Array.isArray(data) && data.length > 0) {
+          const firstResult = data[0];
+          // Extract the project_id if available
+          const projectId = firstResult.project_servers?.length > 0 
+            ? firstResult.project_servers[0].project_id 
+            : null;
+            
+          // Create the server object with project_id
+          serverData = {
+            ...firstResult,
+            project_id: projectId
+          };
+          delete serverData.project_servers;
+        } else {
+          serverData = data;
+        }
+        
+        console.log('Fetched server details:', serverData);
+        setServer(serverData as Server);
       } catch (error) {
         console.error('Error in server fetch:', error);
         toast.error('Failed to load server details');

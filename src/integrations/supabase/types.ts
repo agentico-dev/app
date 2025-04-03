@@ -963,6 +963,22 @@ export type Database = {
           count: number
         }[]
       }
+      count_project_applications: {
+        Args: {
+          project_id: string
+        }
+        Returns: {
+          count: number
+        }[]
+      }
+      count_project_servers: {
+        Args: {
+          project_id: string
+        }
+        Returns: {
+          count: number
+        }[]
+      }
       create_organization: {
         Args: {
           org_name: string

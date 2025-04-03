@@ -3,12 +3,38 @@ import { AppWindow, CircuitBoard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ResourceTabs } from '../../detail/ResourceTabs';
 import { Server } from '@/types/server';
+import { ServerAIToolsTable } from './AIToolsTable';
+import { useServerAITools } from '@/hooks/servers/useServerAITools';
+import { toast } from 'sonner';
 
 interface ServerTabsProps {
   server: Server;
 }
 
 export function ServerTabs({ server }: ServerTabsProps) {
+  const { 
+    aiTools, 
+    availableTools, 
+    associatedTools, 
+    isLoading, 
+    isOrganizationLevel,
+    linkAITool,
+    unlinkAITool
+  } = useServerAITools(server.id, server.project_id);
+  
+  const handleAssociationToggle = async (toolId: string, associate: boolean) => {
+    try {
+      if (associate) {
+        await linkAITool.mutateAsync({ serverId: server.id, aiToolId: toolId });
+      } else {
+        await unlinkAITool.mutateAsync({ serverId: server.id, aiToolId: toolId });
+      }
+    } catch (error) {
+      console.error('Error toggling tool association:', error);
+      toast.error('Failed to update tool association');
+    }
+  };
+
   return (
     <ResourceTabs
       defaultTab="ai-tools"
@@ -43,14 +69,13 @@ export function ServerTabs({ server }: ServerTabsProps) {
           label: 'AI Tools',
           description: 'AI tools deployed on this server',
           content: (
-            <div className="text-center p-6">
-              <CircuitBoard className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No AI Tools</h3>
-              <p className="text-muted-foreground mb-4">
-                There are no AI tools deployed on this server yet.
-              </p>
-              <Button>Deploy AI Tool</Button>
-            </div>
+            <ServerAIToolsTable
+              availableTools={availableTools || []}
+              associatedTools={associatedTools || []}
+              isLoading={isLoading}
+              onAssociateChange={handleAssociationToggle}
+              isOrganizationLevel={isOrganizationLevel}
+            />
           ),
         },
         {
