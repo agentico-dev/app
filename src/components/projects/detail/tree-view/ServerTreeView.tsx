@@ -84,11 +84,11 @@ export function ServerTreeView({ servers, isLoading }: ServerTreeViewProps) {
         aria-label="Project Servers"
       >
         {/* Header row */}
-        <div className="grid grid-cols-12 p-2 font-medium text-sm border-b">
-          <div className="col-span-4">Name</div>
-          <div className="col-span-4">Description</div>
-          <div className="col-span-2">Status</div>
-          <div className="col-span-2">Type</div>
+        <div className="grid grid-cols-12 p-2 font-medium text-sm border-b" role="row">
+          <div className="col-span-4" role="columnheader">Name</div>
+          <div className="col-span-4" role="columnheader">Description</div>
+          <div className="col-span-2" role="columnheader">Status</div>
+          <div className="col-span-2" role="columnheader">Type</div>
         </div>
 
         {/* Tree items */}
@@ -100,6 +100,7 @@ export function ServerTreeView({ servers, isLoading }: ServerTreeViewProps) {
                 server={server}
                 tools={server.tools || []}
                 isLoading={false}
+                expanded={true}
               />
             ))}
           </div>
@@ -115,7 +116,7 @@ export function ServerTreeView({ servers, isLoading }: ServerTreeViewProps) {
 
 function ServerTreeItemSkeleton() {
   return (
-    <div className="w-full p-2">
+    <div className="w-full p-2" role="row">
       <div className="flex items-center">
         <Skeleton className="h-4 w-4 mr-2" />
         <div className="grid grid-cols-12 flex-grow gap-2">

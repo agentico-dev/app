@@ -50,7 +50,7 @@ export function ServerTabs({ server }: ServerTabsProps) {
         },
         {
           value: 'ai-tools',
-          label: `AI Tools (${aiTools?.length || 0})`,
+          label: `AI Tools (${associatedTools?.length || 0})`,
           description: `AI tools associated to this server ${isOrganizationLevel ? 'at organization level' : 'at project level'}`,
           reference: isOrganizationLevel
             ? null

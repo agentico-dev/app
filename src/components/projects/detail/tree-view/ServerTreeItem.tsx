@@ -59,7 +59,7 @@ export function ServerTreeItem({
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full" role="row">
       <div 
         className={cn(
           "flex items-center w-full p-2 hover:bg-muted/50 rounded-md",
@@ -108,13 +108,13 @@ export function ServerTreeItem({
       </div>
 
       {isExpanded && tools.length > 0 && (
-        <div className="pl-6 border-l border-muted ml-3 mt-1 mb-2">
+        <div className="pl-6 border-l border-muted ml-3 mt-1 mb-2" role="rowgroup">
           <div className="text-sm text-muted-foreground font-medium p-2">
             Associated Tools ({tools.length})
           </div>
           
           {tools.map(tool => (
-            <div key={tool.id} className="flex items-center p-2 hover:bg-muted/50 rounded-md">
+            <div key={tool.id} className="flex items-center p-2 hover:bg-muted/50 rounded-md" role="row">
               <div className="w-6"></div>
               <div className="grid grid-cols-12 flex-grow gap-2 items-center">
                 <div className="flex items-center gap-2 col-span-4">
