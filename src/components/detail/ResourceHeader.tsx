@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Star } from 'lucide-react';
+import { PlaneLanding, PlaneTakeoff, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router';
@@ -185,7 +185,7 @@ export function ResourceHeader({
                 onClick={handleDeploy}
                 className="flex items-center justify-start"
               >
-                <Rocket className="h-4 w-4 mr-1" /> Deploy
+                <PlaneTakeoff className="h-4 w-4 mr-1" /> Deploy
               </Button>
               <Button 
                 variant="outline" 
@@ -193,7 +193,7 @@ export function ResourceHeader({
                 onClick={handleUndeploy}
                 className="flex items-center justify-start"
               >
-                <Rocket className="h-4 w-4 mr-1" /> Undeploy
+                <PlaneLanding className="h-4 w-4 mr-1" /> Undeploy
               </Button>
             </CollapsibleContent>
           </Collapsible>

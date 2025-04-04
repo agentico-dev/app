@@ -70,7 +70,7 @@ function ServersPage() {
   return (
     <div className="container py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Servers</h1>
+        <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">Servers</h1>
         <Button onClick={() => navigate('/servers/new')}>
           <PlusCircle className="mr-2 h-4 w-4" />
           New Server

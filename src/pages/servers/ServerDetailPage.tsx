@@ -11,10 +11,7 @@ import { Server } from '@/types/server';
 import { useTags } from '@/contexts/TagsContext';
 import { Badge } from '@/components/ui/badge';
 import Editor from '@monaco-editor/react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Button } from '@/components/ui/button';
-import { ChevronDown, Code, Download, FilesIcon, Import, Rocket } from 'lucide-react';
-import { Toggle } from '@/components/ui/toggle';
+import { FilesIcon } from 'lucide-react';
 
 export default function ServerDetailPage() {
   const { id } = useParams();
@@ -33,45 +30,15 @@ export default function ServerDetailPage() {
       setIsLoading(true);
       try {
         console.log('Fetching server details for ID/slug:', id);
-        
-        let query = supabase.from('servers')
-          .select(`
-            *,
-            project_servers!inner (
-              project_id
-            )
-          `);
-        
         // Check if the ID is a UUID format or a slug
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-        if (isUuid) {
-          query = query.eq('id', id);
-        } else {
-          query = query.eq('slug', id);
-        }
         
-        let { data, error } = await query;
-        
-        if (error) {
-          // If no results found with inner join, try without the join
-          query = supabase.from('servers').select('*');
-          if (isUuid) {
-            query = query.eq('id', id);
-          } else {
-            query = query.eq('slug', id);
-          }
-          
-          const result = await query.single();
-          data = result.data;
-          error = result.error;
-        }
-        
-        if (error) {
-          console.error('Error fetching server details:', error);
-          toast.error(`Failed to load server: ${error.message}`);
-          throw error;
-        }
-        
+
+        const data = {
+          'comming soon': 'project details',
+          'see_project_management_demo': 'https://youtu.be/4JJ30ytn-yY',
+          'see_oas_to_mcp_demo': 'https://youtu.be/kR4pP5VZgKw',
+         }; // Placeholder for actual data fetching logic
         // Process the data to extract project_id if available
         let serverData;
         if (Array.isArray(data) && data.length > 0) {
@@ -219,7 +186,7 @@ export default function ServerDetailPage() {
             handleUndeploy={handleUndeployServer}
           />
           
-          <ServerResourceCards server={server!} />
+          {/* <ServerResourceCards server={server!} /> */}
           
           {showCodeView ? (
             <div className="mt-6 border rounded-md overflow-hidden">

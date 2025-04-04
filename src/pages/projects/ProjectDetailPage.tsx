@@ -28,27 +28,13 @@ export default function ProjectDetailPage() {
       setIsLoading(true);
       try {
         console.log('Fetching project details for ID/slug:', id);
-
-        let query = supabase.from('projects').select('*');
-
         // Check if the ID is a UUID format or a slug
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-        if (isUuid) {
-          query = query.eq('id', id);
-        } else {
-          query = query.eq('slug', id);
-        }
-
-        const { data, error } = await query.single();
-
-        if (error) {
-          console.error('Error fetching project details:', error);
-          toast.error(`Failed to load project: ${error.message}`);
-          throw error;
-        }
-
-        console.log('Fetched project details:', data);
-        setProject(data);
+        const data = {
+          'comming soon': 'project details',
+          'see_project_management_demo': 'https://youtu.be/4JJ30ytn-yY',
+          'see_oas_to_mcp_demo': 'https://youtu.be/kR4pP5VZgKw',
+         }; // Placeholder for actual data fetching logic
         
         // Set initial code content
         setCodeContent(JSON.stringify(data, null, 2));
