@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   AppWindow,
   Briefcase,
+  ChevronDown,
   ChevronRight,
   Database,
   Home,
@@ -24,6 +25,18 @@ import { Link, useLocation } from 'react-router';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible';
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from '@/components/ui/tooltip';
 
 export interface SidebarNavProps {
   onClose?: () => void;
@@ -43,7 +56,8 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
   const location = useLocation();
   const { user } = useAuth();
   const isAuthenticated = !!user;
-
+  const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
+  
   const mainNav: NavItem[] = [
     {
       title: 'Dashboard',
@@ -136,19 +150,81 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
                 key={item.href}
                 item={item}
                 active={location.pathname === item.href}
+                collapsed={collapsed}
               />
             ))}
           </div>
           <div className="h-px bg-sidebar-border" />
           {isAuthenticated ? (
             <div className="space-y-1">
-              {utilityNav.map((item) => (
-                <NavLink
-                  key={item.href}
-                  item={item}
-                  active={location.pathname === item.href}
-                />
-              ))}
+              {utilityNav.map((item) => {
+                // Special handling for items with submenu
+                if (item.submenu && item.submenu.length > 0) {
+                  return (
+                    <Collapsible 
+                      key={item.href}
+                      open={isSettingsExpanded}
+                      onOpenChange={setIsSettingsExpanded}
+                    >
+                      <CollapsibleTrigger className="w-full">
+                        <div
+                          className={cn(
+                            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors w-full",
+                            location.pathname.startsWith(item.href)
+                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                              : "hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                          )}
+                        >
+                          {!collapsed ? (
+                            <>
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.title}</span>
+                              {isSettingsExpanded ? (
+                                <ChevronDown className="ml-auto h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="ml-auto h-4 w-4" />
+                              )}
+                            </>
+                          ) : (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="flex items-center justify-center">
+                                    <item.icon className="h-4 w-4" />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">
+                                  {item.title}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="pl-10 space-y-1 mt-1">
+                        {item.submenu.map(subItem => (
+                          <NavLink
+                            key={subItem.href}
+                            item={subItem}
+                            active={location.pathname === subItem.href}
+                            collapsed={collapsed}
+                          />
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                }
+                
+                // Regular items without submenu
+                return (
+                  <NavLink
+                    key={item.href}
+                    item={item}
+                    active={location.pathname === item.href}
+                    collapsed={collapsed}
+                  />
+                );
+              })}
               <div className="h-px bg-sidebar-border" />
               <div className="space-y-1">
                 {footerNav.map((item) => (
@@ -156,6 +232,7 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
                     key={item.href}
                     item={item}
                     active={location.pathname === item.href}
+                    collapsed={collapsed}
                   />
                 ))}
               </div>
@@ -192,9 +269,14 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
 type NavLinkProps = {
   item: NavItem;
   active?: boolean;
+  collapsed?: boolean;
 };
 
-function NavLink({ item, active }: NavLinkProps) {
+function NavLink({ item, active, collapsed }: NavLinkProps) {
+  if (item.submenu) {
+    return null; // We're handling items with submenus separately
+  }
+  
   return (
     <Link
       to={item.href}
@@ -205,15 +287,30 @@ function NavLink({ item, active }: NavLinkProps) {
           : "hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
       )}
     >
-      <item.icon className="h-4 w-4" />
-      <span>{item.title}</span>
-      {item.badge && (
-        <Badge variant="outline" className="ml-auto text-xs bg-purple-100 text-purple-800 border-purple-300">
-          {item.badge}
-        </Badge>
-      )}
-      {item.submenu && (
-        <ChevronRight className="ml-auto h-4 w-4" />
+      {collapsed ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="flex items-center justify-center">
+                <item.icon className="h-4 w-4" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              {item.title}
+              {item.badge && <span className="ml-2">{item.badge}</span>}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        <>
+          <item.icon className="h-4 w-4" />
+          <span>{item.title}</span>
+          {item.badge && (
+            <Badge variant="outline" className="ml-auto text-xs bg-purple-100 text-purple-800 border-purple-300">
+              {item.badge}
+            </Badge>
+          )}
+        </>
       )}
     </Link>
   );
