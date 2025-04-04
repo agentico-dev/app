@@ -25,4 +25,10 @@ export type Tables = {
   resource_tags: SchemaTable<'resource_tags'>;
   servers: SchemaTable<'servers'>;
   plans: SchemaTable<'plans'>;
+  dashboard_metrics: {
+    projects_count: number;
+    applications_count: number;
+    servers_count: number;
+    ai_tools_count: number;
+  };
 };

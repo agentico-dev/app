@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion } from 'framer-motion';
+import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProjectData {
   id: string;
@@ -29,67 +31,6 @@ interface NotificationData {
   message: string;
   created_at: string;
 }
-
-const recentProjects = [
-  {
-    id: '1',
-    name: 'Customer Support Bot',
-    tools_count: 8,
-    servers_count: 2,
-    status: 'Active',
-  },
-  {
-    id: '2',
-    name: 'Data Analysis Pipeline',
-    tools_count: 12,
-    servers_count: 4,
-    status: 'Active',
-  },
-  {
-    id: '3',
-    name: 'Content Generation System',
-    tools_count: 6,
-    servers_count: 2,
-    status: 'Development',
-  },
-  {
-    id: '4',
-    name: 'Recommendation Engine',
-    tools_count: 9,
-    servers_count: 3,
-    status: 'Maintenance',
-  },
-];
-
-const recentActivity = [
-  {
-    icon: Wrench,
-    description: 'New AI Tool "Text Summarizer" was created',
-    time: '2 hours ago',
-  },
-  {
-    icon: Server,
-    description: 'Server "NLP-Processor-01" was restarted',
-    time: '4 hours ago',
-  },
-  {
-    icon: Users,
-    description: 'User "Alex Kim" was added to "Data Analysis Pipeline" project',
-    time: '6 hours ago',
-  },
-  {
-    icon: AppWindow,
-    description: 'Application "Customer Portal" deployed to production',
-    time: '1 day ago',
-  },
-];
-
-const mockStats = {
-  projects: { count: 12, trend: '+2 this month', trendUp: true },
-  applications: { count: 8, trend: '+1 this week', trendUp: true },
-  servers: { count: 23, trend: 'No change', trendUp: null },
-  aiTools: { count: 35, trend: '+5 this month', trendUp: true },
-};
 
 // Animation variants for staggered children animations
 const containerVariants = {
@@ -119,38 +60,74 @@ export function Dashboard() {
   const { session } = useAuth();
   const isAuthenticated = !!session.user;
 
+  // Fetch metrics from Supabase
+  const { data: metricsData, isLoading: metricsLoading } = useDashboardMetrics();
+
   const { data: projectsData, isLoading: projectsLoading } = useQuery({
     queryKey: ['dashboard', 'projects'],
     queryFn: async () => {
-      return recentProjects;
+      if (!isAuthenticated) return [];
+
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name, tools_count, servers_count, status')
+        .order('updated_at', { ascending: false })
+        .limit(4);
+
+      if (error) {
+        console.error('Error fetching recent projects:', error);
+        throw error;
+      }
+
+      return data || [];
     },
+    enabled: isAuthenticated,
   });
 
   const { data: activityData, isLoading: activityLoading } = useQuery({
     queryKey: ['dashboard', 'activity'],
     queryFn: async () => {
-      return recentActivity;
+      if (!isAuthenticated) return [];
+
+      // In a real app, we would fetch actual activity from a dedicated table
+      // For now, we'll use mock data
+      return [
+        {
+          icon: Wrench,
+          description: 'New AI Tool "Text Summarizer" was created',
+          time: '2 hours ago',
+        },
+        {
+          icon: Server,
+          description: 'Server "NLP-Processor-01" was restarted',
+          time: '4 hours ago',
+        },
+        {
+          icon: Users,
+          description: 'User "Alex Kim" was added to "Data Analysis Pipeline" project',
+          time: '6 hours ago',
+        },
+        {
+          icon: AppWindow,
+          description: 'Application "Customer Portal" deployed to production',
+          time: '1 day ago',
+        },
+      ];
     },
+    enabled: isAuthenticated,
   });
 
-  const { data: statsSummary, isLoading: statsLoading } = useQuery({
-    queryKey: ['dashboard', 'stats'],
-    queryFn: async () => {
-      return mockStats;
-    },
-  });
+  // Fallback to mock data if real data isn't available yet
+  const mockStats = {
+    projects: { count: 0, trend: 'No data yet', trendUp: null },
+    applications: { count: 0, trend: 'No data yet', trendUp: null },
+    servers: { count: 0, trend: 'No data yet', trendUp: null },
+    aiTools: { count: 0, trend: 'No data yet', trendUp: null },
+  };
 
-  const stats = statsLoading || !statsSummary ? mockStats : statsSummary;
-  const projects = projectsLoading || !projectsData ? recentProjects : projectsData;
-  const activity = activityLoading || !activityData 
-    ? recentActivity 
-    : activityData.map((item: ActivityData) => {
-        return {
-          icon: item.icon,
-          description: item.description,
-          time: item.time
-        };
-      });
+  const stats = metricsLoading || !metricsData ? mockStats : metricsData;
+  const projects = projectsLoading || !projectsData ? [] : projectsData;
+  const activity = activityLoading || !activityData ? [] : activityData;
 
   const transformNotificationToActivity = (notification: NotificationData): ActivityData => {
     const getIcon = () => {
@@ -282,7 +259,7 @@ export function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {projects.map((project, index) => (
+                {projects.length > 0 ? projects.map((project, index) => (
                   <motion.div 
                     key={project.id} 
                     className="flex items-center justify-between space-x-4 p-2 hover:bg-background/50 rounded-md transition-all duration-300"
@@ -317,7 +294,14 @@ export function Dashboard() {
                       </Button>
                     </div>
                   </motion.div>
-                ))}
+                )) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No projects yet</p>
+                    <Button variant="outline" className="mt-2" asChild>
+                      <Link to="/projects/new">Create your first project</Link>
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -337,7 +321,7 @@ export function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {activity.map((activity, index) => (
+                {activity.length > 0 ? activity.map((activity, index) => (
                   <motion.div 
                     key={index} 
                     className="flex items-start gap-4 p-2 hover:bg-background/50 rounded-md transition-all duration-300"
@@ -353,7 +337,9 @@ export function Dashboard() {
                       <p className="text-xs text-muted-foreground">{activity.time}</p>
                     </div>
                   </motion.div>
-                ))}
+                )) : (
+                  <p className="text-center py-8 text-muted-foreground">No recent activity</p>
+                )}
               </div>
             </CardContent>
           </Card>
