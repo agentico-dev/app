@@ -15,14 +15,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle, 
-  DialogTrigger
-} from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, Code, Download, FileUp, FilesIcon, Import, Rocket, Upload } from 'lucide-react';
+import { Toggle } from '@/components/ui/toggle';
+import { Switch } from '@/components/ui/switch';
+import CodeEditor from '@/components/editor/CodeEditor';
 
 interface ResourceHeaderProps {
   title: string;
@@ -36,6 +34,14 @@ interface ResourceHeaderProps {
   resourceId?: string;
   resourceType?: 'Project' | 'Server';
   resourceSlug?: string;
+  isActionsOpen: boolean;
+  setIsActionsOpen: (open: boolean) => void;
+  showCodeView: boolean;
+  setShowCodeView: (show: boolean) => void;
+  handleImport: () => void;
+  handleExport: () => void;
+  handleDeploy: () => void;
+  handleUndeploy: () => void;
 }
 
 export function ResourceHeader({
@@ -49,7 +55,15 @@ export function ResourceHeader({
   onDelete,
   resourceId,
   resourceType,
-  resourceSlug
+  resourceSlug,
+  isActionsOpen,
+  setIsActionsOpen,
+  showCodeView,
+  setShowCodeView,
+  handleImport,
+  handleExport,
+  handleDeploy,
+  handleUndeploy
 }: ResourceHeaderProps) {
   const navigate = useNavigate();
 
@@ -128,6 +142,62 @@ export function ResourceHeader({
       </div>
       
       <div className="flex gap-2">
+          <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
+            <Collapsible 
+              open={isActionsOpen} 
+              onOpenChange={setIsActionsOpen} 
+              className="w-full sm:w-auto"
+            >
+              <div className="flex items-center gap-2">
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    Actions <ChevronDown className={`h-4 w-4 transition-transform ${isActionsOpen ? 'rotate-180' : ''}`} />
+                  </Button>
+                </CollapsibleTrigger>
+                <Switch 
+                  checked={showCodeView}
+                  onClick={showCodeView ? () => setShowCodeView(false) : () => setShowCodeView(true)}
+                  aria-label="Toggle code view"
+                  className="ml-2"
+                >
+                  <Code className="h-4 w-4 mr-1" /> Code View
+                </Switch>
+              </div>
+              <CollapsibleContent className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleImport}
+                  className="flex items-center"
+                >
+                  <Import className="h-4 w-4 mr-1" /> Import
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleExport}
+                  className="flex items-center"
+                >
+                  <Download className="h-4 w-4 mr-1" /> Export
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleDeploy}
+                  className="flex items-center"
+                >
+                  <Rocket className="h-4 w-4 mr-1" /> Deploy
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleUndeploy}
+                  className="flex items-center"
+                >
+                  <Rocket className="h-4 w-4 mr-1" /> Undeploy
+                </Button>
+              </CollapsibleContent>
+            </Collapsible>
         <Button 
           variant="outline" 
           onClick={handleEdit}
@@ -153,6 +223,7 @@ export function ResourceHeader({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        </div>
       </div>
     </div>
   );
