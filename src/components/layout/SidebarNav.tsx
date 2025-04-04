@@ -108,7 +108,7 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-14 items-center border-b border-sidebar-border px-4">
+      <div className="flex h-14 items-center border-b border-sidebar-border px-4 sticky top-0 z-10">
         <Link to="/index" className="flex items-center space-x-2">
           <img src="/favicon-32x32.png" alt="Agentico" className="h-6 w-6" />
           <span>Agentico <small style={{ fontSize: '8px' }}>{import.meta.env.VITE_REACT_APP_VERSION}</small></span>
@@ -125,7 +125,7 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
           </Button>
         )}
       </div>
-      <ScrollArea className="flex-1 px-3 py-4">
+      <ScrollArea className="flex-1 px-3 py-4 overflow-y-auto">
         <div className="space-y-4">
           <div className="space-y-1">
             {mainNav.map((item) => (
@@ -150,7 +150,7 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
           )}
         </div>
       </ScrollArea>
-      <div className="border-t border-sidebar-border p-4">
+      <div className="border-t border-sidebar-border p-4 sticky bottom-0 bg-sidebar">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-sidebar-primary/20 flex items-center justify-center">
             <User className="h-4 w-4 text-sidebar-primary" />

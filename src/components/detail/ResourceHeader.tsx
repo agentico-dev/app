@@ -75,7 +75,6 @@ export function ResourceHeader({
     if (onEdit) {
       onEdit();
     } else if (resourceType && (resourceSlug || resourceId)) {
-      // Redirect to the appropriate edit page based on resourceType
       // Prefer slug over ID when available
       const resourceIdentifier = resourceSlug || resourceId;
       switch (resourceType) {
@@ -141,88 +140,88 @@ export function ResourceHeader({
         )}
       </div>
       
-      <div className="flex gap-2">
-          <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-            <Collapsible 
-              open={isActionsOpen} 
-              onOpenChange={setIsActionsOpen} 
-              className="w-full sm:w-auto"
-            >
-              <div className="flex items-center gap-2">
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    Actions <ChevronDown className={`h-4 w-4 transition-transform ${isActionsOpen ? 'rotate-180' : ''}`} />
-                  </Button>
-                </CollapsibleTrigger>
-                <Switch 
-                  checked={showCodeView}
-                  onClick={showCodeView ? () => setShowCodeView(false) : () => setShowCodeView(true)}
-                  aria-label="Toggle code view"
-                  className="ml-2"
-                >
-                  <Code className="h-4 w-4 mr-1" /> Code View
-                </Switch>
-              </div>
-              <CollapsibleContent className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleImport}
-                  className="flex items-center"
-                >
-                  <Import className="h-4 w-4 mr-1" /> Import
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-end gap-2">
+          <Collapsible 
+            open={isActionsOpen} 
+            onOpenChange={setIsActionsOpen} 
+          >
+            <div className="flex items-center gap-2">
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Actions <ChevronDown className={`h-4 w-4 transition-transform ${isActionsOpen ? 'rotate-180' : ''}`} />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleExport}
-                  className="flex items-center"
-                >
-                  <Download className="h-4 w-4 mr-1" /> Export
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleDeploy}
-                  className="flex items-center"
-                >
-                  <Rocket className="h-4 w-4 mr-1" /> Deploy
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleUndeploy}
-                  className="flex items-center"
-                >
-                  <Rocket className="h-4 w-4 mr-1" /> Undeploy
-                </Button>
-              </CollapsibleContent>
-            </Collapsible>
-        <Button 
-          variant="outline" 
-          onClick={handleEdit}
-        >
-          Edit
-        </Button>
+              </CollapsibleTrigger>
+              <Switch 
+                checked={showCodeView}
+                onClick={() => setShowCodeView(!showCodeView)}
+                aria-label="Toggle code view"
+              />
+              <span className="text-sm">Code View</span>
+            </div>
+            <CollapsibleContent className="absolute z-10 mt-2 p-2 bg-popover border rounded-md shadow-md w-[280px] grid grid-cols-2 gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleImport}
+                className="flex items-center justify-start"
+              >
+                <Import className="h-4 w-4 mr-1" /> Import
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleExport}
+                className="flex items-center justify-start"
+              >
+                <Download className="h-4 w-4 mr-1" /> Export
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDeploy}
+                className="flex items-center justify-start"
+              >
+                <Rocket className="h-4 w-4 mr-1" /> Deploy
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleUndeploy}
+                className="flex items-center justify-start"
+              >
+                <Rocket className="h-4 w-4 mr-1" /> Undeploy
+              </Button>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
 
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive">Delete</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the {resourceType?.toLowerCase() || 'resource'} 
-                and all associated data.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <div className="flex gap-2 justify-end">
+          <Button 
+            variant="outline" 
+            onClick={handleEdit}
+          >
+            Edit
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">Delete</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the {resourceType?.toLowerCase() || 'resource'} 
+                  and all associated data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>

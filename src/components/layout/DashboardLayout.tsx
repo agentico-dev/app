@@ -20,7 +20,7 @@ export const DashboardLayout = () => {
       <div className="flex flex-1 overflow-hidden">
         <div
           className={cn(
-            "flex-shrink-0 transition-all duration-300 ease-in-out bg-sidebar border-r border-sidebar-border h-[calc(100vh-4rem)] sticky top-16",
+            "transition-all duration-300 ease-in-out bg-sidebar border-r border-sidebar-border h-[calc(100vh-4rem)] sticky top-16",
             sidebarOpen ? (isMobile ? 'w-full fixed inset-0 z-40' : 'w-64') : 'w-0'
           )}
         >
