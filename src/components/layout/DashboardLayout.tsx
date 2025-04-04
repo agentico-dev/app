@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Outlet } from 'react-router';
 import { SidebarNav } from './SidebarNav';
@@ -18,7 +19,7 @@ export const DashboardLayout = () => {
   const toggleCollapse = () => setSidebarCollapsed(!sidebarCollapsed);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-secondary/30">
+    <div className="min-h-screen flex flex-col subtle-mesh">
       <TopNav
         sidebarCollapsed={sidebarCollapsed}
         toggleCollapse={toggleCollapse}

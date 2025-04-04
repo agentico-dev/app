@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
@@ -99,16 +98,10 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen overflow-hidden relative">
-      {/* Animated gradient background */}
-      <motion.div 
-        className="fixed inset-0 w-full h-full z-0"
-        style={{
-          background: 'linear-gradient(135deg, rgba(97,218,251,0.8) 0%, rgba(97,218,251,0.7) 30%, rgba(61,164,203,0.6) 70%, rgba(28,93,153,0.5) 100%)',
-          y: backgroundY,
-        }}
-      />
+      {/* Updated background using our new subtle-mesh class */}
+      <div className="fixed inset-0 w-full h-full z-0 subtle-mesh"></div>
       
-      <div className="absolute inset-0 w-full h-full bg-black/20 backdrop-blur-[2px] z-0" />
+      <div className="absolute inset-0 w-full h-full backdrop-blur-[1px] z-0" />
       
       {/* Wave effect */}
       <div className="absolute w-full h-64 top-[60vh] left-0 z-0 overflow-hidden">
@@ -150,7 +143,7 @@ export default function LandingPage() {
       
       {/* Floating elements */}
       <motion.div 
-        className="absolute top-20 left-10 w-64 h-64 rounded-full bg-primary/20 blur-3xl z-0"
+        className="absolute top-20 left-10 w-64 h-64 rounded-full bg-primary/10 blur-3xl z-0"
         animate={{
           x: [0, 15, 0],
           y: [0, 10, 0],
@@ -162,7 +155,7 @@ export default function LandingPage() {
         }}
       />
       <motion.div 
-        className="absolute bottom-40 right-10 w-80 h-80 rounded-full bg-accent/20 blur-3xl z-0"
+        className="absolute bottom-40 right-10 w-80 h-80 rounded-full bg-accent/10 blur-3xl z-0"
         animate={{
           x: [0, -20, 0],
           y: [0, 15, 0],
