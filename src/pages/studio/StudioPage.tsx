@@ -83,7 +83,7 @@ export default function StudioPage() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Studio</h1>
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">Studio</h1>
           <p className="text-muted-foreground mt-1">
             Create and manage AI workflow integrations
           </p>
@@ -94,7 +94,7 @@ export default function StudioPage() {
       </div>
 
       <div className="mb-8 bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border">
-        <h2 className="text-lg font-medium mb-2">AI-Assisted Workflow Generation</h2>
+        <h2 className="text-lg font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent mb-2">AI-Assisted Workflow Generation</h2>
         <p className="text-sm text-muted-foreground mb-4">
           Describe the workflow you want to create in natural language, and we'll generate it for you.
         </p>
@@ -110,7 +110,7 @@ export default function StudioPage() {
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold">Your Workflows</h2>
+        <h2 className="text-lg font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent mb-2">Your Workflows</h2>
         <div className="relative max-w-sm">
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input

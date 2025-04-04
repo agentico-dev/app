@@ -71,17 +71,17 @@ export function TopNav({ sidebarCollapsed, toggleCollapse }: { sidebarCollapsed:
             <span className="sr-only">{sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}</span>
           </Button>
           <Link to="/index" className="flex items-center gap-2 font-semibold">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent/70 flex items-center justify-center shadow-lg">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent-100 flex items-center justify-center shadow-lg">
               <img src="/favicon-32x32.png" alt="Agentico" className="h-6 w-6" />
             </div>
             {!sidebarCollapsed && (
               <motion.span 
-                className="text-xl font-bold bg-gradient-to-r from-primary to-accent/80 bg-clip-text text-transparent hidden sm:inline-block"
+                className="bg-gradient-to-r from-primary to-accent-600 bg-clip-text text-transparent hidden sm:inline-block"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
               >
-                Agentico <small style={{ fontSize: '8px' }}>{import.meta.env.VITE_REACT_APP_VERSION}</small>
+                Agentico <small style={{ fontSize: '7px' }}>{import.meta.env.VITE_REACT_APP_VERSION}</small>
               </motion.span>
             )}
           </Link>

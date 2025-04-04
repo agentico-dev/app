@@ -71,7 +71,7 @@ export default function NewWorkflowPage() {
       <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[50vh]">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-          <h2 className="text-2xl font-semibold mb-2">Generating Your Workflow</h2>
+          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">Generating Your Workflow</h2>
           <p className="text-muted-foreground mb-8 max-w-md">
             We're using AI to create a workflow based on your prompt:<br /> 
             <span className="font-medium italic">"{prompt}"</span>

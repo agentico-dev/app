@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Outlet } from 'react-router';
 import { SidebarNav } from './SidebarNav';
@@ -43,7 +42,8 @@ export const DashboardLayout = () => {
               }}
               className={cn(
                 "transition-all duration-300 ease-in-out bg-sidebar border-r border-sidebar-border h-screen fixed top-16",
-                isMobile ? 'w-full inset-0 z-40' : '',
+                isMobile ? 'w-full inset-0 z-40' : 'z-30', // Ensure proper z-index
+                "overflow-hidden" // Prevent overflow issues
               )}
               onMouseEnter={() => setSidebarHovered(true)}
               onMouseLeave={() => setSidebarHovered(false)}
@@ -61,6 +61,7 @@ export const DashboardLayout = () => {
         <motion.div
           className={cn(
             "flex-1 overflow-auto transition-all duration-300",
+            "relative z-10" // Ensure main content is above the sidebar
           )}
           style={{
             marginLeft: sidebarOpen && !isMobile 

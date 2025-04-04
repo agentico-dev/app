@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowUpRight, BarChart3, Briefcase, CircuitBoard, Server, Shield, Users } from 'lucide-react';
+import { ArrowUpRight, Briefcase, AppWindow, Server, Shield, Users, Wrench, Megaphone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -63,7 +63,7 @@ const recentProjects = [
 
 const recentActivity = [
   {
-    icon: CircuitBoard,
+    icon: Wrench,
     description: 'New AI Tool "Text Summarizer" was created',
     time: '2 hours ago',
   },
@@ -78,7 +78,7 @@ const recentActivity = [
     time: '6 hours ago',
   },
   {
-    icon: CircuitBoard,
+    icon: AppWindow,
     description: 'Application "Customer Portal" deployed to production',
     time: '1 day ago',
   },
@@ -157,10 +157,10 @@ export function Dashboard() {
       const type = notification.type || 'info';
       switch (type) {
         case 'project': return Briefcase;
-        case 'application': return CircuitBoard;
+        case 'application': return AppWindow;
         case 'server': return Server;
         case 'user': return Users;
-        default: return CircuitBoard;
+        default: return Megaphone;
       }
     };
 
@@ -239,7 +239,7 @@ export function Dashboard() {
             title="Applications"
             value={stats.applications.count.toString()}
             description="Deployed applications"
-            icon={CircuitBoard}
+            icon={AppWindow}
             trend={stats.applications.trend}
             trendUp={stats.applications.trendUp}
           />
@@ -259,7 +259,7 @@ export function Dashboard() {
             title="AI Tools"
             value={stats.aiTools.count.toString()}
             description="Total AI tools"
-            icon={BarChart3}
+            icon={Wrench}
             trend={stats.aiTools.trend}
             trendUp={stats.aiTools.trendUp}
           />

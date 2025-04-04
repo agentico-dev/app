@@ -123,7 +123,7 @@ export default function ApplicationDetailPage() {
             
             <TabsContent value="apis" className="space-y-4 mt-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Application APIs</h2>
+                <h2 className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">Application APIs</h2>
                 <Button onClick={() => {
                   if (orgSlug && appSlug) {
                     navigate(`/apps/${orgSlug}@${appSlug}/apis/new`);
