@@ -7,6 +7,12 @@ export const apiTable = (tableName: string) => {
 
 // Generate a valid slug from a name
 export function generateSlug(name: string): string {
+  // if empty or just spaces, return empty string
+  if (!name || name.trim() === '') {
+    return '';
+  }
+  // Remove leading and trailing whitespace
+  name = name.trim();
   // Convert to lowercase
   let slug = name.toLowerCase();
   

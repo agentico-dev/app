@@ -1,104 +1,48 @@
 
-import { AppWindow, CircuitBoard, Server } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { FolderIcon, Server, Wrench } from 'lucide-react';
 import { ResourceTabs } from '../../detail/ResourceTabs';
 import { Project } from '@/types/project';
-import { DraggableResourceList } from './DraggableResourceList';
-import { useProjectApplications } from '@/hooks/useProjectApplications';
-import { useProjectTools } from '@/hooks/useProjectTools';
-import { useNavigate } from 'react-router';
+import { OverviewTab, ApplicationsTab, ServersTab, ToolsTab } from './tabs';
+import { useProjectServerDetails } from '@/hooks/useProjectServerDetails';
 
 interface ProjectTabsProps {
   project: Project;
 }
 
 export function ProjectTabs({ project }: ProjectTabsProps) {
-  const navigate = useNavigate();
-  const { 
-    availableApplications, 
-    associatedApplications, 
-    isLoading: isLoadingApplications,
-    handleMoveApplication
-  } = useProjectApplications(project.id);
-
-  const { 
-    availableTools, 
-    associatedTools, 
-    isLoading: isLoadingTools,
-    handleMoveTool
-  } = useProjectTools(project.id);
-
-  const handleCreateApplication = () => {
-    navigate('/applications/new', { state: { projectId: project.id } });
-  };
-
-  const handleCreateTool = () => {
-    navigate('/tools/new', { state: { projectId: project.id } });
-  };
+  const { serversWithTools } = useProjectServerDetails(project.id);
+  const toolsCount = serversWithTools.reduce((acc, server) => acc + (server.tools ? server.tools.length : 0), 0);
 
   return (
     <ResourceTabs
-      defaultTab="applications"
+      defaultTab="overview"
       tabs={[
         {
           value: 'overview',
           label: 'Overview',
           description: 'Detailed information about this project',
-          content: (
-            <p className="text-muted-foreground">
-              {project.description || 'No detailed description available for this project.'}
-            </p>
-          ),
+          content: <OverviewTab description={project.description} projectId={project.id} />,
         },
         {
           value: 'applications',
-          label: 'Applications',
-          description: 'Manage applications associated with this project',
-          content: isLoadingApplications ? (
-            <div className="flex justify-center p-6">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <DraggableResourceList
-              projectId={project.id}
-              availableResources={availableApplications}
-              associatedResources={associatedApplications}
-              resourceType="application"
-              onResourceMoved={handleMoveApplication}
-              createButtonLabel="Create Application"
-              onCreateClick={handleCreateApplication}
-            />
-          ),
+          label: `Applications (${project.applications_count || 0})`,
+          description: 'Applications associated with this project',
+          icon: <FolderIcon className="h-4 w-4" />,
+          content: <ApplicationsTab projectId={project.id} />,
         },
         {
-          value: 'services',
-          label: 'Services',
-          description: 'Services associated with this project',
-          content: (
-            <p className="text-center text-muted-foreground p-6">
-              Services information will be displayed here.
-            </p>
-          ),
+          value: 'servers',
+          label: `Servers (${serversWithTools.length || 0})`,
+          description: 'Servers associated with this project',
+          icon: <Server className="h-4 w-4" />,
+          content: <ServersTab projectId={project.id} />,
         },
         {
           value: 'tools',
-          label: 'AI Tools',
-          description: 'Manage AI tools associated with this project',
-          content: isLoadingTools ? (
-            <div className="flex justify-center p-6">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <DraggableResourceList
-              projectId={project.id}
-              availableResources={availableTools}
-              associatedResources={associatedTools}
-              resourceType="tool"
-              onResourceMoved={handleMoveTool}
-              createButtonLabel="Create AI Tool"
-              onCreateClick={handleCreateTool}
-            />
-          ),
+          label: `AI Tools (${toolsCount || 0})`,
+          description: 'AI tools for this project',
+          icon: <Wrench className="h-4 w-4" />,
+          content: <ToolsTab projectId={project.id} />,
         },
       ]}
     />

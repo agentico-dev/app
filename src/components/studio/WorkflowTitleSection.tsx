@@ -8,14 +8,14 @@ interface WorkflowTitleSectionProps {
   workflowName: string;
   setWorkflowName: (name: string) => void;
   onBack: () => void;
-  projectId?: string;
+  workflowId?: string;
 }
 
 export function WorkflowTitleSection({
   workflowName,
   setWorkflowName,
   onBack,
-  projectId
+  workflowId
 }: WorkflowTitleSectionProps) {
   return (
     <div className="flex items-center gap-4">
@@ -29,7 +29,7 @@ export function WorkflowTitleSection({
           onChange={(e) => setWorkflowName(e.target.value)}
           className="font-medium text-lg border-none focus-visible:ring-0 focus-visible:ring-offset-0 h-8 p-0"
         />
-        {projectId && <p className="text-muted-foreground text-sm">Project: {projectId}</p>}
+        {workflowId && <p className="text-muted-foreground text-sm">Workflow: {workflowId}</p>}
       </div>
     </div>
   );

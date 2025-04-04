@@ -27,6 +27,8 @@ interface DraggableResourceListProps {
   onResourceMoved: (resourceId: string, source: string, destination: string) => Promise<void>;
   createButtonLabel?: string;
   onCreateClick?: () => void;
+  showEmptyState?: boolean;
+  emptyStateMessage?: string;
 }
 
 // A component to render each column (Available or Associated)
@@ -60,6 +62,7 @@ const ResourceContainer = ({
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
+                      className="transition-all duration-200"
                     >
                       {resourceType === 'application' ? (
                         <ApplicationCard application={item as Application} />
@@ -94,6 +97,36 @@ const ResourceContainer = ({
   </Card>
 );
 
+// An empty state component for when no resources are available
+const EmptyResourceState = ({ 
+  message, 
+  resourceType, 
+  createButtonLabel, 
+  onCreateClick 
+}: { 
+  message: string; 
+  resourceType: string; 
+  createButtonLabel?: string; 
+  onCreateClick?: () => void; 
+}) => (
+  <div className="flex flex-col items-center justify-center text-center p-12 border rounded-lg bg-muted/10">
+    {resourceType === 'application' 
+      ? <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+        </div>
+      : <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M18 16H6a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2Z"/><path d="m10 10-2-2m0 0L6 6m2 2 2-2m4 2 2-2m0 0 2-2m-2 2-2-2"/></svg>
+        </div>
+    }
+    <h3 className="text-lg font-medium mt-4 mb-2">{message}</h3>
+    {createButtonLabel && onCreateClick && (
+      <Button onClick={onCreateClick} className="mt-4">
+        {createButtonLabel}
+      </Button>
+    )}
+  </div>
+);
+
 export function DraggableResourceList({ 
   projectId,
   availableResources, 
@@ -101,8 +134,20 @@ export function DraggableResourceList({
   resourceType,
   onResourceMoved,
   createButtonLabel,
-  onCreateClick
+  onCreateClick,
+  showEmptyState = false,
+  emptyStateMessage
 }: DraggableResourceListProps) {
+  const [localAvailable, setLocalAvailable] = React.useState<Application[] | AITool[]>([]);
+  const [localAssociated, setLocalAssociated] = React.useState<Application[] | AITool[]>([]);
+  const [isUpdating, setIsUpdating] = React.useState(false);
+
+  // Initialize local state from props
+  React.useEffect(() => {
+    setLocalAvailable(availableResources);
+    setLocalAssociated(associatedResources);
+  }, [availableResources, associatedResources]);
+
   const handleDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId } = result;
     
@@ -117,7 +162,41 @@ export function DraggableResourceList({
       return;
     }
     
+    // Type assertions for TypeScript
+    const sourceItems = source.droppableId === 'available' 
+      ? [...localAvailable] as (Application | AITool)[]
+      : [...localAssociated] as (Application | AITool)[];
+    
+    const destItems = destination.droppableId === 'available' 
+      ? [...localAvailable] as (Application | AITool)[]
+      : [...localAssociated] as (Application | AITool)[];
+    
+    // Find the item being moved
+    const itemToMove = sourceItems.find(item => item.id === draggableId);
+    if (!itemToMove) return;
+    
+    // Remove from source
+    const newSourceItems = sourceItems.filter(item => item.id !== draggableId);
+    
+    // Add to destination
+    const newDestItems = [...destItems];
+    newDestItems.splice(destination.index, 0, itemToMove);
+    
+    // Update local state immediately for responsive UI
+    if (source.droppableId === 'available') {
+      setLocalAvailable(newSourceItems as Application[] | AITool[]);
+    } else {
+      setLocalAssociated(newSourceItems as Application[] | AITool[]);
+    }
+    
+    if (destination.droppableId === 'available') {
+      setLocalAvailable(newDestItems as Application[] | AITool[]);
+    } else {
+      setLocalAssociated(newDestItems as Application[] | AITool[]);
+    }
+    
     // Handle association or disassociation
+    setIsUpdating(true);
     try {
       await onResourceMoved(draggableId, source.droppableId, destination.droppableId);
       
@@ -130,8 +209,26 @@ export function DraggableResourceList({
     } catch (error) {
       console.error('Error moving resource:', error);
       toast.error(`Failed to update ${resourceType} association`);
+      
+      // Revert local state on error
+      setLocalAvailable(availableResources);
+      setLocalAssociated(associatedResources);
+    } finally {
+      setIsUpdating(false);
     }
   };
+
+  // If we need to show an empty state (for tools with no associated applications)
+  if (showEmptyState) {
+    return (
+      <EmptyResourceState 
+        message={emptyStateMessage || `No ${resourceType === 'application' ? 'applications' : 'AI tools'} available`} 
+        resourceType={resourceType}
+        createButtonLabel={createButtonLabel}
+        onCreateClick={onCreateClick}
+      />
+    );
+  }
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
@@ -139,7 +236,7 @@ export function DraggableResourceList({
         <ResourceContainer
           id="available"
           title="Available"
-          items={availableResources}
+          items={localAvailable}
           resourceType={resourceType}
           emptyMessage={`No available ${resourceType === 'application' ? 'applications' : 'AI tools'}`}
           emptyIcon={resourceType === 'application' 
@@ -157,7 +254,7 @@ export function DraggableResourceList({
         <ResourceContainer
           id="associated"
           title={`Associated with Project`}
-          items={associatedResources}
+          items={localAssociated}
           resourceType={resourceType}
           emptyMessage={`No ${resourceType === 'application' ? 'applications' : 'AI tools'} associated with this project`}
           emptyIcon={resourceType === 'application' 

@@ -1,5 +1,5 @@
 
-import { ApplicationStatus } from './application';
+import { ServerStatus } from './application';
 
 export interface Server {
   id: string;
@@ -8,7 +8,7 @@ export interface Server {
   is_public: boolean;
   description: string;
   type: string;
-  status: ApplicationStatus;
+  status: ServerStatus;
   favorite: boolean;
   organization_id: string | null;
   organization_slug?: string;

@@ -50,7 +50,7 @@ const WorkflowEditorErrorBoundary = Sentry.withErrorBoundary(
 
 // The main component wrapped with the error boundary
 function WorkflowEditor() {
-  const { projectId } = useParams<{ projectId: string }>();
+  const { workflowId } = useParams<{ workflowId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -133,8 +133,8 @@ function WorkflowEditor() {
     }, Math.floor(Math.random() * 1500) + 500);
   }, []);
 
-  // Navigate back to projects list
-  const handleBackToProjects = () => {
+  // Navigate back to workflows list
+  const handleBackToWorkflows = () => {
     navigate(`/studio`);
   };
 
@@ -147,24 +147,24 @@ function WorkflowEditor() {
   useEffect(() => {
     Sentry.setTag('page', 'workflow-editor');
     Sentry.setContext('workflow', {
-      projectId,
+      workflowId,
       workflowName,
       nodesCount: nodes.length,
       edgesCount: edges.length,
     });
-  }, [projectId, workflowName, nodes.length, edges.length]);
+  }, [workflowId, workflowName, nodes.length, edges.length]);
 
   return (
     <div className={mainContentClass}>
       <WorkflowHeader
         workflowName={workflowName}
         setWorkflowName={setWorkflowName}
-        onViewCode={() => navigate(`/studio/projects/${projectId}/code`)}
+        onViewCode={() => navigate(`/studio/workflows/${workflowId}/code`)}
         onSave={onSave}
         onRun={onRun}
         onSettings={() => setIsSettingsOpen(true)}
-        onBack={handleBackToProjects}
-        projectId={projectId}
+        onBack={handleBackToWorkflows}
+        workflowId={workflowId}
         isSaving={isSaving}
         isRunning={isRunning}
         isDeploying={isDeploying}

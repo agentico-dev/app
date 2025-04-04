@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
-export default function NewProjectPage() {
+export default function NewWorkflowPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -19,9 +19,8 @@ export default function NewProjectPage() {
   const aiGenerated = searchParams.get('aiGenerated') === 'true';
   const prompt = searchParams.get('prompt') || '';
   
-  const [projectName, setProjectName] = useState('');
-  const [projectDescription, setProjectDescription] = useState('');
-  const [isShared, setIsShared] = useState(false);
+  const [workflowName, setWorkflowName] = useState('');
+  const [workflowDescription, setWorkflowDescription] = useState('');
   const [isGenerating, setIsGenerating] = useState(aiGenerated);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -36,8 +35,8 @@ export default function NewProjectPage() {
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ') + ' Workflow';
         
-        setProjectName(generatedName);
-        setProjectDescription(prompt);
+        setWorkflowName(generatedName);
+        setWorkflowDescription(prompt);
         setIsGenerating(false);
       }, 2000);
       
@@ -48,18 +47,18 @@ export default function NewProjectPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!projectName.trim()) {
-      toast.error('Project name is required');
+    if (!workflowName.trim()) {
+      toast.error('Workflow name is required');
       return;
     }
     
     setIsCreating(true);
     
-    // Simulate project creation
+    // Simulate workflow creation
     setTimeout(() => {
-      const newProjectId = Date.now().toString();
-      toast.success('Project created successfully');
-      navigate(`/studio/projects/${newProjectId}`);
+      const newWorkflowId = Date.now().toString();
+      toast.success('Workflow created successfully');
+      navigate(`/studio/workflows/${newWorkflowId}`);
     }, 1000);
   };
 
@@ -72,9 +71,9 @@ export default function NewProjectPage() {
       <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[50vh]">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-          <h2 className="text-2xl font-semibold mb-2">Generating Your Project</h2>
+          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">Generating Your Workflow</h2>
           <p className="text-muted-foreground mb-8 max-w-md">
-            We're using AI to create a project based on your prompt:<br /> 
+            We're using AI to create a workflow based on your prompt:<br /> 
             <span className="font-medium italic">"{prompt}"</span>
           </p>
         </div>
@@ -92,22 +91,22 @@ export default function NewProjectPage() {
       
       <Card className="mx-auto max-w-xl">
         <CardHeader>
-          <CardTitle>Create New Project</CardTitle>
+          <CardTitle>Create New Workflow</CardTitle>
           <CardDescription>
             {aiGenerated
-              ? 'We\'ve generated this project based on your prompt. You can edit the details before creating it.'
-              : 'Set up a new project to organize your AI workflows.'}
+              ? 'We\'ve generated this workflow based on your prompt. You can edit the details before creating it.'
+              : 'Set up a new workflow to organize your AI workflows.'}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Project Name</Label>
+              <Label htmlFor="name">Workflow Name</Label>
               <Input
                 id="name"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                placeholder="Enter project name"
+                value={workflowName}
+                onChange={(e) => setWorkflowName(e.target.value)}
+                placeholder="Enter workflow name"
                 required
               />
             </div>
@@ -116,22 +115,11 @@ export default function NewProjectPage() {
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                value={projectDescription}
-                onChange={(e) => setProjectDescription(e.target.value)}
-                placeholder="Describe what this project will do"
+                value={workflowDescription}
+                onChange={(e) => setWorkflowDescription(e.target.value)}
+                placeholder="Describe what this workflow will do"
                 rows={4}
               />
-            </div>
-            
-            <div className="flex items-center space-x-2 pt-2">
-              <Checkbox
-                id="shared"
-                checked={isShared}
-                onCheckedChange={(checked) => setIsShared(checked as boolean)}
-              />
-              <Label htmlFor="shared" className="text-sm font-normal">
-                Share this project with my team
-              </Label>
             </div>
           </CardContent>
           
@@ -141,7 +129,7 @@ export default function NewProjectPage() {
             </Button>
             <Button type="submit" disabled={isCreating}>
               {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Project
+              Create Workflow
             </Button>
           </CardFooter>
         </form>

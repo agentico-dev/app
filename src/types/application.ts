@@ -18,6 +18,7 @@ export interface Application {
   // Add any other fields that are part of the application object
 }
 
+export type ServerStatus = 'active' | 'development' | 'suspended' | 'offline' | 'deprecated' | 'archived';
 export type ApplicationStatus = 'active' | 'inactive' | 'maintenance' | 'deprecated' | 'archived';
 
 export interface Organization {

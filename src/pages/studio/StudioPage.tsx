@@ -19,7 +19,7 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 // Mock data for initial display
-const mockProjects: WorkflowProject[] = [
+const mockWorkflows: WorkflowProject[] = [
   {
     id: '1',
     name: 'Customer Support AI',
@@ -48,21 +48,21 @@ const mockProjects: WorkflowProject[] = [
 export default function StudioPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<WorkflowProject[]>(mockProjects);
+  const [workflows, setWorkflows] = useState<WorkflowProject[]>(mockWorkflows);
   const [searchQuery, setSearchQuery] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
 
-  const filteredProjects = projects.filter(
-    project => project.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-               project.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredWorkflows = workflows.filter(
+    workflow => workflow.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+               workflow.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleCreateProject = () => {
-    navigate('/studio/new-project');
+  const handleCreateWorkflow = () => {
+    navigate('/studio/new-workflow');
   };
 
-  const handleOpenProject = (projectId: string) => {
-    navigate(`/studio/projects/${projectId}`);
+  const handleOpenWorkflow = (workflowId: string) => {
+    navigate(`/studio/workflows/${workflowId}`);
   };
 
   const handleGenerateFromPrompt = () => {
@@ -73,9 +73,9 @@ export default function StudioPage() {
     
     toast.success('Generating workflow from your prompt...');
     // @todo - In the real implementation, this will call agentico backend to generate a workflow
-    // For now, we will just navigate to the new project page with the prompt simulating the generation with a delay
+    // For now, we will just navigate to the new workflow page with the prompt simulating the generation with a delay
     setTimeout(() => {
-      navigate('/studio/new-project?aiGenerated=true&prompt=' + encodeURIComponent(aiPrompt));
+      navigate('/studio/new-workflow?aiGenerated=true&prompt=' + encodeURIComponent(aiPrompt));
     }, 1000);
   };
 
@@ -83,18 +83,18 @@ export default function StudioPage() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Studio</h1>
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">Studio</h1>
           <p className="text-muted-foreground mt-1">
             Create and manage AI workflow integrations
           </p>
         </div>
-        <Button onClick={handleCreateProject}>
-          <Plus className="mr-2 h-4 w-4" /> New Project
+        <Button onClick={handleCreateWorkflow}>
+          <Plus className="mr-2 h-4 w-4" /> New Workflow
         </Button>
       </div>
 
       <div className="mb-8 bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border">
-        <h2 className="text-lg font-medium mb-2">AI-Assisted Workflow Generation</h2>
+        <h2 className="text-lg font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent mb-2">AI-Assisted Workflow Generation</h2>
         <p className="text-sm text-muted-foreground mb-4">
           Describe the workflow you want to create in natural language, and we'll generate it for you.
         </p>
@@ -110,11 +110,11 @@ export default function StudioPage() {
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold">Your Projects</h2>
+        <h2 className="text-lg font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent mb-2">Your Workflows</h2>
         <div className="relative max-w-sm">
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search projects..."
+            placeholder="Search workflows..."
             className="max-w-sm pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -122,34 +122,34 @@ export default function StudioPage() {
         </div>
       </div>
 
-      {filteredProjects.length === 0 ? (
+      {filteredWorkflows.length === 0 ? (
         <div className="text-center py-12">
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 mb-4">
             <FileText className="h-6 w-6 text-slate-600" />
           </div>
-          <h3 className="text-lg font-medium">No projects found</h3>
+          <h3 className="text-lg font-medium">No workflows found</h3>
           <p className="text-sm text-muted-foreground mt-1 mb-4">
-            {searchQuery ? 'No projects match your search query' : 'Create your first project to get started'}
+            {searchQuery ? 'No workflows match your search query' : 'Create your first workflow to get started'}
           </p>
-          <Button onClick={handleCreateProject}>
-            <Plus className="mr-2 h-4 w-4" /> Create Project
+          <Button onClick={handleCreateWorkflow}>
+            <Plus className="mr-2 h-4 w-4" /> Create Workflow
           </Button>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredProjects.map((project) => (
-            <Card key={project.id} className="overflow-hidden">
+          {filteredWorkflows.map((workflow) => (
+            <Card key={workflow.id} className="overflow-hidden">
               <CardHeader className="pb-3">
-                <CardTitle>{project.name}</CardTitle>
-                <CardDescription className="line-clamp-2">{project.description}</CardDescription>
+                <CardTitle>{workflow.name}</CardTitle>
+                <CardDescription className="line-clamp-2">{workflow.description}</CardDescription>
               </CardHeader>
               <CardContent className="pb-2">
                 <div className="flex items-center text-sm text-muted-foreground">
                   <div className="flex items-center">
                     <FileText className="mr-1 h-4 w-4" />
-                    {project.workflows.length} workflows
+                    {workflow.workflows.length} workflows
                   </div>
-                  {project.is_shared && (
+                  {workflow.is_shared && (
                     <div className="ml-4 flex items-center">
                       <Share2 className="mr-1 h-4 w-4" />
                       Shared
@@ -161,7 +161,7 @@ export default function StudioPage() {
                 <Button variant="outline" size="sm">
                   <Settings className="mr-2 h-3 w-3" /> Settings
                 </Button>
-                <Button size="sm" onClick={() => handleOpenProject(project.id)}>
+                <Button size="sm" onClick={() => handleOpenWorkflow(workflow.id)}>
                   Open
                 </Button>
               </CardFooter>

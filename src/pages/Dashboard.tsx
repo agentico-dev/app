@@ -1,12 +1,17 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowUpRight, BarChart3, Briefcase, CircuitBoard, Server, Shield, Users } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
+import { Shield, Users, Wrench, Megaphone, AppWindow, Server, Briefcase } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { motion } from 'framer-motion';
+import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { DashboardMetricsGrid } from '@/components/dashboard/DashboardMetrics';
+import { ProjectsList } from '@/components/dashboard/ProjectsList';
+import { ActivityList } from '@/components/dashboard/ActivityList';
 
 interface ProjectData {
   id: string;
@@ -28,113 +33,88 @@ interface NotificationData {
   created_at: string;
 }
 
-const recentProjects = [
-  {
-    id: '1',
-    name: 'Customer Support Bot',
-    tools_count: 8,
-    servers_count: 2,
-    status: 'Active',
-  },
-  {
-    id: '2',
-    name: 'Data Analysis Pipeline',
-    tools_count: 12,
-    servers_count: 4,
-    status: 'Active',
-  },
-  {
-    id: '3',
-    name: 'Content Generation System',
-    tools_count: 6,
-    servers_count: 2,
-    status: 'Development',
-  },
-  {
-    id: '4',
-    name: 'Recommendation Engine',
-    tools_count: 9,
-    servers_count: 3,
-    status: 'Maintenance',
-  },
-];
-
-const recentActivity = [
-  {
-    icon: CircuitBoard,
-    description: 'New AI Tool "Text Summarizer" was created',
-    time: '2 hours ago',
-  },
-  {
-    icon: Server,
-    description: 'Server "NLP-Processor-01" was restarted',
-    time: '4 hours ago',
-  },
-  {
-    icon: Users,
-    description: 'User "Alex Kim" was added to "Data Analysis Pipeline" project',
-    time: '6 hours ago',
-  },
-  {
-    icon: CircuitBoard,
-    description: 'Application "Customer Portal" deployed to production',
-    time: '1 day ago',
-  },
-];
-
-const mockStats = {
-  projects: { count: 12, trend: '+2 this month', trendUp: true },
-  applications: { count: 8, trend: '+1 this week', trendUp: true },
-  servers: { count: 23, trend: 'No change', trendUp: null },
-  aiTools: { count: 35, trend: '+5 this month', trendUp: true },
-};
-
 export function Dashboard() {
   const { session } = useAuth();
   const isAuthenticated = !!session.user;
 
+  // Fetch metrics from Supabase
+  const { data: metricsData, isLoading: metricsLoading } = useDashboardMetrics();
+
   const { data: projectsData, isLoading: projectsLoading } = useQuery({
     queryKey: ['dashboard', 'projects'],
     queryFn: async () => {
-      return recentProjects;
+      if (!isAuthenticated) return [];
+
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name, slug, tools_count, servers_count, status')
+        .order('updated_at', { ascending: false })
+        .limit(4);
+
+      if (error) {
+        console.error('Error fetching recent projects:', error);
+        throw error;
+      }
+
+      return data || [];
     },
+    enabled: isAuthenticated,
   });
 
   const { data: activityData, isLoading: activityLoading } = useQuery({
     queryKey: ['dashboard', 'activity'],
     queryFn: async () => {
-      return recentActivity;
+      if (!isAuthenticated) return [];
+
+      // In a real app, we would fetch actual activity from a dedicated table
+      // For now, we'll use mock data
+      return [
+        {
+          icon: Wrench,
+          description: 'New AI Tool "Text Summarizer" was created',
+          time: '2 hours ago',
+        },
+        {
+          icon: Server,
+          description: 'Server "NLP-Processor-01" was restarted',
+          time: '4 hours ago',
+        },
+        {
+          icon: Users,
+          description: 'User "Alex Kim" was added to "Data Analysis Pipeline" project',
+          time: '6 hours ago',
+        },
+        {
+          icon: AppWindow,
+          description: 'Application "Customer Portal" deployed to production',
+          time: '1 day ago',
+        },
+      ];
     },
+    enabled: isAuthenticated,
   });
 
-  const { data: statsSummary, isLoading: statsLoading } = useQuery({
-    queryKey: ['dashboard', 'stats'],
-    queryFn: async () => {
-      return mockStats;
-    },
-  });
+  // Fallback to mock data if real data isn't available yet
+  const mockStats = {
+    projects: { count: 0, trend: 'No data yet', trendUp: null },
+    applications: { count: 0, trend: 'No data yet', trendUp: null },
+    servers: { count: 0, trend: 'No data yet', trendUp: null },
+    aiTools: { count: 0, trend: 'No data yet', trendUp: null },
+  };
 
-  const stats = statsLoading || !statsSummary ? mockStats : statsSummary;
-  const projects = projectsLoading || !projectsData ? recentProjects : projectsData;
-  const activity = activityLoading || !activityData 
-    ? recentActivity 
-    : activityData.map((item: ActivityData) => {
-        return {
-          icon: item.icon,
-          description: item.description,
-          time: item.time
-        };
-      });
+  const stats = metricsLoading || !metricsData ? mockStats : metricsData;
+  const projects = projectsLoading || !projectsData ? [] : projectsData;
+  const activity = activityLoading || !activityData ? [] : activityData;
 
   const transformNotificationToActivity = (notification: NotificationData): ActivityData => {
     const getIcon = () => {
       const type = notification.type || 'info';
       switch (type) {
         case 'project': return Briefcase;
-        case 'application': return CircuitBoard;
+        case 'application': return AppWindow;
         case 'server': return Server;
         case 'user': return Users;
-        default: return CircuitBoard;
+        default: return Megaphone;
       }
     };
 
@@ -146,158 +126,73 @@ export function Dashboard() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <motion.div
+      className="space-y-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">Dashboard</h2>
           <p className="text-muted-foreground">
             Welcome to your AI Tools Hub dashboard
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button asChild>
+        </motion.div>
+        <motion.div
+          className="flex items-center gap-2"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          <Button 
+            asChild
+                    className="w-full sm:w-auto bg-gradient-to-r from-white to-white/90 text-primary hover:from-white/90 hover:to-white/70 shadow-lg hover:shadow-primary/25 transition-all duration-300 hover:translate-y-[-2px] font-medium"
+          >
             <Link to={isAuthenticated ? "/projects/new" : "/login"}>Create new project</Link>
           </Button>
-        </div>
+        </motion.div>
       </div>
         {!isAuthenticated && (
-          <Alert variant="default" className="bg-amber-50 border-amber-200">
-            <Shield className="h-4 w-4 text-amber-500" />
-            <AlertDescription>
-              You are currently in limited access mode. Some features may be restricted.
-            </AlertDescription>
-          </Alert>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            <Alert variant="default" className="bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200">
+              <Shield className="h-4 w-4 text-amber-500" />
+              <AlertDescription>
+                You are currently in limited access mode. Some features may be restricted.
+              </AlertDescription>
+            </Alert>
+          </motion.div>
         )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="Projects"
-          value={stats.projects.count.toString()}
-          description="Total projects"
-          icon={Briefcase}
-          trend={stats.projects.trend}
-          trendUp={stats.projects.trendUp}
-        />
-        <MetricCard
-          title="Applications"
-          value={stats.applications.count.toString()}
-          description="Deployed applications"
-          icon={CircuitBoard}
-          trend={stats.applications.trend}
-          trendUp={stats.applications.trendUp}
-        />
-        <MetricCard
-          title="Servers"
-          value={stats.servers.count.toString()}
-          description="Active servers"
-          icon={Server}
-          trend={stats.servers.trend}
-          trendUp={stats.servers.trendUp}
-        />
-        <MetricCard
-          title="AI Tools"
-          value={stats.aiTools.count.toString()}
-          description="Total AI tools"
-          icon={BarChart3}
-          trend={stats.aiTools.trend}
-          trendUp={stats.aiTools.trendUp}
-        />
-      </div>
+      <DashboardMetricsGrid metrics={stats} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="col-span-2">
-          <CardHeader>
-            <CardTitle>Recent Projects</CardTitle>
-            <CardDescription>
-              Your recently updated projects
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {projects.map(project => (
-                <div key={project.id} className="flex items-center justify-between space-x-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Briefcase className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium leading-none">{project.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {project.tools_count} tools · {project.servers_count} servers
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <Badge variant="outline" className="mr-2">
-                      {project.status}
-                    </Badge>
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link to={`/projects/${project.id}`}>
-                        <ArrowUpRight className="h-4 w-4" />
-                        <span className="sr-only">View project</span>
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div 
+          className="col-span-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          <ProjectsList projects={projects} />
+        </motion.div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>
-              Latest actions in your workspace
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {activity.map((activity, index) => (
-                <div key={index} className="flex items-start gap-4">
-                  <activity.icon className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                  <div className="space-y-1">
-                    <p className="text-sm">{activity.description}</p>
-                    <p className="text-xs text-muted-foreground">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+        >
+          <ActivityList activities={activity} />
+        </motion.div>
       </div>
-    </div>
-  );
-}
-
-interface MetricCardProps {
-  title: string;
-  value: string;
-  description: string;
-  icon: React.ElementType;
-  trend: string;
-  trendUp: boolean | null;
-}
-
-function MetricCard({ title, value, description, icon: Icon, trend, trendUp }: MetricCardProps) {
-  return (
-    <Card className="card-hover">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-        {trend && (
-          <div className={`mt-2 flex items-center text-xs ${trendUp === true ? 'text-green-500' :
-              trendUp === false ? 'text-red-500' : 'text-muted-foreground'
-            }`}>
-            {trend}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    </motion.div>
   );
 }
 

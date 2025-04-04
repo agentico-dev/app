@@ -610,6 +610,42 @@ export type Database = {
           },
         ]
       }
+      project_servers: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          server_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          server_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          server_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_servers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_servers_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_tools: {
         Row: {
           ai_tool_id: string
@@ -740,42 +776,6 @@ export type Database = {
           },
         ]
       }
-      server_ai_tools: {
-        Row: {
-          ai_tool_id: string | null
-          created_at: string | null
-          id: string
-          server_id: string | null
-        }
-        Insert: {
-          ai_tool_id?: string | null
-          created_at?: string | null
-          id?: string
-          server_id?: string | null
-        }
-        Update: {
-          ai_tool_id?: string | null
-          created_at?: string | null
-          id?: string
-          server_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "server_ai_tools_ai_tool_id_fkey"
-            columns: ["ai_tool_id"]
-            isOneToOne: false
-            referencedRelation: "ai_tools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "server_ai_tools_server_id_fkey"
-            columns: ["server_id"]
-            isOneToOne: false
-            referencedRelation: "servers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       server_applications: {
         Row: {
           application_id: string | null
@@ -805,6 +805,42 @@ export type Database = {
           },
           {
             foreignKeyName: "server_applications_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      server_tools: {
+        Row: {
+          ai_tool_id: string | null
+          created_at: string | null
+          id: string
+          server_id: string | null
+        }
+        Insert: {
+          ai_tool_id?: string | null
+          created_at?: string | null
+          id?: string
+          server_id?: string | null
+        }
+        Update: {
+          ai_tool_id?: string | null
+          created_at?: string | null
+          id?: string
+          server_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "server_ai_tools_ai_tool_id_fkey"
+            columns: ["ai_tool_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "server_ai_tools_server_id_fkey"
             columns: ["server_id"]
             isOneToOne: false
             referencedRelation: "servers"
@@ -918,6 +954,30 @@ export type Database = {
           role: string
           user_id: string | null
         }
+      }
+      count_project_ai_tools: {
+        Args: {
+          project_id: string
+        }
+        Returns: {
+          count: number
+        }[]
+      }
+      count_project_applications: {
+        Args: {
+          project_id: string
+        }
+        Returns: {
+          count: number
+        }[]
+      }
+      count_project_servers: {
+        Args: {
+          project_id: string
+        }
+        Returns: {
+          count: number
+        }[]
       }
       create_organization: {
         Args: {

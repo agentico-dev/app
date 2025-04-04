@@ -22,31 +22,24 @@ export function ProjectResourceCards({ project }: ProjectResourceCardsProps) {
     const fetchResourceCounts = async () => {
       setIsLoading(true);
       try {
-        // Get AI tools count
-        const { count: toolCount, error: toolError } = await supabase
-          .from('project_tools')
-          .select('*', { count: 'exact', head: true })
-          .eq('project_id', project.id);
+        // Get AI tools count - an object with key 'count'
+        const { data: toolCount, error: toolError } = await supabase
+          .rpc('count_project_ai_tools', { project_id: project.id })
+          .single();
         
         if (toolError) throw toolError;
         
         // Get application IDs for the project
-        const { data, error: appError } = await supabase
-        .from('project_applications')
-        .select('application_id')
-        .eq('project_id', project.id);
-
-        const appCount = data?.length || 0;
+        const { data: appCount, error: appError } = await supabase
+          .rpc('count_project_applications', { project_id: project.id })
+          .single();
         
         if (appError) throw appError;
         
-        // select count(true) from server_applications sa join project_applications pa
-        // on pa.application_id = sa.application_id  
-        // WHERE pa.project_id =$1
-        const { count: serverCount, error: serverError } = await supabase
-          .from('server_applications')
-          .select('id', { count: 'exact', head: true })
-          .in('application_id', data?.map((item) => item.application_id) || []);
+        // Get server IDs for the project
+        const { data: serverCount, error: serverError } = await supabase
+          .rpc('count_project_servers', { project_id: project.id })
+          .single();
           
         if (serverError) throw serverError;
         
@@ -63,10 +56,10 @@ export function ProjectResourceCards({ project }: ProjectResourceCardsProps) {
           }
         }
         
-        // Update state with fresh counts
-        setToolsCount(toolCount || 0);
-        setApplicationsCount(appCount || 0);
-        setServersCount(serverCount || 0);
+        // Update state with fresh counts - toolsCount is an object with key 'count'
+        setToolsCount((toolCount as any)?.count || 0);
+        setApplicationsCount((appCount as any).count || 0);
+        setServersCount((serverCount as any).count || 0);
         
       } catch (error) {
         console.error('Error fetching resource counts:', error);

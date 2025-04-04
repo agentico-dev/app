@@ -95,6 +95,7 @@
   }
 }
 
+/* Existing utility classes */
 .card-hover {
   @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
 }
@@ -117,4 +118,58 @@
 
 .tag-red {
   @apply bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100;
+}
+
+/* Gradient utilities */
+.bg-gradient-primary {
+  @apply bg-gradient-to-r from-primary to-accent;
+}
+
+.bg-gradient-card {
+  @apply bg-gradient-to-br from-card to-background/80 backdrop-blur-sm;
+}
+
+.text-gradient {
+  @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+}
+
+/* Animation utilities */
+.hover-scale {
+  @apply transition-transform duration-300 hover:scale-105;
+}
+
+.hover-lift {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+}
+
+@layer utilities {
+  .to-accent {
+    --tw-gradient-to: hsl(var(--accent));
+  }
+  
+  /* New background styles */
+  .bg-soft-blue {
+    @apply bg-gradient-to-br from-blue-50 via-blue-100/70 to-sky-100/60;
+  }
+  
+  .subtle-pattern {
+    background-image: radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.2) 1%, transparent 6%),
+                     radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.2) 1%, transparent 6%);
+    background-size: 60px 60px;
+    background-position: 0 0, 30px 30px;
+  }
+  
+  .subtle-mesh {
+    background-color: hsla(210, 40%, 98%, 1);
+    background-image:
+      radial-gradient(at 59% 67%, hsla(212, 33%, 89%, 0.6) 0px, transparent 50%),
+      radial-gradient(at 97% 5%, hsla(201, 100%, 70%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 0% 31%, hsla(210, 40%, 96%, 0.8) 0px, transparent 50%),
+      radial-gradient(at 26% 92%, hsla(203, 87%, 91%, 0.3) 0px, transparent 50%);
+  }
+  
+  .light-particles {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.4) 2px, transparent 2px);
+    background-size: 40px 40px;
+  }
 }

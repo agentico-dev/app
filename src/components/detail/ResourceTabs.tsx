@@ -2,12 +2,15 @@
 import { ReactNode } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Link } from 'react-router';
 
 export interface TabItem {
   value: string;
   label: string;
   content: ReactNode;
   description?: string;
+  reference?: string | null;
+  icon?: ReactNode;
 }
 
 interface ResourceTabsProps {
@@ -29,7 +32,19 @@ export function ResourceTabs({ tabs, defaultTab }: ResourceTabsProps) {
           <Card>
             <CardHeader>
               <CardTitle>{tab.label}</CardTitle>
-              {tab.description && <CardDescription>{tab.description}</CardDescription>}
+              {tab.description && (
+                <div className="flex items-center space-x-2">
+                  <CardDescription>{tab.description}</CardDescription>
+                  {tab.reference && (
+                    <Link 
+                      to={`${tab.reference}`}
+                      className="text-blue-500 hover:underline"
+                    >
+                      {tab.icon}
+                    </Link>
+                  )}
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               {tab.content}

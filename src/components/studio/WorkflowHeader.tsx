@@ -16,7 +16,7 @@ interface WorkflowHeaderProps {
   onRun: () => void;
   onSettings: () => void;
   onBack: () => void;
-  projectId?: string;
+  workflowId?: string;
   isSaving: boolean;
   isRunning: boolean;  
   isDeploying: boolean;
@@ -32,7 +32,7 @@ export function WorkflowHeader({
   onRun,
   onSettings,
   onBack,
-  projectId,
+  workflowId,
   isSaving,
   isRunning,
   isDeploying,
@@ -52,7 +52,7 @@ export function WorkflowHeader({
           workflowName={workflowName}
           setWorkflowName={setWorkflowName}
           onBack={onBack}
-          projectId={projectId}
+          workflowId={workflowId}
         />
         
         <div className="flex items-center gap-2">
