@@ -73,7 +73,7 @@ export function DashboardMetricsGrid({ metrics }: DashboardMetricsGridProps) {
       </motion.div>
       <motion.div variants={itemVariants}>
         <MetricCard
-          title="AI Tools"
+          title="Tools"
           value={metrics.aiTools.count.toString()}
           description="Total AI tools"
           icon={Wrench}

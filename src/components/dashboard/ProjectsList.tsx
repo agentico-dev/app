@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 interface ProjectData {
   id: string;
   name: string;
+  slug?: string;
   tools_count: number;
   servers_count: number;
   status: string;
@@ -58,7 +59,7 @@ export function ProjectsList({ projects }: ProjectsListProps) {
                   {project.status}
                 </Badge>
                 <Button variant="ghost" size="icon" asChild className="hover:bg-primary/10 transition-colors duration-300">
-                  <Link to={`/projects/${project.id}`}>
+                  <Link to={`/projects/${project.slug ? project.slug : project.id}`}>
                     <ArrowUpRight className="h-4 w-4" />
                     <span className="sr-only">View project</span>
                   </Link>

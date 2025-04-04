@@ -47,7 +47,7 @@ export function Dashboard() {
 
       const { data, error } = await supabase
         .from('projects')
-        .select('id, name, tools_count, servers_count, status')
+        .select('id, name, slug, tools_count, servers_count, status')
         .order('updated_at', { ascending: false })
         .limit(4);
 
@@ -151,7 +151,7 @@ export function Dashboard() {
         >
           <Button 
             asChild
-            className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all duration-300"
+                    className="w-full sm:w-auto bg-gradient-to-r from-white to-white/90 text-primary hover:from-white/90 hover:to-white/70 shadow-lg hover:shadow-primary/25 transition-all duration-300 hover:translate-y-[-2px] font-medium"
           >
             <Link to={isAuthenticated ? "/projects/new" : "/login"}>Create new project</Link>
           </Button>

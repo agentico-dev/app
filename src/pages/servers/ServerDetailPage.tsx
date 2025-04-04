@@ -30,15 +30,45 @@ export default function ServerDetailPage() {
       setIsLoading(true);
       try {
         console.log('Fetching server details for ID/slug:', id);
+        
+        let query = supabase.from('servers')
+          .select(`
+            *,
+            project_servers!inner (
+              project_id
+            )
+          `);
+        
         // Check if the ID is a UUID format or a slug
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUuid) {
+          query = query.eq('id', id);
+        } else {
+          query = query.eq('slug', id);
+        }
         
-
-        const data = {
-          'comming soon': 'project details',
-          'see_project_management_demo': 'https://youtu.be/4JJ30ytn-yY',
-          'see_oas_to_mcp_demo': 'https://youtu.be/kR4pP5VZgKw',
-         }; // Placeholder for actual data fetching logic
+        let { data, error } = await query;
+        
+        if (error) {
+          // If no results found with inner join, try without the join
+          query = supabase.from('servers').select('*');
+          if (isUuid) {
+            query = query.eq('id', id);
+          } else {
+            query = query.eq('slug', id);
+          }
+          
+          const result = await query.single();
+          data = result.data;
+          error = result.error;
+        }
+        
+        if (error) {
+          console.error('Error fetching server details:', error);
+          toast.error(`Failed to load server: ${error.message}`);
+          throw error;
+        }
+        
         // Process the data to extract project_id if available
         let serverData;
         if (Array.isArray(data) && data.length > 0) {
@@ -61,8 +91,14 @@ export default function ServerDetailPage() {
         console.log('Fetched server details:', serverData);
         setServer(serverData as Server);
         
+        
+        const dataCodeTMP = {
+          'comming soon': 'project details',
+          'see_project_management_demo': 'https://youtu.be/4JJ30ytn-yY',
+          'see_oas_to_mcp_demo': 'https://youtu.be/kR4pP5VZgKw',
+         }; // Placeholder for actual data fetching logic
         // Set initial code content
-        setCodeContent(JSON.stringify(serverData, null, 2));
+        setCodeContent(JSON.stringify(dataCodeTMP, null, 2));
       } catch (error) {
         console.error('Error in server fetch:', error);
         toast.error('Failed to load server details');
@@ -134,7 +170,7 @@ export default function ServerDetailPage() {
   };
 
   const getStatusColorClass = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case 'active': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
       case 'development': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
       case 'maintenance': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';

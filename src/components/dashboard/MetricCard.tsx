@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router';
 
 interface MetricCardProps {
   title: string;
@@ -22,6 +23,8 @@ export function MetricCard({ title, value, description, icon: Icon, trend, trend
         </div>
       </CardHeader>
       <CardContent>
+        {/* link to title in tower case */}
+        <Link to={`/${title.toLowerCase()}`} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors duration-200">
         <div className="text-2xl font-bold bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">{value}</div>
         <p className="text-xs text-muted-foreground">{description}</p>
         {trend && (
@@ -32,6 +35,7 @@ export function MetricCard({ title, value, description, icon: Icon, trend, trend
             {trend}
           </div>
         )}
+        </Link>
       </CardContent>
     </Card>
   );
