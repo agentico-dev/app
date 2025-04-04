@@ -118,3 +118,25 @@
 .tag-red {
   @apply bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100;
 }
+
+/* Gradient utilities */
+.bg-gradient-primary {
+  @apply bg-gradient-to-r from-primary to-accent;
+}
+
+.bg-gradient-card {
+  @apply bg-gradient-to-br from-card to-background/80 backdrop-blur-sm;
+}
+
+.text-gradient {
+  @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+}
+
+/* Animation utilities */
+.hover-scale {
+  @apply transition-transform duration-300 hover:scale-105;
+}
+
+.hover-lift {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+}
