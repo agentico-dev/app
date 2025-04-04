@@ -151,7 +151,7 @@ export function AIToolsPage() {
         </TabsList>
         <TabsContent value="all" className="mt-6">
           {isLoading ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[1, 2, 3].map((i) => (
                 <Card key={i} className="overflow-hidden">
                   <CardHeader className="p-4">
@@ -172,7 +172,7 @@ export function AIToolsPage() {
               ))}
             </div>
           ) : filteredTools.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {filteredTools.map((tool) => (
                 <AIToolCard key={tool.id} tool={tool} />
               ))}
@@ -196,7 +196,7 @@ export function AIToolsPage() {
         </TabsContent>
         <TabsContent value="favorites" className="mt-6">
           {isLoading ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[1, 2].map((i) => (
                 <Card key={i} className="overflow-hidden">
                   <CardHeader className="p-4">
@@ -213,7 +213,7 @@ export function AIToolsPage() {
               ))}
             </div>
           ) : filteredTools.filter(t => t.favorite).length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {filteredTools.filter(t => t.favorite).map((tool) => (
                 <AIToolCard key={tool.id} tool={tool} />
               ))}
@@ -230,7 +230,7 @@ export function AIToolsPage() {
         </TabsContent>
         <TabsContent value="recent" className="mt-6">
           {isLoading ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[1, 2].map((i) => (
                 <Card key={i} className="overflow-hidden">
                   <CardHeader className="p-4">
@@ -247,7 +247,7 @@ export function AIToolsPage() {
               ))}
             </div>
           ) : filteredTools.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {filteredTools.slice(0, 3).map((tool) => (
                 <AIToolCard key={tool.id} tool={tool} />
               ))}

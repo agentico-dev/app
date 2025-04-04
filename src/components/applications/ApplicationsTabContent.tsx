@@ -40,7 +40,7 @@ export function ApplicationsTabContent({
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {displayedApplications.map((app) => (
         <ApplicationCard key={app.id} application={app} />
       ))}

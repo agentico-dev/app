@@ -43,7 +43,7 @@ export function ServersList({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       {filteredServers.map((server) => (
         <ServerCard 
           key={server.id} 

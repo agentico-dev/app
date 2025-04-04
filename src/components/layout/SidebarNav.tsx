@@ -104,6 +104,11 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
       icon: Settings,
       submenu: [
         {
+          title: 'Profile',
+          href: '/profile',
+          icon: User,
+        },        
+        {
           title: 'Organizations',
           href: '/orgs',
           icon: Hotel,
