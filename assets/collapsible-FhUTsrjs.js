@@ -1,0 +1,2 @@
+import{ax as s,ay as l,az as n}from"./ui-components-CAmpQbeX.js";import"./react-vendor-TyuC8qxg.js";try{let e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{},o=new e.Error().stack;o&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[o]="b6e85719-c5eb-4914-807f-9f9d6c80b2e5",e._sentryDebugIdIdentifier="sentry-dbid-b6e85719-c5eb-4914-807f-9f9d6c80b2e5")}catch{}const b=s,i=l,d=n;export{b as C,i as a,d as b};
+//# sourceMappingURL=collapsible-FhUTsrjs.js.map
