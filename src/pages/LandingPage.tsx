@@ -180,7 +180,7 @@ export default function LandingPage() {
               className="inline-block bg-white/10 backdrop-blur-md px-3 py-1 mb-6 rounded-full"
               variants={fadeInUp}
             >
-              <span className="text-sm font-medium text-white">Introducing Agentico</span>
+              <span className="text-sm font-medium text-blue">Introducing Agentico</span>
             </motion.div>
 
             <motion.h1 
@@ -190,13 +190,13 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
             >
-              <span className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-br from-primary to-white/70 bg-clip-text text-transparent">
                 Where AI<br />Meets Standards
               </span>
             </motion.h1>
             
             <motion.p 
-              className="text-xl mb-8 text-white/90 max-w-lg"
+              className="text-xl mb-8 text-blue/90 max-w-lg"
               variants={fadeInUp}
             >
               Agentico provides a structured, reusable approach to MCP implementation, making integration seamless across your AI projects.
@@ -222,7 +222,7 @@ export default function LandingPage() {
                   <Button 
                     variant="outline" 
                     size="lg" 
-                    className="w-full sm:w-auto border-white/30 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all duration-300 font-medium"
+                    className="w-full sm:w-auto border-blue/30 bg-white/10 backdrop-blur-md text-blue hover:bg-white/20 transition-all duration-300 font-medium"
                   >
                     Sign Up
                   </Button>
