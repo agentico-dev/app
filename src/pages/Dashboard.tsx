@@ -3,14 +3,15 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowUpRight, Briefcase, AppWindow, Server, Shield, Users, Wrench, Megaphone } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
+import { Shield, Users, Wrench, Megaphone, AppWindow, Server, Briefcase } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion } from 'framer-motion';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { DashboardMetricsGrid } from '@/components/dashboard/DashboardMetrics';
+import { ProjectsList } from '@/components/dashboard/ProjectsList';
+import { ActivityList } from '@/components/dashboard/ActivityList';
 
 interface ProjectData {
   id: string;
@@ -31,30 +32,6 @@ interface NotificationData {
   message: string;
   created_at: string;
 }
-
-// Animation variants for staggered children animations
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { 
-    opacity: 1, 
-    y: 0,
-    transition: { 
-      type: "spring", 
-      stiffness: 300, 
-      damping: 24 
-    } 
-  }
-};
 
 export function Dashboard() {
   const { session } = useAuth();
@@ -195,53 +172,7 @@ export function Dashboard() {
           </motion.div>
         )}
 
-      <motion.div 
-        className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-      >
-        <motion.div variants={itemVariants}>
-          <MetricCard
-            title="Projects"
-            value={stats.projects.count.toString()}
-            description="Total projects"
-            icon={Briefcase}
-            trend={stats.projects.trend}
-            trendUp={stats.projects.trendUp}
-          />
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <MetricCard
-            title="Applications"
-            value={stats.applications.count.toString()}
-            description="Deployed applications"
-            icon={AppWindow}
-            trend={stats.applications.trend}
-            trendUp={stats.applications.trendUp}
-          />
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <MetricCard
-            title="Servers"
-            value={stats.servers.count.toString()}
-            description="Active servers"
-            icon={Server}
-            trend={stats.servers.trend}
-            trendUp={stats.servers.trendUp}
-          />
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <MetricCard
-            title="AI Tools"
-            value={stats.aiTools.count.toString()}
-            description="Total AI tools"
-            icon={Wrench}
-            trend={stats.aiTools.trend}
-            trendUp={stats.aiTools.trendUp}
-          />
-        </motion.div>
-      </motion.div>
+      <DashboardMetricsGrid metrics={stats} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <motion.div 
@@ -250,61 +181,7 @@ export function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.5 }}
         >
-          <Card className="h-full bg-gradient-to-br from-card to-background/80 backdrop-blur-sm border-opacity-40 shadow-lg">
-            <CardHeader>
-              <CardTitle>Recent Projects</CardTitle>
-              <CardDescription>
-                Your recently updated projects
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {projects.length > 0 ? projects.map((project, index) => (
-                  <motion.div 
-                    key={project.id} 
-                    className="flex items-center justify-between space-x-4 p-2 hover:bg-background/50 rounded-md transition-all duration-300"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * index, duration: 0.3 }}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shadow-sm">
-                        <Briefcase className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium leading-none">{project.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {project.tools_count} tools · {project.servers_count} servers
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <Badge variant="outline" className={`mr-2 ${
-                        project.status === 'Active' ? 'bg-green-100 text-green-800 border-green-300' : 
-                        project.status === 'Development' ? 'bg-blue-100 text-blue-800 border-blue-300' : 
-                        'bg-amber-100 text-amber-800 border-amber-300'
-                      }`}>
-                        {project.status}
-                      </Badge>
-                      <Button variant="ghost" size="icon" asChild className="hover:bg-primary/10 transition-colors duration-300">
-                        <Link to={`/projects/${project.id}`}>
-                          <ArrowUpRight className="h-4 w-4" />
-                          <span className="sr-only">View project</span>
-                        </Link>
-                      </Button>
-                    </div>
-                  </motion.div>
-                )) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">No projects yet</p>
-                    <Button variant="outline" className="mt-2" asChild>
-                      <Link to="/projects/new">Create your first project</Link>
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <ProjectsList projects={projects} />
         </motion.div>
 
         <motion.div
@@ -312,74 +189,10 @@ export function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.5 }}
         >
-          <Card className="h-full bg-gradient-to-br from-card to-background/80 backdrop-blur-sm border-opacity-40 shadow-lg">
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>
-                Latest actions in your workspace
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {activity.length > 0 ? activity.map((activity, index) => (
-                  <motion.div 
-                    key={index} 
-                    className="flex items-start gap-4 p-2 hover:bg-background/50 rounded-md transition-all duration-300"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * index, duration: 0.3 }}
-                  >
-                    <div className="mt-0.5 h-8 w-8 rounded-full bg-gradient-to-br from-secondary/30 to-background flex items-center justify-center shadow-sm">
-                      <activity.icon className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm">{activity.description}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
-                    </div>
-                  </motion.div>
-                )) : (
-                  <p className="text-center py-8 text-muted-foreground">No recent activity</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <ActivityList activities={activity} />
         </motion.div>
       </div>
     </motion.div>
-  );
-}
-
-interface MetricCardProps {
-  title: string;
-  value: string;
-  description: string;
-  icon: React.ElementType;
-  trend: string;
-  trendUp: boolean | null;
-}
-
-function MetricCard({ title, value, description, icon: Icon, trend, trendUp }: MetricCardProps) {
-  return (
-    <Card className="overflow-hidden bg-gradient-to-br from-card to-background/80 backdrop-blur-sm border-opacity-40 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shadow-sm">
-          <Icon className="h-4 w-4 text-primary" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">{value}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-        {trend && (
-          <div className={`mt-2 flex items-center text-xs ${
-            trendUp === true ? 'text-green-500' :
-            trendUp === false ? 'text-red-500' : 'text-muted-foreground'
-          }`}>
-            {trend}
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 }
 
