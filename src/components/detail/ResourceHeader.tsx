@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Code, Download, FileUp, FilesIcon, Import, Rocket, Upload } from 'lucide-react';
+import { ChevronDown, Code, Import, Rocket, Upload } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Switch } from '@/components/ui/switch';
 import CodeEditor from '@/components/editor/CodeEditor';
@@ -140,6 +140,8 @@ export function ResourceHeader({
         )}
       </div>
       
+
+      <div className="flex gap-2 justify-end">
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-end gap-2">
           <Collapsible 
@@ -156,6 +158,7 @@ export function ResourceHeader({
                 checked={showCodeView}
                 onClick={() => setShowCodeView(!showCodeView)}
                 aria-label="Toggle code view"
+                icon={Code}
               />
               <span className="text-sm">Code View</span>
             </div>
@@ -174,7 +177,7 @@ export function ResourceHeader({
                 onClick={handleExport}
                 className="flex items-center justify-start"
               >
-                <Download className="h-4 w-4 mr-1" /> Export
+                <Upload className="h-4 w-4 mr-1" /> Export
               </Button>
               <Button 
                 variant="outline" 
@@ -194,9 +197,6 @@ export function ResourceHeader({
               </Button>
             </CollapsibleContent>
           </Collapsible>
-        </div>
-
-        <div className="flex gap-2 justify-end">
           <Button 
             variant="outline" 
             onClick={handleEdit}
@@ -222,6 +222,7 @@ export function ResourceHeader({
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </div>
         </div>
       </div>
     </div>

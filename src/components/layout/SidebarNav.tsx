@@ -24,9 +24,10 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 
-type SidebarNavProps = {
+export interface SidebarNavProps {
   onClose?: () => void;
-};
+  collapsed?: boolean; // Add collapsed property
+}
 
 type NavItem = {
   title: string;
@@ -37,7 +38,7 @@ type NavItem = {
   badge?: string;
 };
 
-export function SidebarNav({ onClose }: SidebarNavProps) {
+export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
   const location = useLocation();
   const { user } = useAuth();
   const isAuthenticated = !!user;
@@ -108,7 +109,7 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-14 items-center border-b border-sidebar-border px-4 sticky top-0 z-10">
+      {/* <div className="flex h-14 items-center border-b border-sidebar-border px-4 sticky top-0 z-10">
         <Link to="/index" className="flex items-center space-x-2">
           <img src="/favicon-32x32.png" alt="Agentico" className="h-6 w-6" />
           <span>Agentico <small style={{ fontSize: '8px' }}>{import.meta.env.VITE_REACT_APP_VERSION}</small></span>
@@ -124,7 +125,7 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
             <span className="sr-only">Close</span>
           </Button>
         )}
-      </div>
+      </div> */}
       <ScrollArea className="flex-1 px-3 py-4 overflow-y-auto">
         <div className="space-y-4">
           <div className="space-y-1">
@@ -155,22 +156,20 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
           <div className="h-8 w-8 rounded-full bg-sidebar-primary/20 flex items-center justify-center">
             <User className="h-4 w-4 text-sidebar-primary" />
           </div>
-          <div className="text-sm">
-            {isAuthenticated && (
-              <>
-                <div className="font-medium">{user.user_metadata.full_name}</div>
-                <div className="text-sidebar-foreground/60">{user.email}</div>
-              </>
-            )
-              || (
-                <>
-                  <div className="font-medium">Guest</div>
+          {!collapsed ? (
+            <div className="text-sm font-medium">
+              {isAuthenticated ? user.user_metadata.full_name : 'Guest'}
+            </div>
+          ) : (
+            <div className="text-sm font-medium">
+              {isAuthenticated ? user.user_metadata.full_name[0] : 'G'}
+            </div>
+          )}
+            {!isAuthenticated && (
                   <div className="text-sidebar-foreground/60">
                     <Link to="/login">Sign in</Link> for more features
                   </div>
-                </>
               )}
-          </div>
         </div>
       </div>
     </div>

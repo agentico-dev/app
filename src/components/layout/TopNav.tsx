@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { 
@@ -9,7 +8,9 @@ import {
   User,
   AtSign,
   PlugZap,
-  Building2
+  Building2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +27,7 @@ import { useAuth } from '@/hooks/useAuth';
 import OrganizationSelector from '@/components/organizations/OrganizationSelector';
 import { useNavigate } from 'react-router';
 
-export function TopNav() {
+export function TopNav({ sidebarCollapsed, toggleCollapse }: { sidebarCollapsed: boolean; toggleCollapse: () => void }) {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const { signOut, session } = useAuth();
   const isAuthenticated = !!session.user;
@@ -48,11 +49,23 @@ export function TopNav() {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-      <Link to="/" className="flex items-center gap-2 font-semibold md:hidden">
-        <img src="/favicon-32x32.png" alt="Agentico" className="h-6 w-6" />
-        <CircuitBoard className="h-6 w-6" />
-        <span>Agentico <small style={{ fontSize: '8px' }}>{import.meta.env.VITE_REACT_APP_VERSION}</small></span>
-      </Link>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleCollapse}
+          className="hidden md:flex" // Show only on non-mobile screens
+        >
+          {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          <span className="sr-only">{sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}</span>
+        </Button>
+        <Link to="/index" className="flex items-center gap-2 font-semibold">
+          <img src="/favicon-32x32.png" alt="Agentico" className="h-6 w-6" />
+          {!sidebarCollapsed && (
+              <span>Agentico <small style={{ fontSize: '8px' }}>{import.meta.env.VITE_REACT_APP_VERSION}</small></span>
+          )}
+        </Link>
+      </div>
 
       <div className="w-full flex items-center justify-between gap-2">
         <form className="hidden md:flex-1 md:max-w-sm lg:max-w-md md:flex">
