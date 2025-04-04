@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { motion } from 'framer-motion';
 import { Link } from 'react-router';
+import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 
 interface MetricCardProps {
   title: string;
@@ -23,18 +23,20 @@ export function MetricCard({ title, value, description, icon: Icon, trend, trend
         </div>
       </CardHeader>
       <CardContent>
-        {/* link to title in tower case */}
         <Link to={`/${title.toLowerCase()}`} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors duration-200">
-        <div className="text-2xl font-bold bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">{value}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-        {trend && (
-          <div className={`mt-2 flex items-center text-xs ${
-            trendUp === true ? 'text-green-500' :
-            trendUp === false ? 'text-red-500' : 'text-muted-foreground'
-          }`}>
-            {trend}
-          </div>
-        )}
+          <div className="text-2xl font-bold bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">{value}</div>
+          <p className="text-xs text-muted-foreground">{description}</p>
+          {trend && (
+            <div className={`mt-2 flex items-center gap-1 text-xs ${
+              trendUp === true ? 'text-green-500' :
+              trendUp === false ? 'text-red-500' : 'text-muted-foreground'
+            }`}>
+              {trendUp === true && <ArrowUpRight className="h-3 w-3" />}
+              {trendUp === false && <ArrowDownRight className="h-3 w-3" />}
+              {trendUp === null && <Minus className="h-3 w-3" />}
+              <span>{trend}</span>
+            </div>
+          )}
         </Link>
       </CardContent>
     </Card>
