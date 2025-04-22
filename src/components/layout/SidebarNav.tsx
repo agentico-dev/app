@@ -84,12 +84,12 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
       href: '/tools',
       icon: Wrench,
     },
-    {
-      title: 'Studio',
-      href: '/studio',
-      icon: Zap,
-      badge: 'Pro',
-    },
+    // {
+    //   title: 'Studio',
+    //   href: '/studio',
+    //   icon: Zap,
+    //   badge: 'Pro',
+    // },
   ];
 
   const utilityNav: NavItem[] = [

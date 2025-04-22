@@ -190,7 +190,7 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
             >
-              <span className="bg-gradient-to-br from-primary to-white/70 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-br from-primary to-green-500/70 bg-clip-text text-transparent">
                 Where AI<br />Meets Standards
               </span>
             </motion.h1>
@@ -270,6 +270,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-background/80 backdrop-blur-md z-0" />
         
         <div className="container mx-auto px-4 relative z-10">
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-accent/50 to-green-600/8 rounded-lg blur-lg opacity-75"></div>
           <div className="max-w-3xl mx-auto text-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
@@ -329,7 +330,7 @@ export default function LandingPage() {
             transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
-            <span className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-accent/10 text-accent mb-2">Our Solution</span>
+            <span className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-primary/10 text-primary mb-2">Our Solution</span>
             <motion.h2 
               className="text-3xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent"
               initial={{ opacity: 0, y: 20 }}
@@ -393,41 +394,132 @@ export default function LandingPage() {
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto">
-            <motion.div 
-              className="relative"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7 }}
-            >
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 via-accent/50 to-purple-600/50 rounded-lg blur-lg opacity-75"></div>
-              <div className="relative bg-gray-900 backdrop-blur-md rounded-lg shadow-xl p-6 border border-white/10">
-                <div className="flex items-center mb-3">
-                  <div className="flex space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  </div>
-                  <div className="ml-4 text-xs font-medium text-gray-400">server.js</div>
-                </div>
-                <div className="border border-gray-700 rounded-md bg-gray-800/70 p-4 font-mono text-sm overflow-hidden backdrop-blur-sm">
-                  <pre className="text-green-400">
-                    <code>{`// Initialize Agentico MCP server
-import { AgenticoServer } from 'agentico';
+        {/* Step 1: Define your MCP Server and Tools */}
+        <motion.div 
+          className="relative mb-12"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+        >
+          <h3 className="text-2xl font-bold mb-4 text-blue">1. Define your MCP Server and Tools</h3>
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 via-accent/50 to-purple-600/50 rounded-lg blur-lg opacity-75"></div>
+          <div className="relative bg-gray-900 backdrop-blur-md rounded-lg shadow-xl p-6 border border-white/10">
+        <div className="flex items-center mb-3">
+          <div className="flex space-x-2">
+        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          </div>
+          <div className="ml-4 text-xs font-medium text-gray-400">server.yaml</div>
+        </div>
+        <div className="border border-gray-700 rounded-md bg-gray-800/70 p-4 font-mono text-sm overflow-hidden backdrop-blur-sm">
+          <pre className="text-green-400">
+        <code>{`apiVersion: agentico.dev/v1
+kind: Server
+metadata:
+  name: demo-mcp
+  description: "Demo MCP Server instance"
+  annotations:
+    language:
+  name: typescript
+  version: "5.0"
+    spec:
+  template:
+    metadata:
+  scope: "local"  # local or global (default) - global scope is accessible across all projects
+spec:
+  tools:
+    - name: echo
+      description: "Utility tool that returns the exact input provided to it, useful for testing communication flows, verifying data integrity, and debugging request-response patterns in the demo environment. Supports various data formats including text, JSON, and YAML."
+      input: 
+    $ref: "#/schemas/tools/echo/input"
+    - name: reverse
+      description: "Text manipulation tool that reverses the order of characters in the input string. Handles Unicode characters correctly, preserves whitespace positioning, and provides options for reversing at different levels (character, word, or sentence) for demonstration purposes."
+      input: 
+    $ref: "#/schemas/tools/common-input"
+    - name: uppercase
+      description: "String transformation utility that converts all alphabetic characters in the input to uppercase. Supports international character sets with proper locale handling, preserves formatting and non-alphabetic characters, and is optimized for processing large text inputs efficiently."
+      input: 
+    $ref: "#/schemas/tools/common-input"
+  prompts:
+    - name: system
+      content: "You are a helpful assistant"
+    - name: task
+      content: "Process user requests"
+schemas:
+  tools:
+    echo:
+  input:
+    type: object
+    properties:
+      text:
+    type: string
+    description: "Input text to be echoed back"
+    example: "Hello, World!"
+    common-input:
+  type: object
+  properties:
+    text:
+      type: string
+      description: "Input text to be processed"
+      example: "Hello, World!"`}</code>
+          </pre>
+        </div>
+          </div>
+        </motion.div>
 
-const server = new AgenticoServer({
-  tools: standardTools,
-  contextProviders: myContextProviders,
-});
+        {/* Step 2: Generate the boilerplate code */}
+        <motion.div 
+          className="relative mb-12"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+        >
+          <h3 className="text-2xl font-bold mb-4 text-gray">2. Generate the boilerplate code</h3>
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 via-accent/50 to-purple-600/50 rounded-lg blur-lg opacity-75"></div>
+          <div className="relative bg-gray-900 backdrop-blur-md rounded-lg shadow-xl p-6 border border-white/10">
+        <div className="border border-gray-700 rounded-md bg-gray-800/70 p-4 font-mono text-sm overflow-hidden backdrop-blur-sm">
+          <pre className="text-green-400">
+        <code>{`$ agentico init <Project-name> --file server.yaml`}</code>
+          </pre>
+        </div>
+          </div>
+        </motion.div>
 
-// Start serving MCP requests
-server.listen(3000);
+        {/* Step 3: Adapt and deploy */}
+        <motion.div 
+          className="relative"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+        >
+          <h3 className="text-2xl font-bold mb-4 text-gray">3. Adapt and deploy via CLI or UI</h3>
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 via-accent/50 to-purple-600/50 rounded-lg blur-lg opacity-75"></div>
+          <div className="relative bg-gray-900 backdrop-blur-md rounded-lg shadow-xl p-6 border border-white/10">
+        <div className="border border-gray-700 rounded-md bg-gray-800/70 p-4 font-mono text-sm overflow-hidden backdrop-blur-sm">
+          <pre className="text-green-400">
+        <code>{`# Deploy locally
+$ agentico deploy <Project-name>
 
-// That's it! MCP-compliant and ready to go.`}</code>
-                  </pre>
-                </div>
-              </div>
-            </motion.div>
+# Deploy to the cloud
+$ agentico deploy <UUID|slug>`}</code>
+          </pre>
+        </div>
+          </div>
+        {/* screenshot of UI */}
+        <div className="mt-4">
+          <AspectRatio ratio={16 / 9} className="rounded-lg overflow-hidden">
+            <img
+              src="/screenshots/projects-tools-servers-v0.3.0.png"
+              alt="Agentico UI"
+              className="w-full h-full object-cover"
+            />
+          </AspectRatio>
+          </div>
+        </motion.div>
           </div>
         </div>
       </motion.section>

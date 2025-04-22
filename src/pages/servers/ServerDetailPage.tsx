@@ -48,8 +48,9 @@ export default function ServerDetailPage() {
         }
         
         let { data, error } = await query;
+        console.log('Initial query result:', data, error);
         
-        if (error) {
+        if (error || !data || data.length === 0) {
           // If no results found with inner join, try without the join
           query = supabase.from('servers').select('*');
           if (isUuid) {
@@ -62,6 +63,7 @@ export default function ServerDetailPage() {
           data = result.data;
           error = result.error;
         }
+        console.log('Fallback query result:', data, error);
         
         if (error) {
           console.error('Error fetching server details:', error);

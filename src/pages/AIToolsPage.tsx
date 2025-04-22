@@ -84,7 +84,7 @@ export function AIToolsPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">AI Tools</h2>
+          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-green-500/70 bg-clip-text text-transparent">AI Tools</h2>
           <p className="text-muted-foreground">
             Manage your AI tools and integrations
           </p>

@@ -39,8 +39,8 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
         },
         {
           value: 'tools',
-          label: `AI Tools (${toolsCount || 0})`,
-          description: 'AI tools for this project',
+          label: `Tools (${toolsCount || 0})`,
+          description: 'Tools for this project',
           icon: <Wrench className="h-4 w-4" />,
           content: <ToolsTab projectId={project.id} />,
         },

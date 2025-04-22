@@ -138,7 +138,7 @@ export function Dashboard() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">Dashboard</h2>
+          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-green-500/70 bg-clip-text text-transparent">Dashboard</h2>
           <p className="text-muted-foreground">
             Welcome to your AI Tools Hub dashboard
           </p>
