@@ -19,7 +19,10 @@ import {
   AtSign,
   ConciergeBellIcon,
   Wrench,
-  Youtube
+  Youtube,
+  Bot,
+  ListTodo,
+  PlaySquare
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import { cn } from '@/lib/utils';
@@ -57,6 +60,7 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
   const { user } = useAuth();
   const isAuthenticated = !!user;
   const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
+  const [isAgentsExpanded, setIsAgentsExpanded] = useState(false);
   
   const mainNav: NavItem[] = [
     {
@@ -83,6 +87,29 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
       title: 'AI Tools',
       href: '/tools',
       icon: Wrench,
+    },
+    {
+      title: 'Agents',
+      href: '/agents',
+      icon: Bot,
+      submenu: [
+        {
+          title: 'Manage Agents',
+          href: '/agents',
+          icon: Bot,
+        },
+        {
+          title: 'Tasks',
+          href: '/agents/tasks',
+          icon: ListTodo,
+        },
+        {
+          title: 'Playground',
+          href: '/agents/playground',
+          icon: PlaySquare,
+          badge: 'New',
+        },
+      ],
     },
     // {
     //   title: 'Studio',
@@ -150,14 +177,80 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
       <ScrollArea className="flex-1 px-3 py-4 overflow-y-auto">
         <div className="space-y-4">
           <div className="space-y-1">
-            {mainNav.map((item) => (
-              <NavLink
-                key={item.href}
-                item={item}
-                active={location.pathname === item.href}
-                collapsed={collapsed}
-              />
-            ))}
+            {mainNav.map((item) => {
+              // Special handling for items with submenu (Agents section)
+              if (item.submenu && item.submenu.length > 0 && item.title === 'Agents') {
+                return (
+                  <Collapsible 
+                    key={item.href}
+                    open={isAgentsExpanded}
+                    onOpenChange={setIsAgentsExpanded}
+                  >
+                    <CollapsibleTrigger className="w-full">
+                      <div
+                        className={cn(
+                          "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors w-full",
+                          location.pathname.startsWith(item.href)
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                        )}
+                      >
+                        {!collapsed ? (
+                          <>
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                            {item.badge && (
+                              <Badge variant="outline" className="ml-auto text-xs bg-purple-100 text-purple-800 border-purple-300">
+                                {item.badge}
+                              </Badge>
+                            )}
+                            {isAgentsExpanded ? (
+                              <ChevronDown className="ml-auto h-4 w-4" />
+                            ) : (
+                              <ChevronRight className="ml-auto h-4 w-4" />
+                            )}
+                          </>
+                        ) : (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="flex items-center justify-center">
+                                  <item.icon className="h-4 w-4" />
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="right">
+                                {item.title}
+                                {item.badge && <span className="ml-2">{item.badge}</span>}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pl-10 space-y-1 mt-1">
+                      {item.submenu.map(subItem => (
+                        <NavLink
+                          key={subItem.href}
+                          item={subItem}
+                          active={location.pathname === subItem.href}
+                          collapsed={collapsed}
+                        />
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              }
+              
+              // Regular items without submenu
+              return (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  active={location.pathname === item.href}
+                  collapsed={collapsed}
+                />
+              );
+            })}
           </div>
           <div className="h-px bg-sidebar-border" />
           {isAuthenticated ? (

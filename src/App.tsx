@@ -41,6 +41,13 @@ const StudioPage = lazy(() => import("./pages/studio/StudioPage"));
 const StudioNewWorkflowPage = lazy(() => import("./pages/studio/NewWorkflowPage"));
 const WorkflowEditorPage = lazy(() => import("./pages/studio/WorkflowEditorPage"));
 
+// Agents pages
+const AgentsPage = lazy(() => import("./pages/agents/index"));
+const NewAgentPage = lazy(() => import("./pages/agents/new"));
+const TasksPage = lazy(() => import("./pages/agents/tasks/index"));
+const NewTaskPage = lazy(() => import("./pages/agents/tasks/new"));
+const PlaygroundPage = lazy(() => import("./pages/agents/playground/index"));
+
 // Environment pages
 const EnvironmentsPage = lazy(() => import("./pages/settings/EnvironmentsPage"));
 const EnvironmentDetailPage = lazy(() => import("./pages/settings/EnvironmentDetailPage"));
@@ -184,6 +191,14 @@ const AppRoutes = () => {
         <Route path="/studio" element={<StudioPage />} />
         <Route path="/studio/new-workflow" element={<AuthenticatedRoute><StudioNewWorkflowPage /></AuthenticatedRoute>} />
         <Route path="/studio/workflows/:workflowId" element={<WorkflowEditorPage />} />
+        
+        {/* Agents Routes */}
+        <Route path="/agents" element={<AgentsPage />} />
+        <Route path="/agents/new" element={<AuthenticatedRoute><NewAgentPage /></AuthenticatedRoute>} />
+        <Route path="/agents/tasks" element={<TasksPage />} />
+        <Route path="/agents/tasks/new" element={<AuthenticatedRoute><NewTaskPage /></AuthenticatedRoute>} />
+        <Route path="/agents/playground" element={<PlaygroundPage />} />
+        <Route path="/agents/playground/:agentId" element={<PlaygroundPage />} />
 
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
