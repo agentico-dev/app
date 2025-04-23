@@ -2,7 +2,7 @@
   "name": "agentico-dashboard",
   "private": true,
   "homepage": "https://app.agentico.dev/",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

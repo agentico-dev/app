@@ -49,9 +49,16 @@ export const mainNav: NavItem[] = [
     icon: Wrench,
   },
   {
+    title: 'Studio',
+    href: '/studio',
+    icon: Zap,
+    badge: 'Pro',
+  },
+  {
     title: 'Agents',
     href: '/agents',
     icon: Bot,
+    badge: 'Pro',
     submenu: [
       {
         title: 'Manage Agents',

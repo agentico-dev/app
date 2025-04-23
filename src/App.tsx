@@ -126,9 +126,9 @@ const AppRoutes = () => {
       <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
       <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
       <Route path="/index" element={<LandingPage />} />
+      <Route path="/" element={<LandingPage />} />
 
       <Route element={<DashboardLayout />}>
-        <Route path="/" element={<LandingPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
 
         <Route path="/orgs" element={<AuthenticatedRoute><OrganizationsPage /></AuthenticatedRoute>} />

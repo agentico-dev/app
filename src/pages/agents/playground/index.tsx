@@ -124,7 +124,6 @@ export default function PlaygroundPage() {
         <div className="lg:col-span-5 space-y-6">
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-green-500/70 bg-clip-text text-transparent">
             {mockAgent.name}
-            <span className="text-red-500 text-sm ml-2 font-normal">agentName/Role</span>
           </h1>
           
           <Tabs defaultValue={selectedTab} onValueChange={setSelectedTab} className="w-full">
@@ -224,7 +223,6 @@ export default function PlaygroundPage() {
               <ScrollArea className="flex-1 p-4">
                 {conversation.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center text-gray-500">
-                    <span className="text-red-500">When empty, give a hint to the user</span>
                     <p className="mt-2">Ask anything to {mockAgent.name}</p>
                   </div>
                 ) : (

@@ -38,7 +38,7 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
                   />
                 );
               }
-              
+
               return (
                 <NavLink
                   key={item.href}
@@ -67,7 +67,7 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
                     />
                   );
                 }
-                
+
                 return (
                   <NavLink
                     key={item.href}
@@ -79,7 +79,7 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
               })}
 
               <div className="h-px bg-sidebar-border" />
-              
+
               <div className="space-y-1">
                 {footerNav.map((item) => (
                   <NavLink
@@ -106,13 +106,15 @@ export function SidebarNav({ onClose, collapsed }: SidebarNavProps) {
           ) : (
             <div className="border-t border-sidebar-border p-4 sticky bottom-0 bg-sidebar">
               {!collapsed ? (
-                <div className="text-sm font-medium">Guest</div>
+                <>
+                  <div className="text-sm font-medium">Guest</div>
+                  <div className="text-sidebar-foreground/60">
+                    <Link to="/login">Sign in</Link> for more features
+                  </div>
+                </>
               ) : (
                 <div className="text-sm font-medium">G</div>
               )}
-              <div className="text-sidebar-foreground/60">
-                <Link to="/login">Sign in</Link> for more features
-              </div>
             </div>
           )}
         </div>
