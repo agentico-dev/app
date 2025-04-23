@@ -15,7 +15,8 @@ export function ToolsTab({ projectId }: ToolsTabProps) {
     associatedTools, 
     isLoading: isLoadingTools,
     hasAssociatedApplications,
-    handleAssociationToggle
+    handleAssociationToggle,
+    handleBatchToggle
   } = useProjectTools(projectId);
 
   const handleCreateTool = () => {

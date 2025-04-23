@@ -7,9 +7,8 @@ import {
 } from '@/components/ui/table';
 import { EnhancedAITool } from '@/types/ai-tool';
 import { toast } from 'sonner';
-import { Switch } from '@/components/ui/switch';
 
-// Import our new smaller components
+// Import our smaller components
 import {
   AIToolsSearch,
   AIToolsTableHeader,
@@ -35,22 +34,20 @@ export function AIToolsTable({
   // State for tools after combining available and associated
   const [displayTools, setDisplayTools] = useState<EnhancedAITool[]>([]);
   
-  // Track tools that are currently being updated to prevent race conditions
-  const [updatingToolIds, setUpdatingToolIds] = useState<Set<string>>(new Set());
-  
   // State for search, sorting, and pagination
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof EnhancedAITool | 'associated'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [isUpdatingAll, setIsUpdatingAll] = useState(false);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [isProcessingBatch, setIsProcessingBatch] = useState(false);
   
   // Update displayTools whenever availableTools or associatedTools change
   useEffect(() => {
     const combined = [
-      ...availableTools.map(tool => ({...tool, associated: false})), 
-      ...associatedTools.map(tool => ({...tool, associated: true}))
+      ...associatedTools.map(tool => ({...tool, associated: true})),
+      ...availableTools.map(tool => ({...tool, associated: false}))
     ];
     setDisplayTools(combined);
   }, [availableTools, associatedTools]);
@@ -97,108 +94,69 @@ export function AIToolsTable({
     }
   };
 
-  // Handle tool association change with race condition prevention
+  // Handle tool association change with processing state tracking
   const handleToolAssociationChange = async (toolId: string, associated: boolean) => {
-    // Prevent race condition by checking if this tool is already being updated
-    if (updatingToolIds.has(toolId)) {
-      return;
-    }
+    if (processingIds.has(toolId)) return;
     
-    // Mark this tool as updating
-    setUpdatingToolIds(prev => new Set(prev).add(toolId));
+    setProcessingIds(prev => new Set(prev).add(toolId));
     
     try {
-      // Update the display tools optimistically
-      setDisplayTools(prevTools => 
-        prevTools.map(tool => 
-          tool.id === toolId ? { ...tool, associated } : tool
-        )
-      );
-      
-      // Call the parent handler to update the backend
       await onAssociateChange(toolId, associated);
-      toast.success(`Tool ${associated ? 'associated' : 'disassociated'} successfully`);
-    } catch (error) {
-      // Revert optimistic update on failure
-      setDisplayTools(prevTools => 
-        prevTools.map(tool => 
-          tool.id === toolId ? { ...tool, associated: !associated } : tool
-        )
-      );
-      toast.error('Failed to update tool association');
-      console.error('Error updating tool association:', error);
     } finally {
-      // Remove this tool from the updating set
-      setUpdatingToolIds(prev => {
-        const updated = new Set(prev);
-        updated.delete(toolId);
-        return updated;
+      setProcessingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(toolId);
+        return newSet;
       });
     }
   };
   
   // Handle toggle all tools on current page
   const handleToggleAllTools = async (associate: boolean) => {
-    if (isUpdatingAll || currentTools.length === 0) return;
+    if (isProcessingBatch || currentTools.length === 0) return;
     
-    setIsUpdatingAll(true);
+    // Get tools that need to change state
+    const toolsToUpdate = currentTools.filter(tool => tool.associated !== associate);
+    if (toolsToUpdate.length === 0) return;
+    
+    const toolIds = toolsToUpdate.map(tool => tool.id);
+    setIsProcessingBatch(true);
     
     try {
-      // Get all tool IDs that are NOT already in the target state
-      const toolsToUpdate = currentTools.filter(tool => tool.associated !== associate);
+      // Mark all tools as processing
+      setProcessingIds(prev => {
+        const newSet = new Set(prev);
+        toolIds.forEach(id => newSet.add(id));
+        return newSet;
+      });
       
-      if (toolsToUpdate.length === 0) {
-        setIsUpdatingAll(false);
-        return;
-      }
-      
-      // Update display tools optimistically for ALL tools on the current page
-      setDisplayTools(prevTools => 
-        prevTools.map(tool => 
-          currentTools.some(currentTool => currentTool.id === tool.id) 
-            ? { ...tool, associated: associate } 
+      // For current page, update UI immediately (optimistically)
+      setDisplayTools(prev => 
+        prev.map(tool => 
+          currentTools.some(currentTool => currentTool.id === tool.id)
+            ? { ...tool, associated: associate }
             : tool
         )
       );
       
-      // Process each tool sequentially to avoid race conditions
-      for (const tool of toolsToUpdate) {
-        await onAssociateChange(tool.id, associate);
-      }
+      // Process in batch instead of one by one
+      await Promise.all(toolIds.map(id => onAssociateChange(id, associate)));
       
-      toast.success(`All tools ${associate ? 'associated' : 'disassociated'} successfully`);
     } catch (error) {
-      // On error, revert the optimistic updates for the current page
-      setDisplayTools(prevTools => {
-        // Get the original state from availableTools and associatedTools
-        const originalTools = [
-          ...availableTools.map(tool => ({...tool, associated: false})),
-          ...associatedTools.map(tool => ({...tool, associated: true}))
-        ];
-        
-        return prevTools.map(tool => {
-          // If this tool is on the current page, revert to its original state
-          if (currentTools.some(currentTool => currentTool.id === tool.id)) {
-            const originalTool = originalTools.find(origTool => origTool.id === tool.id);
-            return originalTool || tool;
-          }
-          return tool;
-        });
-      });
-      
+      console.error('Error updating tool associations:', error);
       toast.error('Failed to update some tool associations');
-      console.error('Error updating multiple tool associations:', error);
     } finally {
-      setIsUpdatingAll(false);
+      // Clear processing state
+      setProcessingIds(new Set());
+      setIsProcessingBatch(false);
     }
   };
   
   // Check if all current tools have the same association state
   const areAllToolsAssociated = currentTools.length > 0 && currentTools.every(tool => tool.associated);
-  const areAllToolsDisassociated = currentTools.length > 0 && currentTools.every(tool => !tool.associated);
-  
-  // Get the "indeterminate" state when some but not all tools are associated
-  const isIndeterminate = !areAllToolsAssociated && !areAllToolsDisassociated && currentTools.length > 0;
+  const isIndeterminate = currentTools.length > 0 && 
+                          currentTools.some(tool => tool.associated) && 
+                          !areAllToolsAssociated;
   
   if (isLoading) {
     return <AIToolsLoadingState />;
@@ -228,7 +186,7 @@ export function AIToolsTable({
             toggleAllTools={handleToggleAllTools}
             areAllToolsAssociated={areAllToolsAssociated}
             isIndeterminate={isIndeterminate}
-            isUpdatingAll={isUpdatingAll}
+            isUpdatingAll={isProcessingBatch}
           />
           
           <TableBody>
@@ -240,7 +198,7 @@ export function AIToolsTable({
                   key={tool.id}
                   tool={tool}
                   onToggleAssociation={handleToolAssociationChange}
-                  isUpdating={updatingToolIds.has(tool.id)}
+                  isUpdating={processingIds.has(tool.id)}
                 />
               ))
             )}
