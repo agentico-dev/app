@@ -1,6 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { EnhancedAITool } from '@/types/ai-tool';
+import { Link, Unlink } from 'lucide-react';
 
 interface AIToolsActionsProps {
   toggleAllTools?: (associate: boolean) => Promise<void>;
@@ -24,7 +25,17 @@ export function AIToolsActions({
         onClick={() => toggleAllTools(!areAllToolsAssociated)}
         disabled={isProcessingBatch || currentTools.length === 0}
       >
-        {areAllToolsAssociated ? 'Unlink All' : 'Link All'} Tools
+        {areAllToolsAssociated ? (
+          <>
+            <Unlink className="mr-1 h-4 w-4" />
+            Unlink All Tools
+          </>
+        ) : (
+          <>
+            <Link className="mr-1 h-4 w-4" />
+            Link All Tools
+          </>
+        )}
       </Button>
     </div>
   );

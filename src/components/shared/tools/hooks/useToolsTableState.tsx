@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { EnhancedAITool } from '@/types/ai-tool';
 
 export function useToolsTableState(initialTools: EnhancedAITool[]) {
@@ -10,9 +10,15 @@ export function useToolsTableState(initialTools: EnhancedAITool[]) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
+  const [localTools, setLocalTools] = useState<EnhancedAITool[]>(initialTools);
+  
+  // Update local tools when props change
+  useEffect(() => {
+    setLocalTools(initialTools);
+  }, [initialTools]);
 
   // Filter tools based on search term
-  const filteredTools = initialTools.filter(tool => 
+  const filteredTools = localTools.filter(tool => 
     tool.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     (tool.description && tool.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -69,5 +75,6 @@ export function useToolsTableState(initialTools: EnhancedAITool[]) {
     setProcessingIds,
     isProcessingBatch,
     setIsProcessingBatch,
+    setLocalTools,
   };
 }

@@ -56,6 +56,7 @@ export function SharedAIToolsTable({
     setProcessingIds,
     isProcessingBatch,
     setIsProcessingBatch,
+    setLocalTools,
   } = useToolsTableState(displayTools);
 
   // Handle tool association change with processing state tracking
@@ -66,6 +67,15 @@ export function SharedAIToolsTable({
     
     try {
       await onAssociateChange(toolId, associated);
+      
+      // Update local state after successful API call
+      setLocalTools(prev => 
+        prev.map(tool => 
+          tool.id === toolId 
+            ? { ...tool, associated } 
+            : tool
+        )
+      );
     } catch (error) {
       console.error('Error updating tool association:', error);
       toast.error('Failed to update tool association');
@@ -89,12 +99,28 @@ export function SharedAIToolsTable({
     setIsProcessingBatch(true);
     
     try {
+      // Update UI optimistically
+      setLocalTools(prev => 
+        prev.map(tool => 
+          toolIds.includes(tool.id) 
+            ? { ...tool, associated: associate } 
+            : tool
+        )
+      );
+      
+      // Process all tool associations
       for (const toolId of toolIds) {
         await onAssociateChange(toolId, associate);
       }
+      
+      toast.success(`Successfully ${associate ? 'linked' : 'unlinked'} ${toolIds.length} tools`);
     } catch (error) {
       console.error('Error batch updating tools:', error);
       toast.error('Failed to update some tool associations');
+      
+      // Revert optimistic updates on error
+      // This would require fetching fresh data from the server
+      // For now, we'll just show an error toast
     } finally {
       setProcessingIds(new Set());
       setIsProcessingBatch(false);
