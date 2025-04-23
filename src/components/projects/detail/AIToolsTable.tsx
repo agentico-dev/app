@@ -108,8 +108,6 @@ export function AIToolsTable({
     setUpdatingToolIds(prev => new Set(prev).add(toolId));
     
     try {
-      await onAssociateChange(toolId, associated);
-      
       // Update the display tools optimistically
       setDisplayTools(prevTools => 
         prevTools.map(tool => 
@@ -117,8 +115,16 @@ export function AIToolsTable({
         )
       );
       
+      // Call the parent handler to update the backend
+      await onAssociateChange(toolId, associated);
       toast.success(`Tool ${associated ? 'associated' : 'disassociated'} successfully`);
     } catch (error) {
+      // Revert optimistic update on failure
+      setDisplayTools(prevTools => 
+        prevTools.map(tool => 
+          tool.id === toolId ? { ...tool, associated: !associated } : tool
+        )
+      );
       toast.error('Failed to update tool association');
       console.error('Error updating tool association:', error);
     } finally {
@@ -146,7 +152,7 @@ export function AIToolsTable({
         return;
       }
       
-      // Update display tools optimistically
+      // Update display tools optimistically for ALL tools on the current page
       setDisplayTools(prevTools => 
         prevTools.map(tool => 
           currentTools.some(currentTool => currentTool.id === tool.id) 
@@ -162,6 +168,24 @@ export function AIToolsTable({
       
       toast.success(`All tools ${associate ? 'associated' : 'disassociated'} successfully`);
     } catch (error) {
+      // On error, revert the optimistic updates for the current page
+      setDisplayTools(prevTools => {
+        // Get the original state from availableTools and associatedTools
+        const originalTools = [
+          ...availableTools.map(tool => ({...tool, associated: false})),
+          ...associatedTools.map(tool => ({...tool, associated: true}))
+        ];
+        
+        return prevTools.map(tool => {
+          // If this tool is on the current page, revert to its original state
+          if (currentTools.some(currentTool => currentTool.id === tool.id)) {
+            const originalTool = originalTools.find(origTool => origTool.id === tool.id);
+            return originalTool || tool;
+          }
+          return tool;
+        });
+      });
+      
       toast.error('Failed to update some tool associations');
       console.error('Error updating multiple tool associations:', error);
     } finally {

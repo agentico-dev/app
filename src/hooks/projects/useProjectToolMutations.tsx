@@ -46,11 +46,17 @@ export function useProjectToolMutations(projectId: string) {
         
         if (error) throw error;
       }
+
+      // Return the updated state for optimistic updates
+      return { toolId, isAssociated: action === 'associate' };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['project-tools-join', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project-tools', projectId] });
+      
+      // Return the result to be used by the calling component
+      return result;
     },
     onError: (error) => {
       console.error('Error updating association:', error);
