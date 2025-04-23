@@ -18,9 +18,7 @@ import {
 import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, Code, Import, Rocket, Upload } from 'lucide-react';
-import { Toggle } from '@/components/ui/toggle';
 import { Switch } from '@/components/ui/switch';
-import CodeEditor from '@/components/editor/CodeEditor';
 
 interface ResourceHeaderProps {
   title: string;
