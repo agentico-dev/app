@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router';
 import { useProjectTools } from '@/hooks/projects/useProjectTools';
-import { AIToolsTable } from '../AIToolsTable';
+import { SharedAIToolsTable } from '@/components/shared/tools/AIToolsTable';
 
 interface ToolsTabProps {
   projectId: string;
@@ -15,8 +15,7 @@ export function ToolsTab({ projectId }: ToolsTabProps) {
     associatedTools, 
     isLoading: isLoadingTools,
     hasAssociatedApplications,
-    handleAssociationToggle,
-    handleBatchToggle
+    handleAssociationToggle
   } = useProjectTools(projectId);
 
   const handleCreateTool = () => {
@@ -61,13 +60,14 @@ export function ToolsTab({ projectId }: ToolsTabProps) {
     );
   }
 
-  // Normal state with available tools
   return (
-    <AIToolsTable
+    <SharedAIToolsTable
       availableTools={availableTools}
       associatedTools={associatedTools}
       isLoading={isLoadingTools}
       onAssociateChange={handleAssociationToggle}
+      showBatchActions={true}
+      emptyStateMessage="No tools available for this project."
     />
   );
 }
