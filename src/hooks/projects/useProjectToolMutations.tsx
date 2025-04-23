@@ -26,7 +26,14 @@ export function useProjectToolMutations(projectId: string) {
             ai_tool_id: toolId 
           });
         
-        if (error) throw error;
+        if (error) {
+          // If error is duplicate key violation, we can safely ignore it
+          if (error.code === '23505') {
+            console.log(`Tool ${toolId} is already associated with project ${projectId}`);
+            return;
+          }
+          throw error;
+        }
       } else {
         // Remove the record from the join table
         const { error } = await supabase

@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/table';
 import { EnhancedAITool } from '@/types/ai-tool';
 import { toast } from 'sonner';
+import { Switch } from '@/components/ui/switch';
 
 // Import our new smaller components
 import {
@@ -34,13 +35,16 @@ export function AIToolsTable({
   // State for tools after combining available and associated
   const [displayTools, setDisplayTools] = useState<EnhancedAITool[]>([]);
   
+  // Track tools that are currently being updated to prevent race conditions
+  const [updatingToolIds, setUpdatingToolIds] = useState<Set<string>>(new Set());
+  
   // State for search, sorting, and pagination
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof EnhancedAITool | 'associated'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [isUpdatingAll, setIsUpdatingAll] = useState(false);
   
   // Update displayTools whenever availableTools or associatedTools change
   useEffect(() => {
@@ -93,9 +97,16 @@ export function AIToolsTable({
     }
   };
 
-  // Handle tool association change
+  // Handle tool association change with race condition prevention
   const handleToolAssociationChange = async (toolId: string, associated: boolean) => {
-    setIsUpdating(true);
+    // Prevent race condition by checking if this tool is already being updated
+    if (updatingToolIds.has(toolId)) {
+      return;
+    }
+    
+    // Mark this tool as updating
+    setUpdatingToolIds(prev => new Set(prev).add(toolId));
+    
     try {
       await onAssociateChange(toolId, associated);
       
@@ -111,9 +122,59 @@ export function AIToolsTable({
       toast.error('Failed to update tool association');
       console.error('Error updating tool association:', error);
     } finally {
-      setIsUpdating(false);
+      // Remove this tool from the updating set
+      setUpdatingToolIds(prev => {
+        const updated = new Set(prev);
+        updated.delete(toolId);
+        return updated;
+      });
     }
   };
+  
+  // Handle toggle all tools on current page
+  const handleToggleAllTools = async (associate: boolean) => {
+    if (isUpdatingAll || currentTools.length === 0) return;
+    
+    setIsUpdatingAll(true);
+    
+    try {
+      // Get all tool IDs that are NOT already in the target state
+      const toolsToUpdate = currentTools.filter(tool => tool.associated !== associate);
+      
+      if (toolsToUpdate.length === 0) {
+        setIsUpdatingAll(false);
+        return;
+      }
+      
+      // Update display tools optimistically
+      setDisplayTools(prevTools => 
+        prevTools.map(tool => 
+          currentTools.some(currentTool => currentTool.id === tool.id) 
+            ? { ...tool, associated: associate } 
+            : tool
+        )
+      );
+      
+      // Process each tool sequentially to avoid race conditions
+      for (const tool of toolsToUpdate) {
+        await onAssociateChange(tool.id, associate);
+      }
+      
+      toast.success(`All tools ${associate ? 'associated' : 'disassociated'} successfully`);
+    } catch (error) {
+      toast.error('Failed to update some tool associations');
+      console.error('Error updating multiple tool associations:', error);
+    } finally {
+      setIsUpdatingAll(false);
+    }
+  };
+  
+  // Check if all current tools have the same association state
+  const areAllToolsAssociated = currentTools.length > 0 && currentTools.every(tool => tool.associated);
+  const areAllToolsDisassociated = currentTools.length > 0 && currentTools.every(tool => !tool.associated);
+  
+  // Get the "indeterminate" state when some but not all tools are associated
+  const isIndeterminate = !areAllToolsAssociated && !areAllToolsDisassociated && currentTools.length > 0;
   
   if (isLoading) {
     return <AIToolsLoadingState />;
@@ -140,6 +201,10 @@ export function AIToolsTable({
             sortField={sortField}
             sortDirection={sortDirection}
             handleSort={handleSort}
+            toggleAllTools={handleToggleAllTools}
+            areAllToolsAssociated={areAllToolsAssociated}
+            isIndeterminate={isIndeterminate}
+            isUpdatingAll={isUpdatingAll}
           />
           
           <TableBody>
@@ -151,7 +216,7 @@ export function AIToolsTable({
                   key={tool.id}
                   tool={tool}
                   onToggleAssociation={handleToolAssociationChange}
-                  isUpdating={isUpdating}
+                  isUpdating={updatingToolIds.has(tool.id)}
                 />
               ))
             )}
