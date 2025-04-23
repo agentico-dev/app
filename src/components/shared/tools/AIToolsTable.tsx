@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCaption } from '@/components/ui/table';
 import { EnhancedAITool } from '@/types/ai-tool';
@@ -10,7 +11,8 @@ import {
   AIToolTableRow,
   PaginationControl,
   AIToolsLoadingState,
-  AIToolsEmptyState
+  AIToolsEmptyState,
+  AIToolsActions
 } from './components';
 
 interface AIToolsTableProps {
@@ -108,6 +110,9 @@ export function SharedAIToolsTable({
     return <AIToolsLoadingState />;
   }
 
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(startIndex + itemsPerPage - 1, displayTools.length);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -116,13 +121,22 @@ export function SharedAIToolsTable({
           setSearchTerm={setSearchTerm}
         />
       </div>
+
+      {showBatchActions && (
+        <AIToolsActions
+          toggleAllTools={handleToggleAllTools}
+          areAllToolsAssociated={areAllToolsAssociated}
+          isProcessingBatch={isProcessingBatch}
+          currentTools={currentTools}
+        />
+      )}
       
       <div className="rounded-md border">
         <Table>
           <TableCaption>
             {currentTools.length === 0 
               ? emptyStateMessage
-              : `Showing ${indexOfFirstItem + 1}-${Math.min(indexOfLastItem, sortedTools.length)} of ${sortedTools.length} tools`}
+              : `Showing ${startIndex}-${endIndex} of ${displayTools.length} tools`}
           </TableCaption>
           
           <AIToolsTableHeader 
