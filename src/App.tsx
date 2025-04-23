@@ -83,7 +83,7 @@ const RedirectIfAuthenticated = ({ children }: { children: React.ReactNode }) =>
   }
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -129,6 +129,7 @@ const AppRoutes = () => {
       <Route path="/" element={<LandingPage />} />
 
       <Route element={<DashboardLayout />}>
+        <Route path="/home" element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
 
         <Route path="/orgs" element={<AuthenticatedRoute><OrganizationsPage /></AuthenticatedRoute>} />

@@ -54,7 +54,7 @@ export default function RegisterPage() {
         description: "Your account has been created and you are now logged in.",
       });
       
-      navigate('/');
+      navigate('/home');
     } catch (err: any) {
       console.error('Registration error:', err);
       

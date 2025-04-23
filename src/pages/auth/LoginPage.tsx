@@ -35,7 +35,7 @@ export default function LoginPage() {
         description: "You've been logged in to your account.",
       });
       
-      navigate('/');
+      navigate('/home');
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to login');

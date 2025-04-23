@@ -206,7 +206,7 @@ export default function LandingPage() {
               className="flex flex-col sm:flex-row gap-4"
               variants={fadeInUp}
             >
-              <Link to="/">
+              <Link to="/dashboard">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
                   <Button 
                     size="lg" 
