@@ -10,7 +10,6 @@ import { ProjectTabs } from '@/components/projects/detail/ProjectTabs';
 import { Project } from '@/types/project';
 import { FilesIcon } from 'lucide-react';
 import Editor from '@monaco-editor/react';
-import { h } from 'node_modules/framer-motion/dist/types.d-B50aGbjN';
 
 export default function ProjectDetailPage() {
   const { id } = useParams();

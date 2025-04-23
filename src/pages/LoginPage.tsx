@@ -21,7 +21,7 @@ export function LoginPage() {
     setTimeout(() => {
       // In a real app, you would verify credentials with a backend
       setLoading(false);
-      navigate('/home');
+      navigate('/');
     }, 1000);
   };
 
