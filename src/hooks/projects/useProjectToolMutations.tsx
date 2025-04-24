@@ -35,13 +35,11 @@ export function useProjectToolMutations(projectId: string) {
           throw error;
         }
       } else {
-        // Remove the record from the join table
+        // Remove the record from the join tables
         const { error } = await supabase
-          .from('project_tools')
-          .delete()
-          .match({ 
-            project_id: projectId, 
-            ai_tool_id: toolId 
+          .rpc('disassociate_tools', {
+            __project_id: projectId,
+            __tool_id: toolId,
           });
         
         if (error) throw error;
