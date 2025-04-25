@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +10,8 @@ import { Server } from '@/types/server';
 import { useTags } from '@/contexts/TagsContext';
 import { Badge } from '@/components/ui/badge';
 import Editor from '@monaco-editor/react';
-import { FilesIcon } from 'lucide-react';
+import { FilesIcon, Loader2 } from 'lucide-react';
+import { formatJson, isValidJson } from '@/utils/formatter';
 
 export default function ServerDetailPage() {
   const { id } = useParams();
@@ -22,6 +22,10 @@ export default function ServerDetailPage() {
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [showCodeView, setShowCodeView] = useState(false);
   const [codeContent, setCodeContent] = useState('');
+  const [manifestId, setManifestId] = useState<bigint | null>(null);
+  const [isCodeLoading, setIsCodeLoading] = useState(false);
+  const [useMonaco, setUseMonaco] = useState(true);
+  const [contentLanguage, setContentLanguage] = useState<'json' | 'yaml'>('json');
 
   useEffect(() => {
     const fetchServerDetails = async () => {
@@ -95,9 +99,13 @@ export default function ServerDetailPage() {
         const { data: dataCode, error: dataCodeError } = await supabase
           .rpc('generate_manifest', { server_id: serverData.id });
 
-        if (dataCodeError) throw dataCodeError;
-
-        setCodeContent(dataCode);
+        if (dataCodeError) {
+          console.error('Error fetching server code:', dataCodeError);
+          toast.error(`Failed to load server code: ${dataCodeError.message}`);
+          return;
+        }
+        
+        setManifestId(dataCode);
       } catch (error) {
         console.error('Error in server fetch:', error);
         toast.error('Failed to load server details');
@@ -108,6 +116,97 @@ export default function ServerDetailPage() {
     
     fetchServerDetails();
   }, [id]);
+
+  // Fetch code content when code view is toggled
+  useEffect(() => {
+    const fetchManifestContent = async () => {
+      if (showCodeView && manifestId && !codeContent) {
+        setIsCodeLoading(true);
+        try {
+          // response format is: { content: {manifest: string}, status_code: number }
+          type ManifestData = {
+            content: {
+              manifest: string;
+            };
+            status_code: number;
+          };
+          
+          const { data: manifestData, error } = await supabase
+            .rpc('get_generated_manifest', { manifest_id: manifestId });
+          
+          if (error) throw error;
+          
+          // Detect content type and set language
+          const contentStr = manifestData?.content?.manifest || '';
+          detectContentLanguage(contentStr);
+          
+          // Set content with a small delay to ensure UI is ready
+          setTimeout(() => {
+            setCodeContent(contentStr);
+            setIsCodeLoading(false);
+          }, 100);
+          
+        } catch (error) {
+          console.error('Error fetching manifest code:', error);
+          toast.error(`Failed to load code content: ${error.message}`);
+          setIsCodeLoading(false);
+          setUseMonaco(false); // Fallback to textarea on error
+        }
+      }
+    };
+
+    fetchManifestContent();
+  }, [showCodeView, manifestId, codeContent]);
+  
+  // Function to detect content language (JSON or YAML)
+  const detectContentLanguage = (content: string) => {
+    if (!content.trim()) return;
+    
+    // Use the formatter util if available, otherwise inline check
+    if (isValidJson(content)) {
+      setContentLanguage('json');
+    } else {
+      setContentLanguage('yaml');
+    }
+  };
+  
+  // Format content based on language
+  const formatContent = () => {
+    try {
+      if (contentLanguage === 'json') {
+        // Use the formatter util if available, otherwise inline format
+        const formattedContent = formatJson(codeContent);
+        setCodeContent(formattedContent);
+        toast.success('Content formatted as JSON');
+      } else {
+        toast.success('Content formatted as YAML');
+      }
+    } catch (error) {
+      console.error('Error formatting content:', error);
+      toast.error('Failed to format content. Invalid syntax.');
+    }
+  };
+  
+  // Handle language toggle
+  const toggleLanguage = () => {
+    setContentLanguage(prev => prev === 'json' ? 'yaml' : 'json');
+  };
+  
+  // Handle editor mounting
+  const handleEditorDidMount = () => {
+    console.log("Monaco editor mounted successfully");
+  };
+  
+  // Handle editor error
+  const handleEditorError = () => {
+    console.error("Monaco editor failed to load");
+    setUseMonaco(false);
+  };
+
+  // Handle code content changes from textarea
+  const handleCodeContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCodeContent(e.target.value);
+  };
 
   const handleGoBack = () => {
     navigate(-1);
@@ -225,23 +324,81 @@ export default function ServerDetailPage() {
           
           {showCodeView ? (
             <div className="mt-6 border rounded-md overflow-hidden">
-              <div className="p-2 bg-muted border-b flex items-center">
-                <FilesIcon className="h-4 w-4 mr-2" />
-                <span className="text-sm font-medium">Server Code View</span>
+              <div className="p-2 bg-muted border-b flex items-center justify-between">
+                <div className="flex items-center">
+                  <FilesIcon className="h-4 w-4 mr-2" />
+                  <span className="text-sm font-medium">Server Code View</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={formatContent} 
+                    className="text-xs hover:underline"
+                  >
+                    Format
+                  </button>
+                  <button 
+                    onClick={toggleLanguage} 
+                    className="text-xs hover:underline mx-2"
+                  >
+                    {contentLanguage.toUpperCase()}
+                  </button>
+                  {useMonaco && (
+                    <button 
+                      onClick={() => setUseMonaco(false)} 
+                      className="text-xs text-muted-foreground hover:underline"
+                    >
+                      Switch to plain editor
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="h-[500px]">
-                <Editor
-                  height="100%"
-                  defaultLanguage="json"
-                  defaultValue={codeContent}
-                  options={{
-                    readOnly: false,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                  }}
-                  onChange={(value) => setCodeContent(value || '')}
-                />
+                {isCodeLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                    <span>Loading code...</span>
+                  </div>
+                ) : !useMonaco ? (
+                  // Textarea fallback
+                  <textarea
+                    className="w-full h-full p-4 font-mono text-sm bg-background resize-none"
+                    value={codeContent}
+                    onChange={handleCodeContentChange}
+                    spellCheck={false}
+                    style={{
+                      lineHeight: '1.5',
+                      tabSize: 2,
+                      whiteSpace: 'pre',
+                      overflowY: 'auto',
+                    }}
+                  />
+                ) : (
+                  // Monaco editor with error handling
+                  <div className="w-full h-full">
+                    <Editor
+                      height="100%"
+                      language={contentLanguage}
+                      value={codeContent}
+                      options={{
+                        readOnly: false,
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        automaticLayout: true,
+                        formatOnPaste: true,
+                        tabSize: 2,
+                      }}
+                      onMount={handleEditorDidMount}
+                      onChange={(value) => setCodeContent(value || '')}
+                      onError={handleEditorError}
+                      loading={
+                        <div className="flex items-center justify-center h-full">
+                          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                          <span>Loading editor...</span>
+                        </div>
+                      }
+                    />
+                  </div>
+                )}
               </div>
             </div>
           ) : (

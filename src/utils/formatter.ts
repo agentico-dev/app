@@ -1,43 +1,43 @@
-import yaml from 'js-yaml';
-
 /**
- * Attempts to parse a string as JSON or YAML
+ * Attempts to parse a string as JSON
  * @param content String to parse
  * @returns Parsed object if successful, or null if parsing fails
  */
 export function try_parse(content: string): any | null {
   if (!content || typeof content !== 'string') return null;
   
-  // First try JSON
+  // Try JSON
   try {
     return JSON.parse(content);
   } catch (e) {
-    // If JSON fails, try YAML
-    try {
-      return yaml.load(content);
-    } catch (e) {
-      return null;
-    }
+    return null;
   }
 }
 
 /**
- * Converts between JSON and YAML formats
- * @param content The content to convert
- * @param targetFormat The target format ('json' or 'yaml')
- * @returns Converted string or null if conversion fails
+ * Formats JSON content with consistent indentation
+ * @param jsonContent JSON string to format
+ * @returns Formatted JSON string or original string if parsing fails
  */
-export function convertFormat(content: string, targetFormat: 'json' | 'yaml'): string | null {
-  const parsed = try_parse(content);
-  if (!parsed) return null;
-  
+export function formatJson(jsonContent: string): string {
   try {
-    if (targetFormat === 'json') {
-      return JSON.stringify(parsed, null, 2);
-    } else {
-      return yaml.dump(parsed, { indent: 2 });
-    }
+    const parsed = JSON.parse(jsonContent);
+    return JSON.stringify(parsed, null, 2);
   } catch (e) {
-    return null;
+    return jsonContent;
+  }
+}
+
+/**
+ * Detects if content is valid JSON
+ * @param content String to check
+ * @returns True if valid JSON, false otherwise
+ */
+export function isValidJson(content: string): boolean {
+  try {
+    JSON.parse(content);
+    return true;
+  } catch (e) {
+    return false;
   }
 }
