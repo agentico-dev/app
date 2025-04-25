@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,8 +7,9 @@ import { ResourceHeader } from '@/components/detail/ResourceHeader';
 import { ProjectResourceCards } from '@/components/projects/detail/ProjectResourceCards';
 import { ProjectTabs } from '@/components/projects/detail/ProjectTabs';
 import { Project } from '@/types/project';
-import { FilesIcon } from 'lucide-react';
+import { FilesIcon, Loader2 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
+import { try_parse } from '@/utils/formatter';
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
@@ -19,7 +19,11 @@ export default function ProjectDetailPage() {
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [showCodeView, setShowCodeView] = useState(false);
   const [codeContent, setCodeContent] = useState('');
-
+  const [manifestId, setManifestId] = useState<bigint | null>(null);
+  const [isCodeLoading, setIsCodeLoading] = useState(false);
+  const [useMonaco, setUseMonaco] = useState(true);
+  const [contentLanguage, setContentLanguage] = useState<'json' | 'yaml'>('json');
+  
   useEffect(() => {
     const fetchProjectDetails = async () => {
       if (!id) return;
@@ -48,17 +52,18 @@ export default function ProjectDetailPage() {
 
         console.log('Fetched project details:', data);
         setProject(data);
-        
-        const dataCodeTMP = {
-          'comming soon': 'project details',
-          'see_project_management_demo': 'https://youtu.be/4JJ30ytn-yY',
-          'see_oas_to_mcp_demo': 'https://youtu.be/kR4pP5VZgKw',
-         }; // Placeholder for actual data fetching logic
-        // Set initial code content
-        setCodeContent(JSON.stringify(dataCodeTMP, null, 2));
+        const { data: dataCode, error: dataCodeError } = await supabase
+          .rpc('generate_manifest', { project_id: data.id });
+          if (!dataCode) {
+            console.error('Error fetching project code:', dataCodeError);
+            toast.error(`Failed to load project code: ${dataCodeError?.message}`);
+            return;
+          }
+        if (dataCodeError) throw dataCodeError;
+        setManifestId(dataCode);
       } catch (error) {
         console.error('Error in project fetch:', error);
-        toast.error('Failed to load project details');
+        toast.error(`Failed to load project details: ${error.message}`);
       } finally {
         setIsLoading(false);
       }
@@ -66,6 +71,99 @@ export default function ProjectDetailPage() {
 
     fetchProjectDetails();
   }, [id]);
+  
+  // Fetch code content when code view is toggled
+  useEffect(() => {
+    const fetchManifestContent = async () => {
+      if (showCodeView && manifestId && !codeContent) {
+        setIsCodeLoading(true);
+        try {
+          // response format is: { content: {manifest: string}, status_code: number }
+          type ManifestData = {
+            content: {
+              manifest: string;
+            };
+            status_code: number;
+          };
+          const { data: manifestData, error } = await supabase
+            .rpc('get_generated_manifest', { manifest_id: manifestId });
+          
+          if (error) throw error;
+          
+          // Detect content type and set language
+          const contentStr = manifestData?.content.manifest || '';
+          detectContentLanguage(contentStr);
+          
+          // Set content with a small delay to ensure UI is ready
+          setTimeout(() => {
+            setCodeContent(contentStr);
+            setIsCodeLoading(false);
+          }, 100);
+          
+        } catch (error) {
+          console.error('Error fetching manifest code:', error);
+          toast.error(`Failed to load code content: ${error.message}`);
+          setIsCodeLoading(false);
+        }
+      }
+    };
+
+    fetchManifestContent();
+  }, [showCodeView, manifestId, codeContent]);
+  
+  // Function to detect content language (JSON or YAML)
+  const detectContentLanguage = (content: string) => {
+    if (!content.trim()) return;
+    
+    // Check if it's valid JSON
+    try {
+      JSON.parse(content);
+      setContentLanguage('json');
+      return;
+    } catch (e) {
+      // If not valid JSON, assume YAML
+      setContentLanguage('yaml');
+    }
+  };
+  
+  // Format content based on language
+  const formatContent = () => {
+    try {
+      if (contentLanguage === 'json') {
+        // Format JSON
+        const parsed = JSON.parse(codeContent);
+        setCodeContent(JSON.stringify(parsed, null, 2));
+        toast.success('Content formatted as JSON');
+      } else {
+        // For YAML we're just relying on the editor's formatting
+        toast.success('Content formatted as YAML');
+      }
+    } catch (error) {
+      console.error('Error formatting content:', error);
+      toast.error('Failed to format content. Invalid syntax.');
+    }
+  };
+  
+  // Handle language toggle
+  const toggleLanguage = () => {
+    setContentLanguage(prev => prev === 'json' ? 'yaml' : 'json');
+  };
+
+  // Handle editor mounting
+  const handleEditorDidMount = (editor, monaco) => {
+    console.log("Monaco editor mounted successfully");
+  };
+  
+  // Handle editor error
+  const handleEditorError = () => {
+    console.error("Monaco editor failed to load");
+    setUseMonaco(false);
+  };
+
+  // Handle code content changes from textarea
+  const handleCodeContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCodeContent(e.target.value);
+  };
 
   const handleGoBack = () => {
     navigate(-1);
@@ -80,7 +178,6 @@ export default function ProjectDetailPage() {
 
   const handleDeleteProject = async () => {
     if (!project) return;
-
     try {
       const { error } = await supabase
         .from('projects')
@@ -88,7 +185,6 @@ export default function ProjectDetailPage() {
         .eq('id', project.id);
 
       if (error) throw error;
-
       toast.success('Project deleted successfully');
       navigate('/projects');
     } catch (error: any) {
@@ -169,23 +265,79 @@ export default function ProjectDetailPage() {
 
           {showCodeView ? (
             <div className="mt-6 border rounded-md overflow-hidden">
-              <div className="p-2 bg-muted border-b flex items-center">
-                <FilesIcon className="h-4 w-4 mr-2" />
-                <span className="text-sm font-medium">Project Code View</span>
+              <div className="p-2 bg-muted border-b flex items-center justify-between">
+                <div className="flex items-center">
+                  <FilesIcon className="h-4 w-4 mr-2" />
+                  <span className="text-sm font-medium">Project Code View</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={formatContent} 
+                    className="text-xs hover:underline"
+                  >
+                    Format
+                  </button>
+                  <button 
+                    onClick={toggleLanguage} 
+                    className="text-xs hover:underline mx-2"
+                  >
+                    {contentLanguage.toUpperCase()}
+                  </button>
+                    <button 
+                      onClick={() => setUseMonaco(!useMonaco)} 
+                      className="text-xs text-muted-foreground hover:underline"
+                    >
+                      Switch to {useMonaco ? 'simple' : 'advanced'} editor
+                    </button>
+                </div>
               </div>
               <div className="h-[500px]">
-                <Editor
-                  height="100%"
-                  defaultLanguage="json"
-                  defaultValue={codeContent}
-                  options={{
-                    readOnly: false,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                  }}
-                  onChange={(value) => setCodeContent(value || '')}
-                />
+                {isCodeLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                    <span>Loading code...</span>
+                  </div>
+                ) : !useMonaco ? (
+                  // Textarea fallback
+                  <textarea
+                    className="w-full h-full p-4 font-mono text-sm bg-background resize-none"
+                    value={codeContent}
+                    onChange={handleCodeContentChange}
+                    spellCheck={false}
+                    style={{
+                      lineHeight: '1.5',
+                      tabSize: 2,
+                      whiteSpace: 'pre',
+                      overflowY: 'auto',
+                    }}
+                  />
+                ) : (
+                  // Monaco editor with error handling
+                  <div className="w-full h-full">
+                    <Editor
+                      height="100%"
+                      language={contentLanguage}
+                      value={codeContent}
+                      options={{
+                        readOnly: false,
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        automaticLayout: true,
+                        formatOnPaste: true,
+                        tabSize: 2,
+                      }}
+                      onMount={handleEditorDidMount}
+                      onChange={(value) => setCodeContent(value || '')}
+                      onError={handleEditorError}
+                      loading={
+                        <div className="flex items-center justify-center h-full">
+                          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                          <span>Loading editor...</span>
+                        </div>
+                      }
+                    />
+                  </div>
+                )}
               </div>
             </div>
           ) : (

@@ -92,15 +92,12 @@ export default function ServerDetailPage() {
         
         console.log('Fetched server details:', serverData);
         setServer(serverData as Server);
-        
-        
-        const dataCodeTMP = {
-          'comming soon': 'project details',
-          'see_project_management_demo': 'https://youtu.be/4JJ30ytn-yY',
-          'see_oas_to_mcp_demo': 'https://youtu.be/kR4pP5VZgKw',
-         }; // Placeholder for actual data fetching logic
-        // Set initial code content
-        setCodeContent(JSON.stringify(dataCodeTMP, null, 2));
+        const { data: dataCode, error: dataCodeError } = await supabase
+          .rpc('generate_manifest', { server_id: serverData.id });
+
+        if (dataCodeError) throw dataCodeError;
+
+        setCodeContent(dataCode);
       } catch (error) {
         console.error('Error in server fetch:', error);
         toast.error('Failed to load server details');
