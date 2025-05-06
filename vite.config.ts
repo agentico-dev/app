@@ -11,17 +11,6 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     allowedHosts: [".agentico.dev", ".lovable.app", ".lovableproject.com"],
   },
-  plugins: [
-    react(),
-    mode === 'development' &&
-    componentTagger(),
-    // Put the Sentry vite plugin after all other plugins
-    sentryVitePlugin({
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-      org: "la-rebelion-labs",
-      project: "javascript-react",
-    }),
-  ].filter(Boolean),
   base: "/",
   resolve: {
     alias: {
