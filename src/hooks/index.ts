@@ -9,3 +9,4 @@ export { useServerTools } from './servers/tools/useServerTools';
 export { useProjectTools } from './projects/useProjectTools';
 export { useIsMobile as useMobile } from './use-mobile';
 export { useDashboardMetrics } from './useDashboardMetrics';
+export { useServerManifest } from './servers/useServerManifest';
