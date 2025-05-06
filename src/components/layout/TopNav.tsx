@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { NotificationsPopover } from '@/components/notifications/NotificationsPopover';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import OrganizationSelector from '@/components/organizations/OrganizationSelector';
 import { useNavigate } from 'react-router';
 import { motion } from 'framer-motion';

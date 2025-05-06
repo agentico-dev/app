@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CircuitBoard, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { toast } from 'sonner';
 import { isValidEmail } from '@/utils/formatter';
 

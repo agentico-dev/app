@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLocation } from 'react-router';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { Link } from 'react-router';
 import { mainNav, utilityNav, footerNav } from './navigation/nav-items';
 import { NavLink } from './navigation/NavLink';

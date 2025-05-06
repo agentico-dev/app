@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CircuitBoard } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
+import { useAuth } from '@/hooks/auth';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
