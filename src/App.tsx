@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router"
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { TagsProvider } from "./contexts/TagsContext";
 import { lazy, Suspense } from "react";
-import { initSentry } from "./utils/sentry";
 
 // Lazy-loaded components
 const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout"));

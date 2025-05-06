@@ -2,10 +2,13 @@
 <html>
 
 <head>
-  <meta http-equiv="refresh" content="0; url=/" />
+  <!-- <meta http-equiv="refresh" content="0; url=/" /> -->
   <script>
-    // Redirect to the correct route
-    window.location.href = window.location.pathname;
+    // Redirect to root, preserving path
+    // Ensure the redirect happens immediately
+    window.onload = function() {
+      window.location.replace("/#" + window.location.pathname);
+    };
   </script>
 </head>
 
