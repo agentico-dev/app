@@ -1,3 +1,4 @@
+
 /**
  * Attempts to parse a string as JSON
  * @param content String to parse
@@ -40,4 +41,14 @@ export function isValidJson(content: string): boolean {
   } catch (e) {
     return false;
   }
+}
+
+/**
+ * Validates if a string is a valid email format
+ * @param email String to check
+ * @returns True if valid email format, false otherwise
+ */
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }

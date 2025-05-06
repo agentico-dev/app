@@ -984,6 +984,22 @@ export type Database = {
           updated_at: string | null
         }
       }
+      disassociate_tools: {
+        Args: { __project_id: string; __tool_id: string }
+        Returns: undefined
+      }
+      generate_manifest: {
+        Args: {
+          server_id?: string
+          project_id?: string
+          output_format?: string
+        }
+        Returns: number
+      }
+      get_generated_manifest: {
+        Args: { manifest_id?: number }
+        Returns: Json
+      }
       has_organization_role: {
         Args: { org_id: string; required_roles: string[] }
         Returns: boolean
