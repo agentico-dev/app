@@ -3,6 +3,7 @@ import { ChangeEvent, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Check, Copy, FileJson, FileText } from 'lucide-react';
+import Editor from '@monaco-editor/react';
 
 interface CodeEditorProps {
   value: string;
@@ -10,11 +11,21 @@ interface CodeEditorProps {
   language?: 'json' | 'yaml';
   className?: string;
   readOnly?: boolean;
+  height?: string;
 }
 
-export function CodeEditor({ value, onChange, language = 'json', className, readOnly = false }: CodeEditorProps) {
+export function CodeEditor({ 
+  value, 
+  onChange, 
+  language = 'json', 
+  className, 
+  readOnly = false,
+  height = '500px'
+}: CodeEditorProps) {
   const [copied, setCopied] = useState(false);
   const [localValue, setLocalValue] = useState(value || '');
+  const [useMonaco, setUseMonaco] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Update local state when the parent value changes
   useEffect(() => {
@@ -35,6 +46,17 @@ export function CodeEditor({ value, onChange, language = 'json', className, read
     onChange(newValue);
   };
 
+  const handleMonacoChange = (value: string | undefined) => {
+    const newValue = value || '';
+    setLocalValue(newValue);
+    onChange(newValue);
+  };
+
+  const handleEditorDidMount = () => {
+    setIsLoading(false);
+    console.log("Monaco editor mounted successfully");
+  };
+
   const formatCode = () => {
     if (readOnly) return;
     
@@ -48,6 +70,15 @@ export function CodeEditor({ value, onChange, language = 'json', className, read
     } catch (error) {
       console.error("Failed to format code:", error);
     }
+  };
+
+  // Handle fallback to textarea when Monaco fails to load
+  const handleEditorWillMount = () => {
+    setIsLoading(true);
+  };
+
+  const handleEditorOnLostFocus = () => {
+    // This can be used to trigger validations or save content on blur
   };
 
   return (
@@ -90,19 +121,68 @@ export function CodeEditor({ value, onChange, language = 'json', className, read
               <Copy className="h-3 w-3" />
             )}
           </Button>
+          {useMonaco && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2"
+              onClick={() => setUseMonaco(false)}
+              title="Switch to simple editor"
+              type="button"
+            >
+              Simple
+            </Button>
+          )}
+          {!useMonaco && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2"
+              onClick={() => setUseMonaco(true)}
+              title="Switch to advanced editor"
+              type="button"
+            >
+              Advanced
+            </Button>
+          )}
         </div>
       </div>
-      <textarea
-        value={localValue}
-        onChange={handleChange}
-        className={cn(
-          "font-mono text-sm p-3 w-full min-h-[200px] outline-none focus:ring-0 resize-y",
-          readOnly && "bg-muted cursor-not-allowed"
+      <div style={{ height }}>
+        {!useMonaco ? (
+          // Textarea fallback
+          <textarea
+            value={localValue}
+            onChange={handleChange}
+            className={cn(
+              "font-mono text-sm p-3 w-full h-full outline-none focus:ring-0 resize-y",
+              readOnly && "bg-muted cursor-not-allowed"
+            )}
+            spellCheck="false"
+            data-gramm="false"
+            readOnly={readOnly}
+          />
+        ) : (
+          // Monaco editor
+          <Editor
+            height="100%"
+            language={language}
+            value={localValue}
+            options={{
+              readOnly: readOnly,
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              automaticLayout: true,
+              formatOnPaste: true,
+              tabSize: 2,
+            }}
+            onMount={handleEditorDidMount}
+            onChange={handleMonacoChange}
+            beforeMount={handleEditorWillMount}
+            onValidate={() => {}}
+            loading={isLoading ? "Loading editor..." : undefined}
+          />
         )}
-        spellCheck="false"
-        data-gramm="false"
-        readOnly={readOnly}
-      />
+      </div>
     </div>
   );
 }

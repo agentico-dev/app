@@ -1,6 +1,6 @@
 
 // Export all hooks here
-export { useAuth } from './auth';
+export { useAuth, AuthProvider } from './auth';
 export { useOrganizations } from './useOrganizations';
 export { useApplications } from './useApplications';
 export { useProjectServers } from './useProjectServers';

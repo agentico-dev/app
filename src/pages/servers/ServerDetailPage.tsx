@@ -9,9 +9,9 @@ import { ServerTabs } from '@/components/servers/detail/ServerTabs';
 import { Server } from '@/types/server';
 import { useTags } from '@/contexts/TagsContext';
 import { Badge } from '@/components/ui/badge';
-import Editor from '@monaco-editor/react';
 import { FilesIcon, Loader2 } from 'lucide-react';
 import { formatJson, isValidJson } from '@/utils/formatter';
+import { CodeEditor } from '@/components/editor/CodeEditor';
 
 export default function ServerDetailPage() {
   const { id } = useParams();
@@ -342,14 +342,6 @@ export default function ServerDetailPage() {
                   >
                     {contentLanguage.toUpperCase()}
                   </button>
-                  {useMonaco && (
-                    <button 
-                      onClick={() => setUseMonaco(false)} 
-                      className="text-xs text-muted-foreground hover:underline"
-                    >
-                      Switch to plain editor
-                    </button>
-                  )}
                 </div>
               </div>
               <div className="h-[500px]">
@@ -358,46 +350,13 @@ export default function ServerDetailPage() {
                     <Loader2 className="h-6 w-6 animate-spin mr-2" />
                     <span>Loading code...</span>
                   </div>
-                ) : !useMonaco ? (
-                  // Textarea fallback
-                  <textarea
-                    className="w-full h-full p-4 font-mono text-sm bg-background resize-none"
-                    value={codeContent}
-                    onChange={handleCodeContentChange}
-                    spellCheck={false}
-                    style={{
-                      lineHeight: '1.5',
-                      tabSize: 2,
-                      whiteSpace: 'pre',
-                      overflowY: 'auto',
-                    }}
-                  />
                 ) : (
-                  // Monaco editor with error handling
-                  <div className="w-full h-full">
-                    <Editor
-                      height="100%"
-                      language={contentLanguage}
-                      value={codeContent}
-                      options={{
-                        readOnly: false,
-                        minimap: { enabled: false },
-                        scrollBeyondLastLine: false,
-                        automaticLayout: true,
-                        formatOnPaste: true,
-                        tabSize: 2,
-                      }}
-                      onMount={handleEditorDidMount}
-                      onChange={(value) => setCodeContent(value || '')}
-                      onError={handleEditorError}
-                      loading={
-                        <div className="flex items-center justify-center h-full">
-                          <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                          <span>Loading editor...</span>
-                        </div>
-                      }
-                    />
-                  </div>
+                  <CodeEditor
+                    value={codeContent}
+                    onChange={(value) => setCodeContent(value)}
+                    language={contentLanguage}
+                    height="500px"
+                  />
                 )}
               </div>
             </div>
