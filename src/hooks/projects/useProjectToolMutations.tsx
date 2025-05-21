@@ -26,24 +26,35 @@ export function useProjectToolMutations(projectId: string) {
             ai_tool_id: toolId 
           });
         
-        if (error) throw error;
+        if (error) {
+          // If error is duplicate key violation, we can safely ignore it
+          if (error.code === '23505') {
+            console.log(`Tool ${toolId} is already associated with project ${projectId}`);
+            return;
+          }
+          throw error;
+        }
       } else {
-        // Remove the record from the join table
+        // Remove the record from the join tables
         const { error } = await supabase
-          .from('project_tools')
-          .delete()
-          .match({ 
-            project_id: projectId, 
-            ai_tool_id: toolId 
+          .rpc('disassociate_tools', {
+            __project_id: projectId,
+            __tool_id: toolId,
           });
         
         if (error) throw error;
       }
+
+      // Return the updated state for optimistic updates
+      return { toolId, isAssociated: action === 'associate' };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['project-tools-join', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project-tools', projectId] });
+      
+      // Return the result to be used by the calling component
+      return result;
     },
     onError: (error) => {
       console.error('Error updating association:', error);

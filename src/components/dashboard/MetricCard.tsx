@@ -24,7 +24,7 @@ export function MetricCard({ title, value, description, icon: Icon, trend, trend
       </CardHeader>
       <CardContent>
         <Link to={`/${title.toLowerCase()}`} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors duration-200">
-          <div className="text-2xl font-bold bg-gradient-to-r from-primary to-accent-500 bg-clip-text text-transparent">{value}</div>
+          <div className="text-2xl font-bold bg-gradient-to-r from-primary to-green-500/70 bg-clip-text text-transparent">{value}</div>
           <p className="text-xs text-muted-foreground">{description}</p>
           {trend && (
             <div className={`mt-2 flex items-center gap-1 text-xs ${

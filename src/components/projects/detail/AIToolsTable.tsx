@@ -8,7 +8,7 @@ import {
 import { EnhancedAITool } from '@/types/ai-tool';
 import { toast } from 'sonner';
 
-// Import our new smaller components
+// Import our smaller components
 import {
   AIToolsSearch,
   AIToolsTableHeader,
@@ -40,13 +40,14 @@ export function AIToolsTable({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [isProcessingBatch, setIsProcessingBatch] = useState(false);
   
   // Update displayTools whenever availableTools or associatedTools change
   useEffect(() => {
     const combined = [
-      ...availableTools.map(tool => ({...tool, associated: false})), 
-      ...associatedTools.map(tool => ({...tool, associated: true}))
+      ...associatedTools.map(tool => ({...tool, associated: true})),
+      ...availableTools.map(tool => ({...tool, associated: false}))
     ];
     setDisplayTools(combined);
   }, [availableTools, associatedTools]);
@@ -93,27 +94,69 @@ export function AIToolsTable({
     }
   };
 
-  // Handle tool association change
+  // Handle tool association change with processing state tracking
   const handleToolAssociationChange = async (toolId: string, associated: boolean) => {
-    setIsUpdating(true);
+    if (processingIds.has(toolId)) return;
+    
+    setProcessingIds(prev => new Set(prev).add(toolId));
+    
     try {
       await onAssociateChange(toolId, associated);
+    } finally {
+      setProcessingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(toolId);
+        return newSet;
+      });
+    }
+  };
+  
+  // Handle toggle all tools on current page
+  const handleToggleAllTools = async (associate: boolean) => {
+    if (isProcessingBatch || currentTools.length === 0) return;
+    
+    // Get tools that need to change state
+    const toolsToUpdate = currentTools.filter(tool => tool.associated !== associate);
+    if (toolsToUpdate.length === 0) return;
+    
+    const toolIds = toolsToUpdate.map(tool => tool.id);
+    setIsProcessingBatch(true);
+    
+    try {
+      // Mark all tools as processing
+      setProcessingIds(prev => {
+        const newSet = new Set(prev);
+        toolIds.forEach(id => newSet.add(id));
+        return newSet;
+      });
       
-      // Update the display tools optimistically
-      setDisplayTools(prevTools => 
-        prevTools.map(tool => 
-          tool.id === toolId ? { ...tool, associated } : tool
+      // For current page, update UI immediately (optimistically)
+      setDisplayTools(prev => 
+        prev.map(tool => 
+          currentTools.some(currentTool => currentTool.id === tool.id)
+            ? { ...tool, associated: associate }
+            : tool
         )
       );
       
-      toast.success(`Tool ${associated ? 'associated' : 'disassociated'} successfully`);
+      // Process in batch instead of one by one
+      await Promise.all(toolIds.map(id => onAssociateChange(id, associate)));
+      
     } catch (error) {
-      toast.error('Failed to update tool association');
-      console.error('Error updating tool association:', error);
+      console.error('Error updating tool associations:', error);
+      toast.error('Failed to update some tool associations');
     } finally {
-      setIsUpdating(false);
+      // Clear processing state
+      setProcessingIds(new Set());
+      setIsProcessingBatch(false);
     }
   };
+  
+  // Check if all current tools have the same association state
+  const areAllToolsAssociated = currentTools.length > 0 && currentTools.every(tool => tool.associated);
+  const isIndeterminate = currentTools.length > 0 && 
+                          currentTools.some(tool => tool.associated) && 
+                          !areAllToolsAssociated;
   
   if (isLoading) {
     return <AIToolsLoadingState />;
@@ -140,6 +183,10 @@ export function AIToolsTable({
             sortField={sortField}
             sortDirection={sortDirection}
             handleSort={handleSort}
+            toggleAllTools={handleToggleAllTools}
+            areAllToolsAssociated={areAllToolsAssociated}
+            isIndeterminate={isIndeterminate}
+            isUpdatingAll={isProcessingBatch}
           />
           
           <TableBody>
@@ -151,7 +198,7 @@ export function AIToolsTable({
                   key={tool.id}
                   tool={tool}
                   onToggleAssociation={handleToolAssociationChange}
-                  isUpdating={isUpdating}
+                  isUpdating={processingIds.has(tool.id)}
                 />
               ))
             )}

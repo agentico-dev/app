@@ -68,52 +68,49 @@ export function useProjectTools(projectId: string) {
     }
   }, [applicationTools, projectTools]);
 
-  // Handle moving tool between available and associated
-  const handleMoveTool = async (
-    toolId: string,
-    sourceList: string,
-    destinationList: string
-  ) => {
-    if (sourceList === 'available' && destinationList === 'associated') {
-      await updateToolAssociation({ 
-        toolId, 
-        action: 'associate' 
-      });
-    } else if (sourceList === 'associated' && destinationList === 'available') {
-      await updateToolAssociation({ 
-        toolId, 
-        action: 'disassociate' 
-      });
-    }
-  };
-
-  // Handle toggling association status directly
+  // Handle moving tool between available and associated - simplified approach
   const handleAssociationToggle = async (toolId: string, associated: boolean) => {
     try {
+      // Update in the database first
       await updateToolAssociation({
         toolId,
         action: associated ? 'associate' : 'disassociate'
       });
       
-      toast.success(`Tool ${associated ? 'associated with' : 'removed from'} project`);
+      // After successful update, invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['project-tools-join', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project-tools', projectId] });
       
-      // Provide immediate UI feedback (optimistic update)
-      if (associated) {
-        const toolToMove = availableTools.find(tool => tool.id === toolId);
-        if (toolToMove) {
-          setAvailableTools(prev => prev.filter(tool => tool.id !== toolId));
-          setAssociatedTools(prev => [...prev, { ...toolToMove, associated: true }]);
-        }
-      } else {
-        const toolToMove = associatedTools.find(tool => tool.id === toolId);
-        if (toolToMove) {
-          setAssociatedTools(prev => prev.filter(tool => tool.id !== toolId));
-          setAvailableTools(prev => [...prev, { ...toolToMove, associated: false }]);
-        }
-      }
+      toast.success(`Tool ${associated ? 'associated' : 'disassociated'} successfully`);
     } catch (error) {
-      // Error is already handled in the mutation hook
-      // Revert the UI back in case of an error by refreshing data
+      console.error('Error toggling association:', error);
+      toast.error('Failed to update tool association');
+    }
+  };
+
+  // Handle batch toggling of tools
+  const handleBatchToggle = async (toolIds: string[], associate: boolean) => {
+    if (!toolIds.length) return;
+    
+    try {
+      // Process each tool sequentially
+      for (const toolId of toolIds) {
+        await updateToolAssociation({
+          toolId,
+          action: associate ? 'associate' : 'disassociate'
+        });
+      }
+      
+      // Invalidate queries after all operations are complete
+      queryClient.invalidateQueries({ queryKey: ['project-tools-join', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project-tools', projectId] });
+      
+      toast.success(`${toolIds.length} tools ${associate ? 'associated' : 'disassociated'} successfully`);
+    } catch (error) {
+      console.error('Error batch toggling tools:', error);
+      toast.error('Failed to update some tool associations');
+      
+      // Force a refresh to ensure UI is in sync with server state
       queryClient.invalidateQueries({ queryKey: ['project-tools-join', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project-tools', projectId] });
     }
@@ -124,7 +121,7 @@ export function useProjectTools(projectId: string) {
     associatedTools,
     isLoading: isLoadingApplicationTools || isLoadingAssociated || isLoadingJoin,
     hasAssociatedApplications: projectApplications && projectApplications.length > 0,
-    handleMoveTool,
     handleAssociationToggle,
+    handleBatchToggle,
   };
 }

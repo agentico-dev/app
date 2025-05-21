@@ -114,6 +114,7 @@ export function useApplications() {
         .from('applications')
         .delete()
         .eq('id', id)
+        // only the user who created the application can delete it - @todo validate expected behavior by customers
         .eq('user_id', session.user.id);
       
       if (error) throw error;

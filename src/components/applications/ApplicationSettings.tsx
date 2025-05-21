@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
@@ -33,34 +34,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { useApplications } from '@/hooks/useApplications';
 
 interface ApplicationSettingsProps {
   application: Application;
 }
 
-export function useUpdateApplication() {
-  return {
-    mutate: async (application: Application) => {
-      // This is a placeholder hook that would normally be in useApplications.tsx
-      return Promise.resolve();
-    }
-  };
-}
-
-export function useDeleteApplication() {
-  return {
-    mutate: async (id: string) => {
-      // This is a placeholder hook that would normally be in useApplications.tsx
-      return Promise.resolve();
-    }
-  };
-}
-
 export default function ApplicationSettings({ application }: ApplicationSettingsProps) {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const updateApplication = useUpdateApplication();
-  const deleteApplication = useDeleteApplication();
+  const { updateApplication, deleteApplication } = useApplications();
   const [formValues, setFormValues] = useState({
     name: application.name,
     description: application.description || '',
@@ -91,7 +74,7 @@ export default function ApplicationSettings({ application }: ApplicationSettings
     setIsSubmitting(true);
     try {
       await updateApplication.mutate({
-        ...application,
+        id: application.id,
         ...data,
       });
       toast.success('Application updated successfully');

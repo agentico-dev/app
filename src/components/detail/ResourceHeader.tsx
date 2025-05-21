@@ -18,9 +18,7 @@ import {
 import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, Code, Import, Rocket, Upload } from 'lucide-react';
-import { Toggle } from '@/components/ui/toggle';
 import { Switch } from '@/components/ui/switch';
-import CodeEditor from '@/components/editor/CodeEditor';
 
 interface ResourceHeaderProps {
   title: string;
@@ -147,6 +145,7 @@ export function ResourceHeader({
           <Collapsible 
             open={isActionsOpen} 
             onOpenChange={setIsActionsOpen} 
+            className="relative"
           >
             <div className="flex items-center gap-2">
               <CollapsibleTrigger asChild>
@@ -162,40 +161,42 @@ export function ResourceHeader({
               />
               <span className="text-sm">Code View</span>
             </div>
-            <CollapsibleContent className="absolute z-10 mt-2 p-2 bg-popover border rounded-md shadow-md w-[280px] grid grid-cols-2 gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleImport}
-                className="flex items-center justify-start"
-              >
-                <Import className="h-4 w-4 mr-1" /> Import
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleExport}
-                className="flex items-center justify-start"
-              >
-                <Upload className="h-4 w-4 mr-1" /> Export
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleDeploy}
-                className="flex items-center justify-start"
-              >
-                <PlaneTakeoff className="h-4 w-4 mr-1" /> Deploy
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleUndeploy}
-                className="flex items-center justify-start"
-              >
-                <PlaneLanding className="h-4 w-4 mr-1" /> Undeploy
-              </Button>
-            </CollapsibleContent>
+            {isActionsOpen && (
+              <CollapsibleContent className="absolute z-10 mt-2 p-2 bg-popover border rounded-md shadow-md w-[280px] grid grid-cols-2 gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleImport}
+                  className="flex items-center justify-start"
+                >
+                  <Import className="h-4 w-4 mr-1" /> Import
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleExport}
+                  className="flex items-center justify-start"
+                >
+                  <Upload className="h-4 w-4 mr-1" /> Export
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleDeploy}
+                  className="flex items-center justify-start"
+                >
+                  <PlaneTakeoff className="h-4 w-4 mr-1" /> Deploy
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleUndeploy}
+                  className="flex items-center justify-start"
+                >
+                  <PlaneLanding className="h-4 w-4 mr-1" /> Undeploy
+                </Button>
+              </CollapsibleContent>
+            )}
           </Collapsible>
           <Button 
             variant="outline" 

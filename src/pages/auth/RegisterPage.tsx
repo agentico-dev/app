@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { AlertCircle, ArrowLeft, ArrowRight, Key, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
@@ -54,7 +54,7 @@ export default function RegisterPage() {
         description: "Your account has been created and you are now logged in.",
       });
       
-      navigate('/');
+      navigate('/home');
     } catch (err: any) {
       console.error('Registration error:', err);
       

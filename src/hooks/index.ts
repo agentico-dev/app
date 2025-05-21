@@ -1,6 +1,6 @@
 
 // Export all hooks here
-export { useAuth } from './useAuth';
+export { useAuth, AuthProvider } from './auth';
 export { useOrganizations } from './useOrganizations';
 export { useApplications } from './useApplications';
 export { useProjectServers } from './useProjectServers';
@@ -9,3 +9,4 @@ export { useServerTools } from './servers/tools/useServerTools';
 export { useProjectTools } from './projects/useProjectTools';
 export { useIsMobile as useMobile } from './use-mobile';
 export { useDashboardMetrics } from './useDashboardMetrics';
+export { useServerManifest } from './servers/useServerManifest';

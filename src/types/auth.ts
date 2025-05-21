@@ -7,6 +7,9 @@ export interface Profile {
   plan_id: string | null;
   created_at: string;
   updated_at: string;
+  bio?: string | null;
+  job_title?: string | null;
+  company?: string | null;
 }
 
 export interface AuthUser {

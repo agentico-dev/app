@@ -1,9 +1,8 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import '@xyflow/react/dist/style.css';
-import * as Sentry from '@sentry/react';
 
 import { useWorkflowFlow } from '@/hooks/useWorkflowFlow';
 import { NodePicker } from '@/components/studio/NodePicker';
@@ -13,40 +12,43 @@ import { WorkflowCanvas } from '@/components/studio/WorkflowCanvas';
 import { NodeConfigPanel } from '@/components/studio/NodeConfigPanel';
 
 // Create a specific error boundary for workflow editor exceptions
-const WorkflowEditorErrorBoundary = Sentry.withErrorBoundary(
-  ({ children }) => children,
-  {
-    fallback: ({ error, componentStack, resetError }) => (
-      <div className="p-8 border rounded-md bg-red-50 m-4">
-        <h2 className="text-xl font-semibold text-red-700 mb-2">Workflow Editor Error</h2>
-        <p className="mb-4 text-red-600">{error.message}</p>
-        <button 
-          onClick={resetError} 
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-        >
-          Reset Editor
-        </button>
-      </div>
-    ),
-    onError: (error, componentStack, eventId) => {
-      console.error('Workflow Editor Error:', error);
-      
-      // Only report errors from this specific component
-      Sentry.captureException(error, {
-        tags: {
-          component: 'WorkflowEditorPage',
-        },
-        contexts: {
-          react: {
-            componentStack,
-          },
-        },
-      });
-      
-      toast.error(`Workflow Editor error: ${error.message}`);
-    },
+class WorkflowEditorErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
   }
-);
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Workflow Editor Error:', error, errorInfo);
+    toast.error(`Workflow Editor error: ${error.message}`);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 border rounded-md bg-red-50 m-4">
+          <h2 className="text-xl font-semibold text-red-700 mb-2">Workflow Editor Error</h2>
+          <p className="mb-4 text-red-600">{this.state.error?.message}</p>
+          <button 
+            onClick={() => this.setState({ hasError: false, error: null })} 
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Reset Editor
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // The main component wrapped with the error boundary
 function WorkflowEditor() {
@@ -142,17 +144,6 @@ function WorkflowEditor() {
   const mainContentClass = selectedNode 
     ? 'flex flex-col h-[calc(100vh-5rem)] pr-[360px] transition-all duration-300' 
     : 'flex flex-col h-[calc(100vh-5rem)] transition-all duration-300';
-
-  // Setup Sentry monitoring
-  useEffect(() => {
-    Sentry.setTag('page', 'workflow-editor');
-    Sentry.setContext('workflow', {
-      workflowId,
-      workflowName,
-      nodesCount: nodes.length,
-      edgesCount: edges.length,
-    });
-  }, [workflowId, workflowName, nodes.length, edges.length]);
 
   return (
     <div className={mainContentClass}>

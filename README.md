@@ -18,3 +18,7 @@ With our dashboard, you can easily track and analyze your agents' activities, mo
 - TypeScript
 - shadcn-ui
 - Tailwind CSS
+
+## 
+
+We have this hierarchy: A project can have associated servers and tools, such as project_servers and project_tools DB tables, respectively (the Project can be seen as the root). If tools are disassociated from a project, then the tools associated with a server (server_tools DB table) should be removed too, because the tools are not available in the project.

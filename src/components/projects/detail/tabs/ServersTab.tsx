@@ -12,6 +12,7 @@ import { CreateServerForm } from '../CreateServerForm';
 import { Server } from '@/types/server';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { toast } from 'sonner';
 
 interface ServersTabProps {
   projectId: string;
@@ -26,17 +27,17 @@ export function ServersTab({ projectId }: ServersTabProps) {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  
+
   // Fetch all servers and project servers
   const { servers, isLoading: isLoadingAllServers } = useServers();
-  
+
   const {
     associatedServers,
     isLoadingAssociatedServers,
     associateServer,
     disassociateServer
   } = useProjectServers(projectId);
-  
+
   // Create a map of server IDs that are associated with the project
   const associatedServerIds = useMemo(() => {
     if (!associatedServers) return new Set<string>();
@@ -46,12 +47,12 @@ export function ServersTab({ projectId }: ServersTabProps) {
   // Filter and sort servers
   const filteredServers = useMemo(() => {
     if (!servers) return [];
-    
+
     return servers.filter(server => {
-      const matchesSearch = !searchQuery || 
+      const matchesSearch = !searchQuery ||
         server.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (server.description && server.description.toLowerCase().includes(searchQuery.toLowerCase()));
-      
+
       return matchesSearch;
     });
   }, [servers, searchQuery]);
@@ -62,7 +63,7 @@ export function ServersTab({ projectId }: ServersTabProps) {
 
     return [...filteredServers].sort((a, b) => {
       let comparison = 0;
-      
+
       if (sortField === 'name') {
         comparison = a.name.localeCompare(b.name);
       } else if (sortField === 'status') {
@@ -70,7 +71,7 @@ export function ServersTab({ projectId }: ServersTabProps) {
       } else if (sortField === 'type') {
         comparison = (a.type || '').localeCompare(b.type || '');
       }
-      
+
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   }, [filteredServers, sortField, sortDirection]);
@@ -89,6 +90,17 @@ export function ServersTab({ projectId }: ServersTabProps) {
       await disassociateServer.mutateAsync({ serverId });
     } else {
       await associateServer.mutateAsync({ serverId });
+      toast.success(
+        <>
+          Server associated successfully, now associate the desired tools.{' '}
+          <Button
+            variant="link"
+            onClick={() => navigate(`/projects/${projectId}?tab=tools`)}
+          >
+            Go to Tools Tab
+          </Button>
+        </>
+      );
     }
   };
 
@@ -120,17 +132,17 @@ export function ServersTab({ projectId }: ServersTabProps) {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Project Servers</h3>
         <div className="flex space-x-2">
-          <Button 
-            onClick={() => setIsAddServerOpen(true)} 
+          <Button
+            onClick={() => setIsAddServerOpen(true)}
             size="sm"
             className="flex items-center gap-1"
           >
             <PlusCircle className="h-4 w-4" />
             Insert
           </Button>
-          <Button 
-            onClick={() => setIsImportOpen(true)} 
-            variant="outline" 
+          <Button
+            onClick={() => setIsImportOpen(true)}
+            variant="outline"
             size="sm"
             className="flex items-center gap-1"
           >
@@ -187,12 +199,12 @@ export function ServersTab({ projectId }: ServersTabProps) {
           <Pagination>
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious 
+                <PaginationPrevious
                   onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                 />
               </PaginationItem>
-              
+
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 let pageNum;
                 if (totalPages <= 5) {
@@ -204,7 +216,7 @@ export function ServersTab({ projectId }: ServersTabProps) {
                 } else {
                   pageNum = currentPage - 2 + i;
                 }
-                
+
                 return (
                   <PaginationItem key={pageNum}>
                     <PaginationLink
@@ -216,9 +228,9 @@ export function ServersTab({ projectId }: ServersTabProps) {
                   </PaginationItem>
                 );
               })}
-              
+
               <PaginationItem>
-                <PaginationNext 
+                <PaginationNext
                   onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                   className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                 />
@@ -237,8 +249,8 @@ export function ServersTab({ projectId }: ServersTabProps) {
               Create a new server and automatically associate it with this project.
             </SheetDescription>
           </SheetHeader>
-          <CreateServerForm 
-            projectId={projectId} 
+          <CreateServerForm
+            projectId={projectId}
             onSuccess={() => setIsAddServerOpen(false)}
           />
         </SheetContent>

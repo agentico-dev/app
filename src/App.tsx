@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router"
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { TagsProvider } from "./contexts/TagsContext";
 import { lazy, Suspense } from "react";
-import { initSentry } from "./utils/sentry";
 
 // Lazy-loaded components
 const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout"));
@@ -40,6 +39,13 @@ const ServerDetailPage = lazy(() => import("./pages/servers/ServerDetailPage"));
 const StudioPage = lazy(() => import("./pages/studio/StudioPage"));
 const StudioNewWorkflowPage = lazy(() => import("./pages/studio/NewWorkflowPage"));
 const WorkflowEditorPage = lazy(() => import("./pages/studio/WorkflowEditorPage"));
+
+// Agents pages
+const AgentsPage = lazy(() => import("./pages/agents/index"));
+const NewAgentPage = lazy(() => import("./pages/agents/new"));
+const TasksPage = lazy(() => import("./pages/agents/tasks/index"));
+const NewTaskPage = lazy(() => import("./pages/agents/tasks/new"));
+const PlaygroundPage = lazy(() => import("./pages/agents/playground/index"));
 
 // Environment pages
 const EnvironmentsPage = lazy(() => import("./pages/settings/EnvironmentsPage"));
@@ -76,7 +82,7 @@ const RedirectIfAuthenticated = ({ children }: { children: React.ReactNode }) =>
   }
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -119,9 +125,10 @@ const AppRoutes = () => {
       <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
       <Route path="/register" element={<RedirectIfAuthenticated><RegisterPage /></RedirectIfAuthenticated>} />
       <Route path="/index" element={<LandingPage />} />
+      <Route path="/" element={<RedirectIfAuthenticated><LandingPage /></RedirectIfAuthenticated>} />
 
       <Route element={<DashboardLayout />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/home" element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
 
         <Route path="/orgs" element={<AuthenticatedRoute><OrganizationsPage /></AuthenticatedRoute>} />
@@ -184,6 +191,14 @@ const AppRoutes = () => {
         <Route path="/studio" element={<StudioPage />} />
         <Route path="/studio/new-workflow" element={<AuthenticatedRoute><StudioNewWorkflowPage /></AuthenticatedRoute>} />
         <Route path="/studio/workflows/:workflowId" element={<WorkflowEditorPage />} />
+        
+        {/* Agents Routes */}
+        <Route path="/agents" element={<AgentsPage />} />
+        <Route path="/agents/new" element={<AuthenticatedRoute><NewAgentPage /></AuthenticatedRoute>} />
+        <Route path="/agents/tasks" element={<TasksPage />} />
+        <Route path="/agents/tasks/new" element={<AuthenticatedRoute><NewTaskPage /></AuthenticatedRoute>} />
+        <Route path="/agents/playground" element={<PlaygroundPage />} />
+        <Route path="/agents/playground/:agentId" element={<PlaygroundPage />} />
 
         <Route path="/models" element={<ProjectsPage />} />
         <Route path="/data" element={<ProjectsPage />} />
